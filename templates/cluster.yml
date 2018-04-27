@@ -173,6 +173,8 @@ spec:
     memory: 1G
 ---
 {{end -}}
+{{$csSpec := .CS -}}
+{{$bootSpec := .Boot -}}
 {{range $rack := .Racks -}}
 kind: Node
 name: {{$rack.Name}}-boot
@@ -196,11 +198,12 @@ spec:
         folder: {{$rack.Name}}-bird-data
   ignition: {{$rack.Name}}-boot.ign
   resources:
-    cpu: 2
-    memory: 2G
+    cpu: {{$bootSpec.CPU}}
+    memory: {{$bootSpec.Memory}}
 ---
+{{range $csNode := $rack.CSs -}}
 kind: Node
-name: {{$rack.Name}}-cs1
+name: {{$rack.Name}}-{{$csNode.Name}}
 spec:
   interfaces:
     - {{$rack.Name}}-node1
@@ -219,36 +222,12 @@ spec:
       name: local
       spec:
         folder: {{$rack.Name}}-bird-data
-  ignition: {{$rack.Name}}-cs1.ign
+  ignition: {{$rack.Name}}-{{$csNode.Name}}.ign
   resources:
-    cpu: 2
-    memory: 2G
+    cpu: {{$csSpec.CPU}}
+    memory: {{$csSpec.Memory}}
 ---
-kind: Node
-name: {{$rack.Name}}-cs2
-spec:
-  interfaces:
-    - {{$rack.Name}}-node1
-    - {{$rack.Name}}-node2
-  volumes:
-    - kind: image
-      name: root
-      spec:
-        image: coreos-image
-        copy-on-write: true
-    - kind: vvfat
-      name: common
-      spec:
-        folder: common-data
-    - kind: vvfat
-      name: local
-      spec:
-        folder: {{$rack.Name}}-bird-data
-  ignition: {{$rack.Name}}-cs2.ign
-  resources:
-    cpu: 2
-    memory: 2G
----
+{{end -}}
 {{end -}}
 kind: Node
 name: forest

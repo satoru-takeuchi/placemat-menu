@@ -1,6 +1,10 @@
 package menu
 
-func Export(<`2templateArgs TemplateArgs) error `>{
+import (
+	"os"
+	"text/template"
+)
 
-  return nil
+func Export(t *template.Template, ta TemplateArgs) error {
+	return t.Execute(os.Stdout, ta)
 }

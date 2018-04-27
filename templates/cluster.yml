@@ -4,30 +4,30 @@ spec:
   internal: false
   use-nat: true
   addresses:
-		- {{ .Network.External }}
+    - {{ .Network.External.HostVM }}
 ---
-{{range $ir, $rack := .Racks }}
+{{range $rack := .Racks -}}
 kind: Network
-name: to-rack{{$ir}}-tor1
+name: to-{{$rack.Name}}-tor1
 spec:
   internal: true
 ---
 kind: Network
-name: to-rack{{$ir}}-tor2
+name: to-{{$rack.Name}}-tor2
 spec:
   internal: true
 ---
 kind: Network
-name: rack{{$ir}}-node1
+name: {{$rack.Name}}-node1
 spec:
   internal: true
 ---
 kind: Network
-name: rack{{$ir}}-node2
+name: {{$rack.Name}}-node2
 spec:
   internal: true
 ---
-{{end}}
+{{end -}}
 kind: Image
 name: coreos-image
 spec:
@@ -47,42 +47,42 @@ spec:
     - name: bashrc
       file: bashrc
 ---
-{{range $is, $spine := .Spines}}
+{{range $spine := .Spines -}}
 kind: DataFolder
-name: spine-data
+name: {{$spine.Name}}-data
 spec:
   files:
     - name: setup-iptables
       file: setup-iptables
     - name: bird.conf
-      file: bird_spine{{$is + 1}}.conf
+      file: bird_{{$spine.Name}}.conf
 ---
-{{end}}
-{{range $ir, $rack := .Racks }}
+{{end -}}
+{{range $rack := .Racks -}}
 kind: DataFolder
-name: rack{{$ir}}-tor1-data
+name: {{$rack.Name}}-tor1-data
 spec:
   files:
     - name: bird.conf
-      file: bird_rack{{$ir}}-tor1.conf
+      file: bird_{{$rack.Name}}-tor1.conf
 ---
 kind: DataFolder
-name: rack{{$ir}}-tor2-data
+name: {{$rack.Name}}-tor2-data
 spec:
   files:
     - name: bird.conf
-      file: bird_rack{{$ir}}-tor2.conf
+      file: bird_{{$rack.Name}}-tor2.conf
 ---
 kind: DataFolder
-name: rack{{$ir}}-bird-data
+name: {{$rack.Name}}-bird-data
 spec:
   files:
     - name: setup-rp-filter
       file: setup-rp-filter
     - name: bird.conf
-      file: bird_rack{{$ir}}-node.conf
+      file: bird_{{$rack.Name}}-node.conf
 ---
-{{end}}
+{{end -}}
 kind: DataFolder
 name: forest-data
 spec:
@@ -90,16 +90,17 @@ spec:
     - name: bird.conf
       file: bird_forest.conf
 ---
-{{range $is, $spine := .Spines}}
+{{$racks := .Racks -}}
+{{range $spine := .Spines -}}
 kind: Node
-name: spine{{$is}}
+name: {{$spine.Name}}
 spec:
   interfaces:
     - ext-net
-{{range $ir, $rack := .Racks}}
-    - to-rack{{$ir}}-tor1
-    - to-rack{{$ir}}-tor2
-{{end}}
+    {{range $rack := $racks -}}
+    - to-{{$rack.Name}}-tor1
+    - to-{{$rack.Name}}-tor2
+    {{end -}}
   volumes:
     - kind: image
       name: root
@@ -114,19 +115,19 @@ spec:
       name: local
       spec:
         folder: spine-data
-  ignition: spine{{$is}}.ign
+  ignition: {{$spine.Name}}.ign
   resources:
     cpu: 2
     memory: 1G
 ---
-{{end}}
-{{range $ir, $rack := .Racks}}
+{{end -}}
+{{range $rack := .Racks -}}
 kind: Node
-name: rack{{$ir}}-tor1
+name: {{$rack.Name}}-tor1
 spec:
   interfaces:
-    - to-rack{{$ir}}-tor1
-    - rack{{$ir}}-node1
+    - to-{{$rack.Name}}-tor1
+    - {{$rack.Name}}-node1
   volumes:
     - kind: image
       name: root
@@ -140,18 +141,18 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: rack{{$ir}}-tor1-data
-  ignition: rack{{$ir}}-tor1.ign
+        folder: {{$rack.Name}}-tor1-data
+  ignition: {{$rack.Name}}-tor1.ign
   resources:
     cpu: 2
     memory: 1G
 ---
 kind: Node
-name: rack{{$ir}}-tor2
+name: {{$rack.Name}}-tor2
 spec:
   interfaces:
-    - to-rack{{$ir}}-tor2
-    - rack{{$ir}}-node2
+    - to-{{$rack.Name}}-tor2
+    - {{$rack.Name}}-node2
   volumes:
     - kind: image
       name: root
@@ -165,21 +166,20 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: rack{{$ir}}-tor2-data
-  ignition: rack{{$ir}}-tor2.ign
+        folder: {{$rack.Name}}-tor2-data
+  ignition: {{$rack.Name}}-tor2.ign
   resources:
     cpu: 2
     memory: 1G
 ---
-{{end}}
-
-{{range $ir, $rack := .Racks}}
+{{end -}}
+{{range $rack := .Racks -}}
 kind: Node
-name: rack{{$ir}}-boot
+name: {{$rack.Name}}-boot
 spec:
   interfaces:
-    - rack{{$ir}}-node1
-    - rack{{$ir}}-node2
+    - {{$rack.Name}}-node1
+    - {{$rack.Name}}-node2
   volumes:
     - kind: image
       name: root
@@ -193,18 +193,18 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: rack{{$ir}}-bird-data
-  ignition: rack{{$ir}}-boot.ign
+        folder: {{$rack.Name}}-bird-data
+  ignition: {{$rack.Name}}-boot.ign
   resources:
     cpu: 2
     memory: 2G
 ---
 kind: Node
-name: rack{{$ir}}-cs1
+name: {{$rack.Name}}-cs1
 spec:
   interfaces:
-    - rack{{$ir}}-node1
-    - rack{{$ir}}-node2
+    - {{$rack.Name}}-node1
+    - {{$rack.Name}}-node2
   volumes:
     - kind: image
       name: root
@@ -218,18 +218,18 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: rack{{$ir}}-bird-data
-  ignition: rack{{$ir}}-cs1.ign
+        folder: {{$rack.Name}}-bird-data
+  ignition: {{$rack.Name}}-cs1.ign
   resources:
     cpu: 2
     memory: 2G
 ---
 kind: Node
-name: rack{{$ir}}-cs2
+name: {{$rack.Name}}-cs2
 spec:
   interfaces:
-    - rack{{$ir}}-node1
-    - rack{{$ir}}-node2
+    - {{$rack.Name}}-node1
+    - {{$rack.Name}}-node2
   volumes:
     - kind: image
       name: root
@@ -243,13 +243,13 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: rack{{$ir}}-bird-data
-  ignition: rack{{$ir}}-cs2.ign
+        folder: {{$rack.Name}}-bird-data
+  ignition: {{$rack.Name}}-cs2.ign
   resources:
     cpu: 2
     memory: 2G
 ---
-{{end}}
+{{end -}}
 kind: Node
 name: forest
 spec:

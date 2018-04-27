@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/cybozu-go/placemat-menu"
 	k8sYaml "github.com/kubernetes/apimachinery/pkg/util/yaml"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -59,14 +60,14 @@ type accountConfig struct {
 	} `yaml:"spec"`
 }
 
-func unmarshalNetwork(data []byte) (*menu.Network, error) {
+func unmarshalNetwork(data []byte) (*menu.NetworkMenu, error) {
 	var n networkConfig
-	err := yaml.UnmarshalStrict(data, &n)
+	err := yaml.Unmarshal(data, &n)
 	if err != nil {
 		return nil, err
 	}
 
-	var network menu.Network
+	var network menu.NetworkMenu
 
 	network.ASNBase = n.Spec.ASNBase
 
@@ -85,23 +86,32 @@ func unmarshalNetwork(data []byte) (*menu.Network, error) {
 		return nil, err
 	}
 
-	network.Bastion = n.Spec.Exposed.Bastion
-	network.LoadBalancer = n.Spec.Exposed.LoadBalancer
-	network.Ingress = n.Spec.Exposed.Ingress
-
-	return &network, nil
-}
-
-func unmarshalInventory(data []byte) (*menu.Inventory, error) {
-	var i inventoryConfig
-	err := yaml.UnmarshalStrict(data, &i)
+	_, network.Bastion, err = net.ParseCIDR(n.Spec.Exposed.Bastion)
+	if err != nil {
+		return nil, err
+	}
+	_, network.LoadBalancer, err = net.ParseCIDR(n.Spec.Exposed.LoadBalancer)
+	if err != nil {
+		return nil, err
+	}
+	_, network.Ingress, err = net.ParseCIDR(n.Spec.Exposed.Ingress)
 	if err != nil {
 		return nil, err
 	}
 
-	var inventory menu.Inventory
+	return &network, nil
+}
 
-	if !i.Spec.Spine > 0 {
+func unmarshalInventory(data []byte) (*menu.InventoryMenu, error) {
+	var i inventoryConfig
+	err := yaml.Unmarshal(data, &i)
+	if err != nil {
+		return nil, err
+	}
+
+	var inventory menu.InventoryMenu
+
+	if !(i.Spec.Spine > 0) {
 		return nil, errors.New("spine in Inventory must be more than 0")
 	}
 	inventory.Spine = i.Spec.Spine
@@ -119,36 +129,37 @@ func unmarshalInventory(data []byte) (*menu.Inventory, error) {
 
 func unmarshalNode(data []byte) (*menu.NodeMenu, error) {
 	var n nodeConfig
-	err := yaml.UnmarshalStrict(data, &n)
+	err := yaml.Unmarshal(data, &n)
 	if err != nil {
 		return nil, err
 	}
 
 	var node menu.NodeMenu
 
-	node.Type, ok = nodeType[n.Type]
+	nodetype, ok := nodeType[n.Type]
 	if !ok {
 		return nil, errors.New("Unknown node type: " + n.Type)
 	}
+	node.Type = nodetype
 
-	if !n.Spec.CPU > 0 {
+	if !(n.Spec.CPU > 0) {
 		return nil, errors.New("cpu in Node must be more than 0")
 	}
-	node.CPU, err = n.Spec.CPU
+	node.CPU = n.Spec.CPU
 
 	node.Memory = n.Spec.Memory
 
 	return &node, nil
 }
 
-func unmarshalAccount(data []byte) (*menu.Account, error) {
+func unmarshalAccount(data []byte) (*menu.AccountMenu, error) {
 	var a accountConfig
-	err := yaml.UnmarshalStrict(data, &a)
+	err := yaml.Unmarshal(data, &a)
 	if err != nil {
 		return nil, err
 	}
 
-	var account menu.Account
+	var account menu.AccountMenu
 
 	if a.Spec.UserName == "" {
 		return nil, errors.New("username is empty")

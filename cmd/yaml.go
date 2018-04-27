@@ -60,6 +60,17 @@ type accountConfig struct {
 	} `yaml:"spec"`
 }
 
+func parseNetworkCIDR(s string) (net.IP, *net.IPNet, error) {
+	ip, network, err := net.ParseCIDR(s)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !ip.Equal(network.IP) {
+		return nil, nil, errors.New("Host part of network address must be 0: " + s)
+	}
+	return ip, network, nil
+}
+
 func unmarshalNetwork(data []byte) (*menu.NetworkMenu, error) {
 	var n networkConfig
 	err := yaml.Unmarshal(data, &n)
@@ -71,7 +82,7 @@ func unmarshalNetwork(data []byte) (*menu.NetworkMenu, error) {
 
 	network.ASNBase = n.Spec.ASNBase
 
-	_, network.External, err = net.ParseCIDR(n.Spec.External)
+	_, network.External, err = parseNetworkCIDR(n.Spec.External)
 	if err != nil {
 		return nil, err
 	}
@@ -81,20 +92,20 @@ func unmarshalNetwork(data []byte) (*menu.NetworkMenu, error) {
 		return nil, errors.New("Invalid IP address: " + n.Spec.SpineTor)
 	}
 
-	_, network.Node, err = net.ParseCIDR(n.Spec.Node)
+	_, network.Node, err = parseNetworkCIDR(n.Spec.Node)
 	if err != nil {
 		return nil, err
 	}
 
-	_, network.Bastion, err = net.ParseCIDR(n.Spec.Exposed.Bastion)
+	_, network.Bastion, err = parseNetworkCIDR(n.Spec.Exposed.Bastion)
 	if err != nil {
 		return nil, err
 	}
-	_, network.LoadBalancer, err = net.ParseCIDR(n.Spec.Exposed.LoadBalancer)
+	_, network.LoadBalancer, err = parseNetworkCIDR(n.Spec.Exposed.LoadBalancer)
 	if err != nil {
 		return nil, err
 	}
-	_, network.Ingress, err = net.ParseCIDR(n.Spec.Exposed.Ingress)
+	_, network.Ingress, err = parseNetworkCIDR(n.Spec.Exposed.Ingress)
 	if err != nil {
 		return nil, err
 	}

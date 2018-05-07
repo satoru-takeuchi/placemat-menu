@@ -1,0 +1,282 @@
+kind: Network
+name: ext-net
+spec:
+  internal: false
+  use-nat: true
+  addresses:
+    - {{ .Network.External.HostVM }}
+---
+{{range $rack := .Racks -}}
+kind: Network
+name: to-{{$rack.Name}}-tor1
+spec:
+  internal: true
+---
+kind: Network
+name: to-{{$rack.Name}}-tor2
+spec:
+  internal: true
+---
+kind: Network
+name: {{$rack.Name}}-node1
+spec:
+  internal: true
+---
+kind: Network
+name: {{$rack.Name}}-node2
+spec:
+  internal: true
+---
+{{end -}}
+kind: Image
+name: coreos-image
+spec:
+  url: https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2
+  compression: bzip2
+---
+kind: DataFolder
+name: common-data
+spec:
+  files:
+    - name: bird.aci
+      file: cybozu-bird-2.0.aci
+    - name: ubuntu-debug.aci
+      file: cybozu-ubuntu-debug-18.04.aci
+    - name: rkt-fetch
+      file: rkt-fetch
+    - name: bashrc
+      file: bashrc
+---
+{{range $spine := .Spines -}}
+kind: DataFolder
+name: {{$spine.Name}}-data
+spec:
+  files:
+    - name: setup-iptables
+      file: setup-iptables
+    - name: bird.conf
+      file: bird_{{$spine.Name}}.conf
+---
+{{end -}}
+{{range $rack := .Racks -}}
+kind: DataFolder
+name: {{$rack.Name}}-tor1-data
+spec:
+  files:
+    - name: bird.conf
+      file: bird_{{$rack.Name}}-tor1.conf
+---
+kind: DataFolder
+name: {{$rack.Name}}-tor2-data
+spec:
+  files:
+    - name: bird.conf
+      file: bird_{{$rack.Name}}-tor2.conf
+---
+kind: DataFolder
+name: {{$rack.Name}}-bird-data
+spec:
+  files:
+    - name: setup-rp-filter
+      file: setup-rp-filter
+    - name: bird.conf
+      file: bird_{{$rack.Name}}-node.conf
+---
+{{end -}}
+kind: DataFolder
+name: forest-data
+spec:
+  files:
+    - name: bird.conf
+      file: bird_forest.conf
+---
+{{$racks := .Racks -}}
+{{range $spine := .Spines -}}
+kind: Node
+name: {{$spine.Name}}
+spec:
+  interfaces:
+    - ext-net
+    {{range $rack := $racks -}}
+    - to-{{$rack.Name}}-tor1
+    - to-{{$rack.Name}}-tor2
+    {{end -}}
+  volumes:
+    - kind: image
+      name: root
+      spec:
+        image: coreos-image
+        copy-on-write: true
+    - kind: vvfat
+      name: common
+      spec:
+        folder: common-data
+    - kind: vvfat
+      name: local
+      spec:
+        folder: spine-data
+  ignition: {{$spine.Name}}.ign
+  resources:
+    cpu: 2
+    memory: 1G
+---
+{{end -}}
+{{range $rack := .Racks -}}
+kind: Node
+name: {{$rack.Name}}-tor1
+spec:
+  interfaces:
+    - to-{{$rack.Name}}-tor1
+    - {{$rack.Name}}-node1
+  volumes:
+    - kind: image
+      name: root
+      spec:
+        image: coreos-image
+        copy-on-write: true
+    - kind: vvfat
+      name: common
+      spec:
+        folder: common-data
+    - kind: vvfat
+      name: local
+      spec:
+        folder: {{$rack.Name}}-tor1-data
+  ignition: {{$rack.Name}}-tor1.ign
+  resources:
+    cpu: 2
+    memory: 1G
+---
+kind: Node
+name: {{$rack.Name}}-tor2
+spec:
+  interfaces:
+    - to-{{$rack.Name}}-tor2
+    - {{$rack.Name}}-node2
+  volumes:
+    - kind: image
+      name: root
+      spec:
+        image: coreos-image
+        copy-on-write: true
+    - kind: vvfat
+      name: common
+      spec:
+        folder: common-data
+    - kind: vvfat
+      name: local
+      spec:
+        folder: {{$rack.Name}}-tor2-data
+  ignition: {{$rack.Name}}-tor2.ign
+  resources:
+    cpu: 2
+    memory: 1G
+---
+{{end -}}
+{{$csSpec := .CS -}}
+{{$ssSpec := .SS -}}
+{{$bootSpec := .Boot -}}
+{{range $rack := .Racks -}}
+kind: Node
+name: {{$rack.Name}}-boot
+spec:
+  interfaces:
+    - {{$rack.Name}}-node1
+    - {{$rack.Name}}-node2
+  volumes:
+    - kind: image
+      name: root
+      spec:
+        image: coreos-image
+        copy-on-write: true
+    - kind: vvfat
+      name: common
+      spec:
+        folder: common-data
+    - kind: vvfat
+      name: local
+      spec:
+        folder: {{$rack.Name}}-bird-data
+  ignition: {{$rack.Name}}-boot.ign
+  resources:
+    cpu: {{$bootSpec.CPU}}
+    memory: {{$bootSpec.Memory}}
+---
+{{range $csNode := $rack.CSList -}}
+kind: Node
+name: {{$rack.Name}}-{{$csNode.Name}}
+spec:
+  interfaces:
+    - {{$rack.Name}}-node1
+    - {{$rack.Name}}-node2
+  volumes:
+    - kind: image
+      name: root
+      spec:
+        image: coreos-image
+        copy-on-write: true
+    - kind: vvfat
+      name: commoe
+      spec:
+        folder: common-data
+    - kind: vvfat
+      name: local
+      spec:
+        folder: {{$rack.Name}}-bird-data
+  ignition: {{$rack.Name}}-{{$csNode.Name}}.ign
+  resources:
+    cpu: {{$csSpec.CPU}}
+    memory: {{$csSpec.Memory}}
+---
+{{end -}}
+{{range $ssNode := $rack.SSList -}}
+kind: Node
+name: {{$rack.Name}}-{{$ssNode.Name}}
+spec:
+  interfaces:
+    - {{$rack.Name}}-node1
+    - {{$rack.Name}}-node2
+  volumes:
+    - kind: image
+      name: root
+      spec:
+        image: coreos-image
+        copy-on-write: true
+    - kind: vvfat
+      name: common
+      spec:
+        folder: common-data
+    - kind: vvfat
+      name: local
+      spec:
+        folder: {{$rack.Name}}-bird-data
+  ignition: {{$rack.Name}}-{{$ssNode.Name}}.ign
+  resources:
+    cpu: {{$ssSpec.CPU}}
+    memory: {{$ssSpec.Memory}}
+---
+{{end -}}
+{{end -}}
+kind: Node
+name: forest
+spec:
+  interfaces:
+    - ext-net
+  volumes:
+    - kind: image
+      name: root
+      spec:
+        image: coreos-image
+        copy-on-write: true
+    - kind: vvfat
+      name: common
+      spec:
+        folder: common-data
+    - kind: vvfat
+      name: local
+      spec:
+        folder: forest-data
+  ignition: forest.ign
+  resources:
+    cpu: 2
+    memory: 1G

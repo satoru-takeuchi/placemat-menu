@@ -11,14 +11,12 @@ spec:
 ---
 kind: Inventory
 spec:
-  spine: 3
+  spine: 2
   rack:
     - cs: 2
       ss: 0
     - cs: 2
-      ss: 0
-    - cs: 2
-      ss: 0
+      ss: 2
 ---
 kind: Node
 type: boot
@@ -29,14 +27,14 @@ spec:
 kind: Node
 type: cs
 spec:
-  cpu: 2
-  memory: 2G
+  cpu: 4
+  memory: 4G
 ---
 kind: Node
 type: ss
 spec:
-  cpu: 2
-  memory: 2G
+  cpu: 1
+  memory: 1G
 ---
 kind: Account
 spec:

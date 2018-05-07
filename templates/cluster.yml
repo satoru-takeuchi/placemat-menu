@@ -202,7 +202,7 @@ spec:
     cpu: {{$bootSpec.CPU}}
     memory: {{$bootSpec.Memory}}
 ---
-{{range $csNode := $rack.CSs -}}
+{{range $csNode := $rack.CSList -}}
 kind: Node
 name: {{$rack.Name}}-{{$csNode.Name}}
 spec:
@@ -216,7 +216,7 @@ spec:
         image: coreos-image
         copy-on-write: true
     - kind: vvfat
-      name: common
+      name: commoe
       spec:
         folder: common-data
     - kind: vvfat
@@ -229,7 +229,7 @@ spec:
     memory: {{$csSpec.Memory}}
 ---
 {{end -}}
-{{range $ssNode := $rack.SSs -}}
+{{range $ssNode := $rack.SSList -}}
 kind: Node
 name: {{$rack.Name}}-{{$ssNode.Name}}
 spec:

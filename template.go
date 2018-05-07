@@ -9,11 +9,12 @@ import (
 
 // Rack is template args for rack
 type Rack struct {
-	Name string
-	CSs  []Node
-	SSs  []Node
+	Name   string
+	CSList []Node
+	SSList []Node
 }
 
+// Node is template args for Node
 type Node struct {
 	Name string
 }
@@ -36,13 +37,15 @@ type TemplateArgs struct {
 	SS     VMResource
 	Boot   VMResource
 }
+
+// VMResource is args to specify vm resource
 type VMResource struct {
 	CPU    int
 	Memory string
 }
 
-// MenuToTemplateArgs is converter Menu to TemplateArgs
-func MenuToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
+// ToTemplateArgs is converter Menu to TemplateArgs
+func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	var templateArgs TemplateArgs
 
 	extnet := netutil.IP4ToInt(menu.Network.External.IP)
@@ -71,11 +74,11 @@ func MenuToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	for index, rackMenu := range menu.Inventory.Rack {
 		templateArgs.Racks[index].Name = fmt.Sprintf("rack%d", index)
 		for csidx := 0; csidx < rackMenu.CS; csidx++ {
-			templateArgs.Racks[index].CSs = append(templateArgs.Racks[index].CSs,
+			templateArgs.Racks[index].CSList = append(templateArgs.Racks[index].CSList,
 				Node{fmt.Sprintf("cs%d", csidx+1)})
 		}
 		for ssidx := 0; ssidx < rackMenu.SS; ssidx++ {
-			templateArgs.Racks[index].SSs = append(templateArgs.Racks[index].SSs,
+			templateArgs.Racks[index].SSList = append(templateArgs.Racks[index].SSList,
 				Node{fmt.Sprintf("ss%d", ssidx+1)})
 		}
 	}

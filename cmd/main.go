@@ -45,7 +45,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	ta, err := menu.MenuToTemplateArgs(m)
+	ta, err := menu.ToTemplateArgs(m)
 	if err != nil {
 		log.ErrorExit(err)
 	}

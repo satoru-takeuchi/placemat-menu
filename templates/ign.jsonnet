@@ -34,26 +34,30 @@ local ignition_version = "2.1.0";
     networkd: ign.BootServerNetwork({{range $addr := $rack.BootAddresses}}"{{$addr}}",{{end}}),
     systemd: ign.Systemd([{{range $addr := $rack.BootSystemdAddresses}}"{{$addr}}",{{end}}]),
   },
-  "{{$rack.Name}}-cs1.ign": {
+  {{range $cs := $rack.CSList -}}
+  "{{$rack.Name}}-{{$cs.Name}}.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("{{$rack.Name}}-cs1"),
-    networkd: ign.VMNetwork("10.69.0.4/32", "10.69.0.68/26", "10.69.0.132/26"),
-    systemd: ign.Systemd(["10.69.0.4", "10.69.0.65", "10.69.0.129"]),
+    storage: ign.Storage("{{$rack.Name}}-{{$cs.Name}}"),
+    networkd: ign.VMNetwork({{range $addr := $cs.Addresses}}"{{$addr}}",{{end}}),
+    systemd: ign.Systemd([{{range $addr := $cs.SystemdAddresses}}"{{$addr}}",{{end}}]),
   },
-  "{{$rack.Name}}-cs2.ign": {
+  {{end -}}
+  {{range $ss := $rack.SSList -}}
+  "{{$rack.Name}}-{{$ss.Name}}.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("{{$rack.Name}}-cs2"),
-    networkd: ign.VMNetwork("10.69.0.5/32", "10.69.0.69/26", "10.69.0.133/26"),
-    systemd: ign.Systemd(["10.69.0.5", "10.69.0.65", "10.69.0.129"]),
+    storage: ign.Storage("{{$rack.Name}}-{{$ss.Name}}"),
+    networkd: ign.VMNetwork({{range $addr := $ss.Addresses}}"{{$addr}}",{{end}}),
+    systemd: ign.Systemd([{{range $addr := $ss.SystemdAddresses}}"{{$addr}}",{{end}}]),
   },
+  {{end -}}
   {{end -}}
   "forest.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
     storage: ign.Storage("forest"),
-    networkd: ign.ForestNetwork("10.0.2.1/32", "10.0.0.3/24"),
+    networkd: ign.ForestNetwork("{{.Network.External.VM}}"),
     systemd: ign.Systemd([]),
   },
 }

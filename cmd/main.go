@@ -60,6 +60,10 @@ func main() {
 		log.ErrorExit(err)
 	}
 
+	err = export("ign.libsonnet", "ign.libsonnet", ta)
+	if err != nil {
+		log.ErrorExit(err)
+	}
 }
 
 func export(inputFileName string, outputFileName string, ta *menu.TemplateArgs) error {

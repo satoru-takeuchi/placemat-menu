@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cybozu-go/netutil"
@@ -41,7 +42,7 @@ type VMResource struct {
 }
 
 // MenuToTemplateArgs is converter Menu to TemplateArgs
-func MenuToTemplateArgs(menu *Menu) (TemplateArgs, error) {
+func MenuToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	var templateArgs TemplateArgs
 
 	extnet := netutil.IP4ToInt(menu.Network.External.IP)
@@ -62,7 +63,7 @@ func MenuToTemplateArgs(menu *Menu) (TemplateArgs, error) {
 			templateArgs.Boot.Memory = node.Memory
 			templateArgs.Boot.CPU = node.CPU
 		default:
-			continue
+			return nil, errors.New("Invalid node type")
 		}
 	}
 
@@ -71,11 +72,11 @@ func MenuToTemplateArgs(menu *Menu) (TemplateArgs, error) {
 		templateArgs.Racks[index].Name = fmt.Sprintf("rack%d", index)
 		for csidx := 0; csidx < rackMenu.CS; csidx++ {
 			templateArgs.Racks[index].CSs = append(templateArgs.Racks[index].CSs,
-				Node{fmt.Sprintf("cs%d", csidx)})
+				Node{fmt.Sprintf("cs%d", csidx+1)})
 		}
-		for ssidx := 0; ssidx < rackMenu.CS; ssidx++ {
+		for ssidx := 0; ssidx < rackMenu.SS; ssidx++ {
 			templateArgs.Racks[index].SSs = append(templateArgs.Racks[index].SSs,
-				Node{fmt.Sprintf("ss%d", ssidx)})
+				Node{fmt.Sprintf("ss%d", ssidx+1)})
 		}
 	}
 
@@ -84,5 +85,5 @@ func MenuToTemplateArgs(menu *Menu) (TemplateArgs, error) {
 		templateArgs.Spines[index].Name = fmt.Sprintf("spine%d", index+1)
 	}
 
-	return templateArgs, nil
+	return &templateArgs, nil
 }

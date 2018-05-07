@@ -6,6 +6,6 @@ import (
 )
 
 // Export render config files
-func Export(t *template.Template, ta TemplateArgs) error {
+func Export(t *template.Template, ta *TemplateArgs) error {
 	return t.Execute(os.Stdout, ta)
 }

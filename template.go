@@ -23,7 +23,7 @@ type Rack struct {
 	ToR2Addresses        []string
 	CSList               []Node
 	SSList               []Node
-	nodeNetworkAddresses []*net.IPNet
+	nodeNetworks         []*net.IPNet
 }
 
 // Node is template args for Node
@@ -73,8 +73,8 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		return nil, err
 	}
 	templateArgs.Account.PasswordHash = string(passwordHash)
-	templateArgs.Network.External.Host = makeHostAddressFromNetworkAddress(menu.Network.External, 1)
-	templateArgs.Network.External.VM = makeHostAddressFromNetworkAddress(menu.Network.External, 2)
+	templateArgs.Network.External.Host = addToIPNet(menu.Network.External, 1)
+	templateArgs.Network.External.VM = addToIPNet(menu.Network.External, 2)
 
 	for _, node := range menu.Nodes {
 		switch node.Type {
@@ -96,9 +96,9 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	for rackIdx, rackMenu := range menu.Inventory.Rack {
 		rack := &templateArgs.Racks[rackIdx]
 		rack.Name = fmt.Sprintf("rack%d", rackIdx)
-		rack.nodeNetworkAddresses = make([]*net.IPNet, 3)
+		rack.nodeNetworks = make([]*net.IPNet, 3)
 		for i := 0; i < 3; i++ {
-			rack.nodeNetworkAddresses[i] = makeNodeNetwork(menu.Network.Node, rackIdx*3+i)
+			rack.nodeNetworks[i] = makeNodeNetwork(menu.Network.Node, rackIdx*3+i)
 		}
 
 		constructToRAddresses(rack, rackIdx, menu)
@@ -122,12 +122,12 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		// {external network} + {tor per rack} * {rack}
 		numRack := len(menu.Inventory.Rack)
 		spine.Addresses = make([]string, 1+torPerRack*numRack)
-		spine.Addresses[0] = makeHostAddressFromNetworkAddress(menu.Network.External, 3+spineIdx)
+		spine.Addresses[0] = addToIPNet(menu.Network.External, 3+spineIdx)
 		for rackIdx := range menu.Inventory.Rack {
-			spine.Addresses[rackIdx*torPerRack+1] = makeHostAddressFromIPAddress(
-				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2, 31)
-			spine.Addresses[rackIdx*torPerRack+2] = makeHostAddressFromIPAddress(
-				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+2, 31)
+			spine.Addresses[rackIdx*torPerRack+1] = addToIP(
+				menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2, 31)
+			spine.Addresses[rackIdx*torPerRack+2] = addToIP(
+				menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+2, 31)
 		}
 	}
 
@@ -141,9 +141,9 @@ func constructNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	node.SystemdAddresses = make([]string, 3)
 	offset := offsetStart + idx + 1
 
-	node.Addresses[0] = makeHostAddressFromIPAddress(&rack.nodeNetworkAddresses[0].IP, offset, 32)
-	node.Addresses[1] = makeHostAddressFromNetworkAddress(rack.nodeNetworkAddresses[1], offset)
-	node.Addresses[2] = makeHostAddressFromNetworkAddress(rack.nodeNetworkAddresses[2], offset)
+	node.Addresses[0] = addToIP(rack.nodeNetworks[0].IP, offset, 32)
+	node.Addresses[1] = addToIPNet(rack.nodeNetworks[1], offset)
+	node.Addresses[2] = addToIPNet(rack.nodeNetworks[2], offset)
 	node.SystemdAddresses[0] = removePrefixSize(node.Addresses[0])
 	node.SystemdAddresses[1] = rack.BootSystemdAddresses[1]
 	node.SystemdAddresses[2] = rack.BootSystemdAddresses[2]
@@ -152,48 +152,48 @@ func constructNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 
 func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
 	rack.BootAddresses = make([]string, 4)
-	rack.BootAddresses[0] = makeHostAddressFromIPAddress(&rack.nodeNetworkAddresses[0].IP, 3, 32)
-	rack.BootAddresses[1] = makeHostAddressFromNetworkAddress(rack.nodeNetworkAddresses[1], 3)
-	rack.BootAddresses[2] = makeHostAddressFromNetworkAddress(rack.nodeNetworkAddresses[2], 3)
-	rack.BootAddresses[3] = makeHostAddressFromIPAddress(&menu.Network.Bastion.IP, rackIdx, 32)
+	rack.BootAddresses[0] = addToIP(rack.nodeNetworks[0].IP, 3, 32)
+	rack.BootAddresses[1] = addToIPNet(rack.nodeNetworks[1], 3)
+	rack.BootAddresses[2] = addToIPNet(rack.nodeNetworks[2], 3)
+	rack.BootAddresses[3] = addToIP(menu.Network.Bastion.IP, rackIdx, 32)
 
 	rack.BootSystemdAddresses = make([]string, 3)
 	rack.BootSystemdAddresses[0] = removePrefixSize(rack.BootAddresses[0])
-	rack.BootSystemdAddresses[1] = removePrefixSize(makeHostAddressFromNetworkAddress(rack.nodeNetworkAddresses[1], 1))
-	rack.BootSystemdAddresses[2] = removePrefixSize(makeHostAddressFromNetworkAddress(rack.nodeNetworkAddresses[2], 1))
+	rack.BootSystemdAddresses[1] = removePrefixSize(addToIPNet(rack.nodeNetworks[1], 1))
+	rack.BootSystemdAddresses[2] = removePrefixSize(addToIPNet(rack.nodeNetworks[2], 1))
 }
 
 func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu) {
 	numRack := len(menu.Inventory.Rack)
 	rack.ToR1Addresses = make([]string, menu.Inventory.Spine+1)
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-		rack.ToR1Addresses[spineIdx] = makeHostAddressFromIPAddress(
-			&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+1, 31)
+		rack.ToR1Addresses[spineIdx] = addToIP(
+			menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+1, 31)
 	}
-	rack.ToR1Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
-		rack.nodeNetworkAddresses[1], 1)
+	rack.ToR1Addresses[menu.Inventory.Spine] = addToIPNet(
+		rack.nodeNetworks[1], 1)
 
 	rack.ToR2Addresses = make([]string, menu.Inventory.Spine+1)
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-		rack.ToR2Addresses[spineIdx] = makeHostAddressFromIPAddress(
-			&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+3, 31)
+		rack.ToR2Addresses[spineIdx] = addToIP(
+			menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+3, 31)
 	}
-	rack.ToR2Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
-		rack.nodeNetworkAddresses[2], 1)
+	rack.ToR2Addresses[menu.Inventory.Spine] = addToIPNet(
+		rack.nodeNetworks[2], 1)
 }
 
 func removePrefixSize(input string) string {
 	return strings.Split(input, "/")[0]
 }
 
-func makeHostAddressFromNetworkAddress(netAddr *net.IPNet, offset int) string {
+func addToIPNet(netAddr *net.IPNet, offset int) string {
 	ipint := netutil.IP4ToInt(netAddr.IP) + uint32(offset)
 	prefixSize, _ := netAddr.Mask.Size()
 	return fmt.Sprintf("%s/%d", netutil.IntToIP4(ipint).String(), prefixSize)
 }
 
-func makeHostAddressFromIPAddress(netIP *net.IP, offset int, prefixSize int) string {
-	ipint := netutil.IP4ToInt(*netIP) + uint32(offset)
+func addToIP(netIP net.IP, offset int, prefixSize int) string {
+	ipint := netutil.IP4ToInt(netIP) + uint32(offset)
 	return fmt.Sprintf("%s/%d", netutil.IntToIP4(ipint).String(), prefixSize)
 }
 

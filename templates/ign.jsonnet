@@ -31,8 +31,8 @@ local ignition_version = "2.1.0";
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
     storage: ign.Storage("{{$rack.Name}}-boot"),
-    networkd: ign.BootServerNetwork("10.69.0.3/32", "10.69.0.67/26", "10.69.0.131/26", "10.72.48.0/32"),
-    systemd: ign.Systemd(["10.69.0.3", "10.69.0.65", "10.69.0.129"]),
+    networkd: ign.BootServerNetwork({{range $addr := $rack.BootAddresses}}"{{$addr}}",{{end}}),
+    systemd: ign.Systemd([{{range $addr := $rack.BootSystemdAddresses}}"{{$addr}}",{{end}}]),
   },
   "{{$rack.Name}}-cs1.ign": {
     ignition: { version: ignition_version },

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/cybozu-go/netutil"
 )
@@ -14,11 +15,13 @@ const (
 
 // Rack is template args for rack
 type Rack struct {
-	Name          string
-	ToR1Addresses []string
-	ToR2Addresses []string
-	CSList        []Node
-	SSList        []Node
+	Name                 string
+	BootAddresses        []string
+	BootSystemdAddresses []string
+	ToR1Addresses        []string
+	ToR2Addresses        []string
+	CSList               []Node
+	SSList               []Node
 }
 
 // Node is template args for Node
@@ -83,25 +86,8 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		rack := &templateArgs.Racks[rackIdx]
 		rack.Name = fmt.Sprintf("rack%d", rackIdx)
 
-		numRack := len(menu.Inventory.Rack)
-
-		rack.ToR1Addresses = make([]string, menu.Inventory.Spine+1)
-		for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-			rack.ToR1Addresses[spineIdx] = makeHostAddressFromIPAddress(
-				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+1, 31)
-		}
-		node1Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+1)
-		rack.ToR1Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
-			node1Network, 1)
-
-		rack.ToR2Addresses = make([]string, menu.Inventory.Spine+1)
-		for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-			rack.ToR2Addresses[spineIdx] = makeHostAddressFromIPAddress(
-				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+3, 31)
-		}
-		node2Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+2)
-		rack.ToR2Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
-			node2Network, 1)
+		constructToRAddresses(rack, rackIdx, menu)
+		constructBootAddresses(rack, rackIdx, menu)
 
 		for csIdx := 0; csIdx < rackMenu.CS; csIdx++ {
 			rack.CSList = append(rack.CSList, Node{fmt.Sprintf("cs%d", csIdx+1)})
@@ -127,8 +113,49 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+2, 31)
 		}
 	}
-
 	return &templateArgs, nil
+}
+
+func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
+	node0Network := makeNodeNetwork(menu.Network.Node, rackIdx*3)
+	node1Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+1)
+	node2Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+2)
+
+	rack.BootAddresses = make([]string, 4)
+	rack.BootAddresses[0] = makeHostAddressFromIPAddress(&node0Network.IP, 3, 32)
+	rack.BootAddresses[1] = makeHostAddressFromNetworkAddress(node1Network, 3)
+	rack.BootAddresses[2] = makeHostAddressFromNetworkAddress(node2Network, 3)
+	rack.BootAddresses[3] = makeHostAddressFromIPAddress(&menu.Network.Bastion.IP, rackIdx, 32)
+
+	rack.BootSystemdAddresses = make([]string, 3)
+	rack.BootSystemdAddresses[0] = removePrefixSize(rack.BootAddresses[0])
+	rack.BootSystemdAddresses[1] = removePrefixSize(makeHostAddressFromNetworkAddress(node1Network, 1))
+	rack.BootSystemdAddresses[2] = removePrefixSize(makeHostAddressFromNetworkAddress(node2Network, 1))
+}
+
+func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu) {
+	numRack := len(menu.Inventory.Rack)
+	rack.ToR1Addresses = make([]string, menu.Inventory.Spine+1)
+	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
+		rack.ToR1Addresses[spineIdx] = makeHostAddressFromIPAddress(
+			&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+1, 31)
+	}
+	node1Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+1)
+	rack.ToR1Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
+		node1Network, 1)
+
+	rack.ToR2Addresses = make([]string, menu.Inventory.Spine+1)
+	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
+		rack.ToR2Addresses[spineIdx] = makeHostAddressFromIPAddress(
+			&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+3, 31)
+	}
+	node2Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+2)
+	rack.ToR2Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
+		node2Network, 1)
+}
+
+func removePrefixSize(input string) string {
+	return strings.Split(input, "/")[0]
 }
 
 func makeHostAddressFromNetworkAddress(netAddr *net.IPNet, offset int) string {

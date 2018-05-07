@@ -3,6 +3,7 @@ package menu
 import (
 	"errors"
 	"fmt"
+	"net"
 
 	"github.com/cybozu-go/netutil"
 )
@@ -21,7 +22,8 @@ type Node struct {
 
 // Spine is template args for Spine
 type Spine struct {
-	Name string
+	Name      string
+	Addresses []string
 }
 
 // TemplateArgs is args for cluster.yml
@@ -84,9 +86,34 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	}
 
 	templateArgs.Spines = make([]Spine, menu.Inventory.Spine)
-	for index := 0; index < menu.Inventory.Spine; index++ {
-		templateArgs.Spines[index].Name = fmt.Sprintf("spine%d", index+1)
+	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
+		spine := &templateArgs.Spines[spineIdx]
+		spine.Name = fmt.Sprintf("spine%d", spineIdx+1)
+
+		// {external network} + {tor per rack} * {rack}
+		numRack := len(menu.Inventory.Rack)
+		torPerRack := 2
+
+		spine.Addresses = make([]string, 1+torPerRack*numRack)
+
+		spine.Addresses[0] = makeHostAddressFromNetworkAddress(menu.Network.External, 3+spineIdx)
+		for rackIdx := range menu.Inventory.Rack {
+			spine.Addresses[rackIdx*torPerRack+1] = makeHostAddressFromIPAddress(
+				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2, 31)
+			spine.Addresses[rackIdx*torPerRack+2] = makeHostAddressFromIPAddress(
+				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+2, 31)
+		}
 	}
 
 	return &templateArgs, nil
+}
+
+func makeHostAddressFromNetworkAddress(netAddr *net.IPNet, offset int) string {
+	ipint := netutil.IP4ToInt(netAddr.IP) + uint32(offset)
+	prefixSize, _ := netAddr.Mask.Size()
+	return fmt.Sprintf("%s/%d", netutil.IntToIP4(ipint).String(), prefixSize)
+}
+func makeHostAddressFromIPAddress(netIP *net.IP, offset int, prefixSize int) string {
+	ipint := netutil.IP4ToInt(*netIP) + uint32(offset)
+	return fmt.Sprintf("%s/%d", netutil.IntToIP4(ipint).String(), prefixSize)
 }

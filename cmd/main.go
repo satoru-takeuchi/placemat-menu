@@ -50,14 +50,24 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	f, err = os.Create(filepath.Join(*flagOutDir, "cluster.yml"))
+	err = export("cluster.yml", "cluster.yml", ta)
 	if err != nil {
 		log.ErrorExit(err)
+	}
+
+	err = export("ign.jsonnet", "ign.jsonnet", ta)
+	if err != nil {
+		log.ErrorExit(err)
+	}
+
+}
+
+func export(inputFileName string, outputFileName string, ta *menu.TemplateArgs) error {
+	f, err := os.Create(filepath.Join(*flagOutDir, outputFileName))
+	if err != nil {
+		return err
 	}
 	defer f.Close()
-	t := template.Must(template.ParseFiles("templates/cluster.yml"))
-	err = menu.Export(t, ta, f)
-	if err != nil {
-		log.ErrorExit(err)
-	}
+	t := template.Must(template.ParseFiles(filepath.Join("templates", inputFileName)))
+	return menu.Export(t, ta, f)
 }

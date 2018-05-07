@@ -11,12 +11,10 @@ spec:
 ---
 kind: Inventory
 spec:
-  spine: 2
+  spine: 1
   rack:
     - cs: 2
       ss: 0
-    - cs: 2
-      ss: 2
 ---
 kind: Node
 type: boot

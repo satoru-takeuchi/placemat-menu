@@ -1,11 +1,11 @@
 package menu
 
 import (
-	"os"
+	"io"
 	"text/template"
 )
 
 // Export render config files
-func Export(t *template.Template, ta *TemplateArgs) error {
-	return t.Execute(os.Stdout, ta)
+func Export(t *template.Template, ta *TemplateArgs, wr io.Writer) error {
+	return t.Execute(wr, ta)
 }

@@ -2,6 +2,7 @@ package menu
 
 import (
 	"net"
+	"reflect"
 	"testing"
 )
 
@@ -20,5 +21,14 @@ func TestMakeHostAddressFromIPAddress(t *testing.T) {
 	actual := makeHostAddressFromIPAddress(&ip, 1, 24)
 	if expected != actual {
 		t.Errorf("expected %v, actual %v", expected, actual)
+	}
+}
+
+func TestMakeNodeNetwork(t *testing.T) {
+	_, expected, _ := net.ParseCIDR("10.69.1.64/26")
+	_, base, _ := net.ParseCIDR("10.69.0.0/26")
+	actual := makeNodeNetwork(base, 5)
+	if !reflect.DeepEqual(*expected, *actual) {
+		t.Errorf("expected %v, actual %v", *expected, *actual)
 	}
 }

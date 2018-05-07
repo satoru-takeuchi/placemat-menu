@@ -8,11 +8,17 @@ import (
 	"github.com/cybozu-go/netutil"
 )
 
+const (
+	torPerRack = 2
+)
+
 // Rack is template args for rack
 type Rack struct {
-	Name   string
-	CSList []Node
-	SSList []Node
+	Name          string
+	ToR1Addresses []string
+	ToR2Addresses []string
+	CSList        []Node
+	SSList        []Node
 }
 
 // Node is template args for Node
@@ -73,15 +79,35 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	}
 
 	templateArgs.Racks = make([]Rack, len(menu.Inventory.Rack))
-	for index, rackMenu := range menu.Inventory.Rack {
-		templateArgs.Racks[index].Name = fmt.Sprintf("rack%d", index)
-		for csidx := 0; csidx < rackMenu.CS; csidx++ {
-			templateArgs.Racks[index].CSList = append(templateArgs.Racks[index].CSList,
-				Node{fmt.Sprintf("cs%d", csidx+1)})
+	for rackIdx, rackMenu := range menu.Inventory.Rack {
+		rack := &templateArgs.Racks[rackIdx]
+		rack.Name = fmt.Sprintf("rack%d", rackIdx)
+
+		numRack := len(menu.Inventory.Rack)
+
+		rack.ToR1Addresses = make([]string, menu.Inventory.Spine+1)
+		for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
+			rack.ToR1Addresses[spineIdx] = makeHostAddressFromIPAddress(
+				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+1, 31)
 		}
-		for ssidx := 0; ssidx < rackMenu.SS; ssidx++ {
-			templateArgs.Racks[index].SSList = append(templateArgs.Racks[index].SSList,
-				Node{fmt.Sprintf("ss%d", ssidx+1)})
+		node1Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+1)
+		rack.ToR1Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
+			node1Network, 1)
+
+		rack.ToR2Addresses = make([]string, menu.Inventory.Spine+1)
+		for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
+			rack.ToR2Addresses[spineIdx] = makeHostAddressFromIPAddress(
+				&menu.Network.SpineTor, (spineIdx*numRack+rackIdx)*torPerRack*2+3, 31)
+		}
+		node2Network := makeNodeNetwork(menu.Network.Node, rackIdx*3+2)
+		rack.ToR2Addresses[menu.Inventory.Spine] = makeHostAddressFromNetworkAddress(
+			node2Network, 1)
+
+		for csIdx := 0; csIdx < rackMenu.CS; csIdx++ {
+			rack.CSList = append(rack.CSList, Node{fmt.Sprintf("cs%d", csIdx+1)})
+		}
+		for ssIdx := 0; ssIdx < rackMenu.SS; ssIdx++ {
+			rack.SSList = append(rack.SSList, Node{fmt.Sprintf("ss%d", ssIdx+1)})
 		}
 	}
 
@@ -92,10 +118,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 
 		// {external network} + {tor per rack} * {rack}
 		numRack := len(menu.Inventory.Rack)
-		torPerRack := 2
-
 		spine.Addresses = make([]string, 1+torPerRack*numRack)
-
 		spine.Addresses[0] = makeHostAddressFromNetworkAddress(menu.Network.External, 3+spineIdx)
 		for rackIdx := range menu.Inventory.Rack {
 			spine.Addresses[rackIdx*torPerRack+1] = makeHostAddressFromIPAddress(
@@ -113,7 +136,15 @@ func makeHostAddressFromNetworkAddress(netAddr *net.IPNet, offset int) string {
 	prefixSize, _ := netAddr.Mask.Size()
 	return fmt.Sprintf("%s/%d", netutil.IntToIP4(ipint).String(), prefixSize)
 }
+
 func makeHostAddressFromIPAddress(netIP *net.IP, offset int, prefixSize int) string {
 	ipint := netutil.IP4ToInt(*netIP) + uint32(offset)
 	return fmt.Sprintf("%s/%d", netutil.IntToIP4(ipint).String(), prefixSize)
+}
+
+func makeNodeNetwork(base *net.IPNet, nodeIdx int) *net.IPNet {
+	prefixSize, _ := base.Mask.Size()
+	offset := 1 << uint(32-prefixSize) * nodeIdx
+	ipint := netutil.IP4ToInt(base.IP) + uint32(offset)
+	return &net.IPNet{netutil.IntToIP4(ipint), base.Mask}
 }

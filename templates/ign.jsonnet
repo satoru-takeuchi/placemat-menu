@@ -3,7 +3,7 @@ local ign = import 'ign.libsonnet';
 local ignition_version = "2.1.0";
 
 {
-{{range $spine := .Spines -}}
+  {{range $spine := .Spines -}}
   "{{$spine.Name}}.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
@@ -11,42 +11,44 @@ local ignition_version = "2.1.0";
     networkd: ign.RouterNetwork([{{range $addr := $spine.Addresses}}"{{$addr}}",{{end}}]),
     systemd: ign.Systemd([]),
   },
-{{end -}}
-  "rack0-tor1.ign": {
+  {{end -}}
+  {{range $rack := .Racks -}}
+  "{{$rack.Name}}-tor1.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("rack0-tor1"),
-    networkd: ign.RouterNetwork(["10.0.1.1/31", "10.69.0.65/26"]),
+    storage: ign.Storage("{{$rack.Name}}-tor1"),
+    networkd: ign.RouterNetwork([{{range $addr := $rack.ToR1Addresses}}"{{$addr}}",{{end}}]),
     systemd: ign.Systemd([]),
   },
-  "rack0-tor2.ign": {
+  "{{$rack.Name}}-tor2.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("rack0-tor2"),
-    networkd: ign.RouterNetwork(["10.0.1.3/31", "10.69.0.129/26"]),
+    storage: ign.Storage("{{$rack.Name}}-tor2"),
+    networkd: ign.RouterNetwork([{{range $addr := $rack.ToR2Addresses}}"{{$addr}}",{{end}}]),
     systemd: ign.Systemd([]),
   },
-  "rack0-boot.ign": {
+  "{{$rack.Name}}-boot.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("rack0-boot"),
+    storage: ign.Storage("{{$rack.Name}}-boot"),
     networkd: ign.BootServerNetwork("10.69.0.3/32", "10.69.0.67/26", "10.69.0.131/26", "10.72.48.0/32"),
     systemd: ign.Systemd(["10.69.0.3", "10.69.0.65", "10.69.0.129"]),
   },
-  "rack0-cs1.ign": {
+  "{{$rack.Name}}-cs1.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("rack0-cs1"),
+    storage: ign.Storage("{{$rack.Name}}-cs1"),
     networkd: ign.VMNetwork("10.69.0.4/32", "10.69.0.68/26", "10.69.0.132/26"),
     systemd: ign.Systemd(["10.69.0.4", "10.69.0.65", "10.69.0.129"]),
   },
-  "rack0-cs2.ign": {
+  "{{$rack.Name}}-cs2.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("rack0-cs2"),
+    storage: ign.Storage("{{$rack.Name}}-cs2"),
     networkd: ign.VMNetwork("10.69.0.5/32", "10.69.0.69/26", "10.69.0.133/26"),
     systemd: ign.Systemd(["10.69.0.5", "10.69.0.65", "10.69.0.129"]),
   },
+  {{end -}}
   "forest.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),

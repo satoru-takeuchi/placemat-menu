@@ -8,7 +8,7 @@ local ignition_version = "2.1.0";
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
     storage: ign.Storage("spine"),
-    networkd: ign.RouterNetwork([{{range $addr := $spine.Addresses}}"{{$addr}}",{{end}}]),
+    networkd: ign.RouterNetwork(["{{$spine.ExtnetAddress}}",{{range $addr := $spine.ToRAddresses}}"{{$addr}}",{{end}}]),
     systemd: ign.Systemd([]),
   },
   {{end -}}
@@ -17,14 +17,14 @@ local ignition_version = "2.1.0";
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
     storage: ign.Storage("{{$rack.Name}}-tor1"),
-    networkd: ign.RouterNetwork([{{range $addr := $rack.ToR1Addresses}}"{{$addr}}",{{end}}]),
+    networkd: ign.RouterNetwork([{{range $addr := $rack.ToR1SpineAddresses}}"{{$addr}}",{{end}}"{{$rack.ToR1NodeAddress}}"]),
     systemd: ign.Systemd([]),
   },
   "{{$rack.Name}}-tor2.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
     storage: ign.Storage("{{$rack.Name}}-tor2"),
-    networkd: ign.RouterNetwork([{{range $addr := $rack.ToR2Addresses}}"{{$addr}}",{{end}}]),
+    networkd: ign.RouterNetwork([{{range $addr := $rack.ToR2SpineAddresses}}"{{$addr}}",{{end}}"{{$rack.ToR2NodeAddress}}"]),
     systemd: ign.Systemd([]),
   },
   "{{$rack.Name}}-boot.ign": {

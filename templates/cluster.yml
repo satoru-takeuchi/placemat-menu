@@ -4,7 +4,7 @@ spec:
   internal: false
   use-nat: true
   addresses:
-    - {{ .Network.External.HostVM }}
+    - {{ .Network.External.Host }}
 ---
 {{range $rack := .Racks -}}
 kind: Network

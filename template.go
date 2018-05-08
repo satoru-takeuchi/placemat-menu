@@ -19,11 +19,15 @@ const (
 	offsetNodenetToR     = 1
 	offsetNodenetBoot    = 3
 	offsetNodenetServers = 4
+
+	offsetASNExtVM = -2
+	offsetASNSpine = -1
 )
 
 // Rack is template args for rack
 type Rack struct {
 	Name                 string
+	ASN                  int
 	BootAddresses        []*net.IPNet
 	BootSystemdAddresses []*net.IPNet
 	ToR1Addresses        []*net.IPNet
@@ -53,6 +57,8 @@ type TemplateArgs struct {
 			Host *net.IPNet
 			VM   *net.IPNet
 		}
+		ASNExtVM int
+		ASNSpine int
 	}
 	Racks   []Rack
 	Spines  []Spine
@@ -80,8 +86,11 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		return nil, err
 	}
 	templateArgs.Account.PasswordHash = string(passwordHash)
+
 	templateArgs.Network.External.Host = addToIPNet(menu.Network.External, offsetExtnetHost)
 	templateArgs.Network.External.VM = addToIPNet(menu.Network.External, offsetExtnetVM)
+	templateArgs.Network.ASNExtVM = menu.Network.ASNBase + offsetASNExtVM
+	templateArgs.Network.ASNSpine = menu.Network.ASNBase + offsetASNSpine
 
 	for _, node := range menu.Nodes {
 		switch node.Type {
@@ -115,6 +124,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	for rackIdx, rackMenu := range menu.Inventory.Rack {
 		rack := &templateArgs.Racks[rackIdx]
 		rack.Name = fmt.Sprintf("rack%d", rackIdx)
+		rack.ASN = menu.Network.ASNBase + rackIdx
 		rack.nodeNetworks = make([]*net.IPNet, 3)
 		for i := 0; i < 3; i++ {
 			rack.nodeNetworks[i] = makeNodeNetwork(menu.Network.Node, rackIdx*3+i)

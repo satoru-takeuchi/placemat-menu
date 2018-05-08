@@ -64,6 +64,11 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+
+	err = export("bird_vm.conf", "bird_vm.conf", ta)
+	if err != nil {
+		log.ErrorExit(err)
+	}
 }
 
 func export(inputFileName string, outputFileName string, ta *menu.TemplateArgs) error {

@@ -26,19 +26,20 @@ const (
 
 // Rack is template args for rack
 type Rack struct {
-	Name                 string
-	ASN                  int
-	BootAddresses        []*net.IPNet
-	BootSystemdAddresses []*net.IPNet
-	ToR1SpineAddresses   []*net.IPNet
-	ToR1NodeAddress      *net.IPNet
-	ToR1NodeInterface    string
-	ToR2SpineAddresses   []*net.IPNet
-	ToR2NodeAddress      *net.IPNet
-	ToR2NodeInterface    string
-	CSList               []Node
-	SSList               []Node
-	nodeNetworks         []*net.IPNet
+	Name                  string
+	ASN                   int
+	NodeNetworkPrefixSize int
+	BootAddresses         []*net.IPNet
+	BootSystemdAddresses  []*net.IPNet
+	ToR1SpineAddresses    []*net.IPNet
+	ToR1NodeAddress       *net.IPNet
+	ToR1NodeInterface     string
+	ToR2SpineAddresses    []*net.IPNet
+	ToR2NodeAddress       *net.IPNet
+	ToR2NodeInterface     string
+	CSList                []Node
+	SSList                []Node
+	nodeNetworks          []*net.IPNet
 }
 
 // Node is template args for Node
@@ -161,13 +162,15 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 
 		constructToRAddresses(rack, rackIdx, menu, spineToRackBases)
 		constructBootAddresses(rack, rackIdx, menu)
+		prefixSize, _ := menu.Network.Node.Mask.Size()
+		rack.NodeNetworkPrefixSize = prefixSize
 
 		for csIdx := 0; csIdx < rackMenu.CS; csIdx++ {
-			node := constructNode("cs", csIdx, offsetNodenetServers, rack)
+			node := buildNode("cs", csIdx, offsetNodenetServers, rack)
 			rack.CSList = append(rack.CSList, node)
 		}
 		for ssIdx := 0; ssIdx < rackMenu.SS; ssIdx++ {
-			node := constructNode("ss", ssIdx, offsetNodenetServers+rackMenu.CS, rack)
+			node := buildNode("ss", ssIdx, offsetNodenetServers+rackMenu.CS, rack)
 			rack.SSList = append(rack.SSList, node)
 		}
 	}
@@ -199,7 +202,7 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
 }
 
-func constructNode(basename string, idx int, offsetStart int, rack *Rack) Node {
+func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	node := Node{}
 	node.Name = fmt.Sprintf("%v%d", basename, idx+1)
 	node.Addresses = make([]*net.IPNet, 3)

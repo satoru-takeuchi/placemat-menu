@@ -87,11 +87,16 @@ func main() {
 		if err != nil {
 			log.ErrorExit(err)
 		}
-	}
 
-	for rackIdx := range ta.Racks {
 		err = export("bird_rack-tor2.conf",
 			fmt.Sprintf("bird_rack%d-tor2.conf", rackIdx),
+			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
+		if err != nil {
+			log.ErrorExit(err)
+		}
+
+		err = export("bird_rack-node.conf",
+			fmt.Sprintf("bird_rack%d-node.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			log.ErrorExit(err)

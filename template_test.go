@@ -7,20 +7,20 @@ import (
 )
 
 func TestAddToIPNet(t *testing.T) {
-	expected := "10.0.0.1/24"
+	expectedIPNet := net.IPNet{IP: net.ParseIP("10.0.0.1"), Mask: net.CIDRMask(24, 32)}
 	_, addr, _ := net.ParseCIDR("10.0.0.0/24")
 	actual := addToIPNet(addr, 1)
-	if expected != actual {
-		t.Errorf("expected %v, actual %v", expected, actual)
+	if expectedIPNet.String() != actual.String() {
+		t.Errorf("expected %v, actual %v", expectedIPNet, *actual)
 	}
 }
 
 func TestAddToIP(t *testing.T) {
-	expected := "10.0.0.1/24"
+	expectedIPNet := net.IPNet{IP: net.ParseIP("10.0.0.1"), Mask: net.CIDRMask(24, 32)}
 	ip := net.ParseIP("10.0.0.0")
 	actual := addToIP(ip, 1, 24)
-	if expected != actual {
-		t.Errorf("expected %v, actual %v", expected, actual)
+	if expectedIPNet.String() != actual.String() {
+		t.Errorf("expected %v, actual %v", expectedIPNet, *actual)
 	}
 }
 

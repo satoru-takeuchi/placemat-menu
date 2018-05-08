@@ -57,6 +57,11 @@ type TemplateArgs struct {
 			Host *net.IPNet
 			VM   *net.IPNet
 		}
+		Exposed struct {
+			Bastion      *net.IPNet
+			LoadBalancer *net.IPNet
+			Ingress      *net.IPNet
+		}
 		ASNExtVM int
 		ASNSpine int
 	}
@@ -69,6 +74,12 @@ type TemplateArgs struct {
 		Name         string
 		PasswordHash string
 	}
+}
+
+// BIRDSpineTemplateArgs is args to generate bird config each spine
+type BIRDSpineTemplateArgs struct {
+	Args     TemplateArgs
+	SpineIdx int
 }
 
 // VMResource is args to specify vm resource
@@ -87,10 +98,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	}
 	templateArgs.Account.PasswordHash = string(passwordHash)
 
-	templateArgs.Network.External.Host = addToIPNet(menu.Network.External, offsetExtnetHost)
-	templateArgs.Network.External.VM = addToIPNet(menu.Network.External, offsetExtnetVM)
-	templateArgs.Network.ASNExtVM = menu.Network.ASNBase + offsetASNExtVM
-	templateArgs.Network.ASNSpine = menu.Network.ASNBase + offsetASNSpine
+	setNetworkArgs(&templateArgs, menu)
 
 	for _, node := range menu.Nodes {
 		switch node.Type {
@@ -158,6 +166,16 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	}
 
 	return &templateArgs, nil
+}
+
+func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
+	templateArgs.Network.External.Host = addToIPNet(menu.Network.External, offsetExtnetHost)
+	templateArgs.Network.External.VM = addToIPNet(menu.Network.External, offsetExtnetVM)
+	templateArgs.Network.ASNExtVM = menu.Network.ASNBase + offsetASNExtVM
+	templateArgs.Network.ASNSpine = menu.Network.ASNBase + offsetASNSpine
+	templateArgs.Network.Exposed.Bastion = menu.Network.Bastion
+	templateArgs.Network.Exposed.LoadBalancer = menu.Network.LoadBalancer
+	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
 }
 
 func constructNode(basename string, idx int, offsetStart int, rack *Rack) Node {

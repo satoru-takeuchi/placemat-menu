@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -69,14 +70,23 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+
+	for spineIdx := range ta.Spines {
+		err = export("bird_spine.conf",
+			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
+			menu.BIRDSpineTemplateArgs{Args: *ta, SpineIdx: spineIdx})
+		if err != nil {
+			log.ErrorExit(err)
+		}
+	}
 }
 
-func export(inputFileName string, outputFileName string, ta *menu.TemplateArgs) error {
+func export(inputFileName string, outputFileName string, args interface{}) error {
 	f, err := os.Create(filepath.Join(*flagOutDir, outputFileName))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 	t := template.Must(template.ParseFiles(filepath.Join("templates", inputFileName)))
-	return menu.Export(t, ta, f)
+	return menu.Export(t, args, f)
 }

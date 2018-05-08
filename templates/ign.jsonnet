@@ -32,7 +32,7 @@ local ignition_version = "2.1.0";
     passwd: ign.Passwd(),
     storage: ign.Storage("{{$rack.Name}}-boot"),
     networkd: ign.BootServerNetwork({{range $addr := $rack.BootAddresses}}"{{$addr}}",{{end}}),
-    systemd: ign.Systemd([{{range $addr := $rack.BootSystemdAddresses}}"{{$addr}}",{{end}}]),
+    systemd: ign.Systemd([{{range $addr := $rack.BootSystemdAddresses}}"{{$addr.IP}}",{{end}}]),
   },
   {{range $cs := $rack.CSList -}}
   "{{$rack.Name}}-{{$cs.Name}}.ign": {
@@ -40,7 +40,7 @@ local ignition_version = "2.1.0";
     passwd: ign.Passwd(),
     storage: ign.Storage("{{$rack.Name}}-{{$cs.Name}}"),
     networkd: ign.VMNetwork({{range $addr := $cs.Addresses}}"{{$addr}}",{{end}}),
-    systemd: ign.Systemd([{{range $addr := $cs.SystemdAddresses}}"{{$addr}}",{{end}}]),
+    systemd: ign.Systemd([{{range $addr := $cs.SystemdAddresses}}"{{$addr.IP}}",{{end}}]),
   },
   {{end -}}
   {{range $ss := $rack.SSList -}}
@@ -49,7 +49,7 @@ local ignition_version = "2.1.0";
     passwd: ign.Passwd(),
     storage: ign.Storage("{{$rack.Name}}-{{$ss.Name}}"),
     networkd: ign.VMNetwork({{range $addr := $ss.Addresses}}"{{$addr}}",{{end}}),
-    systemd: ign.Systemd([{{range $addr := $ss.SystemdAddresses}}"{{$addr}}",{{end}}]),
+    systemd: ign.Systemd([{{range $addr := $ss.SystemdAddresses}}"{{$addr.IP}}",{{end}}]),
   },
   {{end -}}
   {{end -}}

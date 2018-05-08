@@ -12,6 +12,14 @@ import (
 
 const (
 	torPerRack = 2
+
+	offsetExtnetHost   = 1
+	offsetExtnetVM     = 2
+	offsetExtnetSpines = 3
+
+	offsetNodenetToR     = 1
+	offsetNodenetBoot    = 3
+	offsetNodenetServers = 4
 )
 
 // Rack is template args for rack
@@ -73,8 +81,8 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		return nil, err
 	}
 	templateArgs.Account.PasswordHash = string(passwordHash)
-	templateArgs.Network.External.Host = addToIPNet(menu.Network.External, 1)
-	templateArgs.Network.External.VM = addToIPNet(menu.Network.External, 2)
+	templateArgs.Network.External.Host = addToIPNet(menu.Network.External, offsetExtnetHost)
+	templateArgs.Network.External.VM = addToIPNet(menu.Network.External, offsetExtnetVM)
 
 	for _, node := range menu.Nodes {
 		switch node.Type {
@@ -117,11 +125,11 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		constructBootAddresses(rack, rackIdx, menu)
 
 		for csIdx := 0; csIdx < rackMenu.CS; csIdx++ {
-			node := constructNode("cs", csIdx, 3, rack)
+			node := constructNode("cs", csIdx, offsetNodenetServers, rack)
 			rack.CSList = append(rack.CSList, node)
 		}
 		for ssIdx := 0; ssIdx < rackMenu.SS; ssIdx++ {
-			node := constructNode("ss", ssIdx, 3+rackMenu.CS, rack)
+			node := constructNode("ss", ssIdx, offsetNodenetServers+rackMenu.CS, rack)
 			rack.SSList = append(rack.SSList, node)
 		}
 	}
@@ -133,7 +141,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 
 		// {external network} + {tor per rack} * {rack}
 		spine.Addresses = make([]string, 1+torPerRack*numRack)
-		spine.Addresses[0] = addToIPNet(menu.Network.External, 3+spineIdx)
+		spine.Addresses[0] = addToIPNet(menu.Network.External, offsetExtnetSpines+spineIdx)
 		for rackIdx := range menu.Inventory.Rack {
 			spine.Addresses[rackIdx*torPerRack+1] = addToIP(spineToRackBases[spineIdx][rackIdx], 0, 31)
 			spine.Addresses[rackIdx*torPerRack+2] = addToIP(spineToRackBases[spineIdx][rackIdx], 2, 31)
@@ -148,7 +156,7 @@ func constructNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	node.Name = fmt.Sprintf("%v%d", basename, idx+1)
 	node.Addresses = make([]string, 3)
 	node.SystemdAddresses = make([]string, 3)
-	offset := offsetStart + idx + 1
+	offset := offsetStart + idx
 
 	node.Addresses[0] = addToIP(rack.nodeNetworks[0].IP, offset, 32)
 	node.Addresses[1] = addToIPNet(rack.nodeNetworks[1], offset)
@@ -161,15 +169,15 @@ func constructNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 
 func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
 	rack.BootAddresses = make([]string, 4)
-	rack.BootAddresses[0] = addToIP(rack.nodeNetworks[0].IP, 3, 32)
-	rack.BootAddresses[1] = addToIPNet(rack.nodeNetworks[1], 3)
-	rack.BootAddresses[2] = addToIPNet(rack.nodeNetworks[2], 3)
+	rack.BootAddresses[0] = addToIP(rack.nodeNetworks[0].IP, offsetNodenetBoot, 32)
+	rack.BootAddresses[1] = addToIPNet(rack.nodeNetworks[1], offsetNodenetBoot)
+	rack.BootAddresses[2] = addToIPNet(rack.nodeNetworks[2], offsetNodenetBoot)
 	rack.BootAddresses[3] = addToIP(menu.Network.Bastion.IP, rackIdx, 32)
 
 	rack.BootSystemdAddresses = make([]string, 3)
 	rack.BootSystemdAddresses[0] = removePrefixSize(rack.BootAddresses[0])
-	rack.BootSystemdAddresses[1] = removePrefixSize(addToIPNet(rack.nodeNetworks[1], 1))
-	rack.BootSystemdAddresses[2] = removePrefixSize(addToIPNet(rack.nodeNetworks[2], 1))
+	rack.BootSystemdAddresses[1] = removePrefixSize(addToIPNet(rack.nodeNetworks[1], offsetNodenetToR))
+	rack.BootSystemdAddresses[2] = removePrefixSize(addToIPNet(rack.nodeNetworks[2], offsetNodenetToR))
 }
 
 func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu, bases [][]net.IP) {
@@ -177,13 +185,13 @@ func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu, bases [][]net.IP
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
 		rack.ToR1Addresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 1, 31)
 	}
-	rack.ToR1Addresses[menu.Inventory.Spine] = addToIPNet(rack.nodeNetworks[1], 1)
+	rack.ToR1Addresses[menu.Inventory.Spine] = addToIPNet(rack.nodeNetworks[1], offsetNodenetToR)
 
 	rack.ToR2Addresses = make([]string, menu.Inventory.Spine+1)
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
 		rack.ToR2Addresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 3, 31)
 	}
-	rack.ToR2Addresses[menu.Inventory.Spine] = addToIPNet(rack.nodeNetworks[2], 1)
+	rack.ToR2Addresses[menu.Inventory.Spine] = addToIPNet(rack.nodeNetworks[2], offsetNodenetToR)
 }
 
 func removePrefixSize(input string) string {

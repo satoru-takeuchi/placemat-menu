@@ -84,11 +84,11 @@ spec:
 ---
 {{end -}}
 kind: DataFolder
-name: forest-data
+name: ext-vm-data
 spec:
   files:
     - name: bird.conf
-      file: bird_forest.conf
+      file: bird_vm.conf
 ---
 {{$racks := .Racks -}}
 {{range $spine := .Spines -}}
@@ -258,7 +258,7 @@ spec:
 {{end -}}
 {{end -}}
 kind: Node
-name: forest
+name: ext-vm
 spec:
   interfaces:
     - ext-net
@@ -275,8 +275,8 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: forest-data
-  ignition: forest.ign
+        folder: ext-vm-data
+  ignition: ext-vm.ign
   resources:
     cpu: 2
     memory: 1G

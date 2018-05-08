@@ -30,8 +30,10 @@ type Rack struct {
 	ASN                  int
 	BootAddresses        []*net.IPNet
 	BootSystemdAddresses []*net.IPNet
-	ToR1Addresses        []*net.IPNet
-	ToR2Addresses        []*net.IPNet
+	ToR1SpineAddresses   []*net.IPNet
+	ToR1NodeAddress      *net.IPNet
+	ToR2SpineAddresses   []*net.IPNet
+	ToR2NodeAddress      *net.IPNet
 	CSList               []Node
 	SSList               []Node
 	nodeNetworks         []*net.IPNet
@@ -46,8 +48,9 @@ type Node struct {
 
 // Spine is template args for Spine
 type Spine struct {
-	Name      string
-	Addresses []*net.IPNet
+	Name          string
+	ExtnetAddress *net.IPNet
+	ToRAddresses  []*net.IPNet
 }
 
 // TemplateArgs is args for cluster.yml
@@ -157,11 +160,11 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		spine.Name = fmt.Sprintf("spine%d", spineIdx+1)
 
 		// {external network} + {tor per rack} * {rack}
-		spine.Addresses = make([]*net.IPNet, 1+torPerRack*numRack)
-		spine.Addresses[0] = addToIPNet(menu.Network.External, offsetExtnetSpines+spineIdx)
+		spine.ExtnetAddress = addToIPNet(menu.Network.External, offsetExtnetSpines+spineIdx)
+		spine.ToRAddresses = make([]*net.IPNet, torPerRack*numRack)
 		for rackIdx := range menu.Inventory.Rack {
-			spine.Addresses[rackIdx*torPerRack+1] = addToIP(spineToRackBases[spineIdx][rackIdx], 0, 31)
-			spine.Addresses[rackIdx*torPerRack+2] = addToIP(spineToRackBases[spineIdx][rackIdx], 2, 31)
+			spine.ToRAddresses[rackIdx*torPerRack] = addToIP(spineToRackBases[spineIdx][rackIdx], 0, 31)
+			spine.ToRAddresses[rackIdx*torPerRack+1] = addToIP(spineToRackBases[spineIdx][rackIdx], 2, 31)
 		}
 	}
 
@@ -208,17 +211,17 @@ func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
 }
 
 func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu, bases [][]net.IP) {
-	rack.ToR1Addresses = make([]*net.IPNet, menu.Inventory.Spine+1)
+	rack.ToR1SpineAddresses = make([]*net.IPNet, menu.Inventory.Spine)
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-		rack.ToR1Addresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 1, 31)
+		rack.ToR1SpineAddresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 1, 31)
 	}
-	rack.ToR1Addresses[menu.Inventory.Spine] = addToIPNet(rack.nodeNetworks[1], offsetNodenetToR)
+	rack.ToR1NodeAddress = addToIPNet(rack.nodeNetworks[1], offsetNodenetToR)
 
-	rack.ToR2Addresses = make([]*net.IPNet, menu.Inventory.Spine+1)
+	rack.ToR2SpineAddresses = make([]*net.IPNet, menu.Inventory.Spine)
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-		rack.ToR2Addresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 3, 31)
+		rack.ToR2SpineAddresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 3, 31)
 	}
-	rack.ToR2Addresses[menu.Inventory.Spine] = addToIPNet(rack.nodeNetworks[2], offsetNodenetToR)
+	rack.ToR2NodeAddress = addToIPNet(rack.nodeNetworks[2], offsetNodenetToR)
 }
 
 func addToIPNet(netAddr *net.IPNet, offset int) *net.IPNet {

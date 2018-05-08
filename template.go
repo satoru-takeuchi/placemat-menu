@@ -53,8 +53,16 @@ type Spine struct {
 	Name          string
 	ExtnetAddress *net.IPNet
 	ToRAddresses  []*net.IPNet
-	ToR1Address   func(int) *net.IPNet
-	ToR2Address   func(int) *net.IPNet
+}
+
+// ToR1Address returns spine's IP address connected from ToR-1 in the specified rack
+func (s Spine) ToR1Address(rackIdx int) *net.IPNet {
+	return s.ToRAddresses[rackIdx*2]
+}
+
+// ToR2Address returns spine's IP address connected from ToR-2 in the specified rack
+func (s Spine) ToR2Address(rackIdx int) *net.IPNet {
+	return s.ToRAddresses[rackIdx*2+1]
 }
 
 // TemplateArgs is args for cluster.yml
@@ -176,9 +184,6 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 			spine.ToRAddresses[rackIdx*torPerRack] = addToIP(spineToRackBases[spineIdx][rackIdx], 0, 31)
 			spine.ToRAddresses[rackIdx*torPerRack+1] = addToIP(spineToRackBases[spineIdx][rackIdx], 2, 31)
 		}
-
-		spine.ToR1Address = func(rackIdx int) *net.IPNet { return spine.ToRAddresses[rackIdx*2] }
-		spine.ToR2Address = func(rackIdx int) *net.IPNet { return spine.ToRAddresses[rackIdx*2+1] }
 	}
 
 	return &templateArgs, nil

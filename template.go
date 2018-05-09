@@ -115,7 +115,7 @@ type VMResource struct {
 func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	var templateArgs TemplateArgs
 	templateArgs.Account.Name = menu.Account.UserName
-	templateArgs.Account.PasswordHash = menu.Account.Password
+	templateArgs.Account.PasswordHash = menu.Account.PasswordHash
 
 	setNetworkArgs(&templateArgs, menu)
 

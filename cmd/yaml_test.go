@@ -264,11 +264,11 @@ func testUnmarshalAccount(t *testing.T) {
 kind: Account
 spec:
   username: scott
-  password: tiger
+  password-hash: qawsedrftgyhujikolp
 `,
 			expected: menu.AccountMenu{
-				UserName: "scott",
-				Password: "tiger",
+				UserName:     "scott",
+				PasswordHash: "qawsedrftgyhujikolp",
 			},
 		},
 	}
@@ -288,7 +288,7 @@ spec:
 kind: Account
 spec:
   username:
-  password: tiger
+  password-hash: qawsedrftgyhujikolp
 `,
 	}
 

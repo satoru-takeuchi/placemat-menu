@@ -46,8 +46,8 @@ type NodeMenu struct {
 
 // AccountMenu contains user account settings
 type AccountMenu struct {
-	UserName string
-	Password string
+	UserName     string
+	PasswordHash string
 }
 
 // Menu is a top-level structure that summarizes the settings of each menus

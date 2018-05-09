@@ -55,8 +55,8 @@ var nodeType = map[string]menu.NodeType{
 
 type accountConfig struct {
 	Spec struct {
-		UserName string `yaml:"username"`
-		Password string `yaml:"password"`
+		UserName     string `yaml:"username"`
+		PasswordHash string `yaml:"password-hash"`
 	} `yaml:"spec"`
 }
 
@@ -177,7 +177,7 @@ func unmarshalAccount(data []byte) (*menu.AccountMenu, error) {
 	}
 	account.UserName = a.Spec.UserName
 
-	account.Password = a.Spec.Password
+	account.PasswordHash = a.Spec.PasswordHash
 
 	return &account, nil
 }

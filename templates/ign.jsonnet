@@ -7,7 +7,7 @@ local ignition_version = "2.1.0";
   "{{$spine.Name}}.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("spine"),
+    storage: ign.Storage("{{$spine.Name}}"),
     networkd: ign.RouterNetwork(["{{$spine.ExtnetAddress}}",{{range $addr := $spine.ToRAddresses}}"{{$addr}}",{{end}}]),
     systemd: ign.Systemd([]),
   },
@@ -53,11 +53,11 @@ local ignition_version = "2.1.0";
   },
   {{end -}}
   {{end -}}
-  "forest.ign": {
+  "ext-vm.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("forest"),
-    networkd: ign.ForestNetwork("{{.Network.External.VM}}"),
+    storage: ign.Storage("ext-vm"),
+    networkd: ign.ExtVMNetwork("{{.Network.External.VM}}"),
     systemd: ign.Systemd([]),
   },
 }

@@ -1,4 +1,4 @@
-package main
+package menu
 
 import (
 	"bufio"
@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 
-	"github.com/cybozu-go/placemat-menu"
 	k8sYaml "github.com/kubernetes/apimachinery/pkg/util/yaml"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -47,16 +46,16 @@ type nodeConfig struct {
 	} `yaml:"spec"`
 }
 
-var nodeType = map[string]menu.NodeType{
-	"boot": menu.BootNode,
-	"cs":   menu.CSNode,
-	"ss":   menu.SSNode,
+var nodeType = map[string]NodeType{
+	"boot": BootNode,
+	"cs":   CSNode,
+	"ss":   SSNode,
 }
 
 type accountConfig struct {
 	Spec struct {
-		UserName string `yaml:"username"`
-		Password string `yaml:"password"`
+		UserName     string `yaml:"username"`
+		PasswordHash string `yaml:"password-hash"`
 	} `yaml:"spec"`
 }
 
@@ -71,14 +70,14 @@ func parseNetworkCIDR(s string) (net.IP, *net.IPNet, error) {
 	return ip, network, nil
 }
 
-func unmarshalNetwork(data []byte) (*menu.NetworkMenu, error) {
+func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 	var n networkConfig
 	err := yaml.Unmarshal(data, &n)
 	if err != nil {
 		return nil, err
 	}
 
-	var network menu.NetworkMenu
+	var network NetworkMenu
 
 	network.ASNBase = n.Spec.ASNBase
 
@@ -113,23 +112,23 @@ func unmarshalNetwork(data []byte) (*menu.NetworkMenu, error) {
 	return &network, nil
 }
 
-func unmarshalInventory(data []byte) (*menu.InventoryMenu, error) {
+func unmarshalInventory(data []byte) (*InventoryMenu, error) {
 	var i inventoryConfig
 	err := yaml.Unmarshal(data, &i)
 	if err != nil {
 		return nil, err
 	}
 
-	var inventory menu.InventoryMenu
+	var inventory InventoryMenu
 
 	if !(i.Spec.Spine > 0) {
 		return nil, errors.New("spine in Inventory must be more than 0")
 	}
 	inventory.Spine = i.Spec.Spine
 
-	inventory.Rack = []menu.RackMenu{}
+	inventory.Rack = []RackMenu{}
 	for _, r := range i.Spec.Rack {
-		var rack menu.RackMenu
+		var rack RackMenu
 		rack.CS = r.CS
 		rack.SS = r.SS
 		inventory.Rack = append(inventory.Rack, rack)
@@ -138,14 +137,14 @@ func unmarshalInventory(data []byte) (*menu.InventoryMenu, error) {
 	return &inventory, nil
 }
 
-func unmarshalNode(data []byte) (*menu.NodeMenu, error) {
+func unmarshalNode(data []byte) (*NodeMenu, error) {
 	var n nodeConfig
 	err := yaml.Unmarshal(data, &n)
 	if err != nil {
 		return nil, err
 	}
 
-	var node menu.NodeMenu
+	var node NodeMenu
 
 	nodetype, ok := nodeType[n.Type]
 	if !ok {
@@ -163,27 +162,28 @@ func unmarshalNode(data []byte) (*menu.NodeMenu, error) {
 	return &node, nil
 }
 
-func unmarshalAccount(data []byte) (*menu.AccountMenu, error) {
+func unmarshalAccount(data []byte) (*AccountMenu, error) {
 	var a accountConfig
 	err := yaml.Unmarshal(data, &a)
 	if err != nil {
 		return nil, err
 	}
 
-	var account menu.AccountMenu
+	var account AccountMenu
 
 	if a.Spec.UserName == "" {
 		return nil, errors.New("username is empty")
 	}
 	account.UserName = a.Spec.UserName
 
-	account.Password = a.Spec.Password
+	account.PasswordHash = a.Spec.PasswordHash
 
 	return &account, nil
 }
 
-func readYAML(r *bufio.Reader) (*menu.Menu, error) {
-	var m menu.Menu
+// ReadYAML read placemat-menu resource files
+func ReadYAML(r *bufio.Reader) (*Menu, error) {
+	var m Menu
 	var c baseConfig
 	y := k8sYaml.NewYAMLReader(r)
 	for {

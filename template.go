@@ -6,7 +6,6 @@ import (
 	"net"
 
 	"github.com/cybozu-go/netutil"
-	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -27,6 +26,7 @@ const (
 // Rack is template args for rack
 type Rack struct {
 	Name                  string
+	ShortName             string
 	ASN                   int
 	NodeNetworkPrefixSize int
 	BootAddresses         []*net.IPNet
@@ -52,6 +52,7 @@ type Node struct {
 // Spine is template args for Spine
 type Spine struct {
 	Name          string
+	ShortName     string
 	ExtnetAddress *net.IPNet
 	ToRAddresses  []*net.IPNet
 }
@@ -114,11 +115,7 @@ type VMResource struct {
 func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	var templateArgs TemplateArgs
 	templateArgs.Account.Name = menu.Account.UserName
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(menu.Account.Password), 10)
-	if err != nil {
-		return nil, err
-	}
-	templateArgs.Account.PasswordHash = string(passwordHash)
+	templateArgs.Account.PasswordHash = menu.Account.PasswordHash
 
 	setNetworkArgs(&templateArgs, menu)
 
@@ -154,6 +151,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	for rackIdx, rackMenu := range menu.Inventory.Rack {
 		rack := &templateArgs.Racks[rackIdx]
 		rack.Name = fmt.Sprintf("rack%d", rackIdx)
+		rack.ShortName = fmt.Sprintf("r%d", rackIdx)
 		rack.ASN = menu.Network.ASNBase + rackIdx
 		rack.nodeNetworks = make([]*net.IPNet, 3)
 		for i := 0; i < 3; i++ {
@@ -179,6 +177,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
 		spine := &templateArgs.Spines[spineIdx]
 		spine.Name = fmt.Sprintf("spine%d", spineIdx+1)
+		spine.ShortName = fmt.Sprintf("s%d", spineIdx+1)
 
 		// {external network} + {tor per rack} * {rack}
 		spine.ExtnetAddress = addToIPNet(menu.Network.External, offsetExtnetSpines+spineIdx)

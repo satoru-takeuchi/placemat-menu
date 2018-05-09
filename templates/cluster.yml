@@ -6,17 +6,22 @@ spec:
   addresses:
     - {{ .Network.External.Host }}
 ---
+{{$racks := .Racks -}}
+{{range $spine := .Spines -}}
+{{range $rack := $racks -}}
+kind: Network
+name: {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
+spec:
+  internal: true
+---
+kind: Network
+name: {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
+spec:
+  internal: true
+---
+{{end -}}
+{{end -}}
 {{range $rack := .Racks -}}
-kind: Network
-name: to-{{$rack.Name}}-tor1
-spec:
-  internal: true
----
-kind: Network
-name: to-{{$rack.Name}}-tor2
-spec:
-  internal: true
----
 kind: Network
 name: {{$rack.Name}}-node1
 spec:
@@ -84,11 +89,11 @@ spec:
 ---
 {{end -}}
 kind: DataFolder
-name: forest-data
+name: ext-vm-data
 spec:
   files:
     - name: bird.conf
-      file: bird_forest.conf
+      file: bird_vm.conf
 ---
 {{$racks := .Racks -}}
 {{range $spine := .Spines -}}
@@ -97,10 +102,10 @@ name: {{$spine.Name}}
 spec:
   interfaces:
     - ext-net
-    {{range $rack := $racks -}}
-    - to-{{$rack.Name}}-tor1
-    - to-{{$rack.Name}}-tor2
-    {{end -}}
+    {{- range $rack := $racks}}
+    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
+    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
+    {{- end}}
   volumes:
     - kind: image
       name: root
@@ -114,19 +119,22 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: spine-data
+        folder: {{$spine.Name}}-data
   ignition: {{$spine.Name}}.ign
   resources:
     cpu: 2
     memory: 1G
 ---
 {{end -}}
+{{$spines := .Spines -}}
 {{range $rack := .Racks -}}
 kind: Node
 name: {{$rack.Name}}-tor1
 spec:
   interfaces:
-    - to-{{$rack.Name}}-tor1
+    {{range $spine := $spines -}}
+    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
+    {{end -}}
     - {{$rack.Name}}-node1
   volumes:
     - kind: image
@@ -151,7 +159,9 @@ kind: Node
 name: {{$rack.Name}}-tor2
 spec:
   interfaces:
-    - to-{{$rack.Name}}-tor2
+    {{range $spine := $spines -}}
+    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
+    {{end -}}
     - {{$rack.Name}}-node2
   volumes:
     - kind: image
@@ -258,7 +268,7 @@ spec:
 {{end -}}
 {{end -}}
 kind: Node
-name: forest
+name: ext-vm
 spec:
   interfaces:
     - ext-net
@@ -275,8 +285,8 @@ spec:
     - kind: vvfat
       name: local
       spec:
-        folder: forest-data
-  ignition: forest.ign
+        folder: ext-vm-data
+  ignition: ext-vm.ign
   resources:
     cpu: 2
     memory: 1G

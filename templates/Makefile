@@ -2,7 +2,7 @@ ignitions = {{range $r := .Racks}}{{$r.Name}}-boot.ign {{$r.Name}}-tor1.ign {{$r
 	{{range $cs := $r.CSList}}{{$r.Name}}-{{$cs.Name}}.ign {{end}}\
 	{{range $ss := $r.SSList}}{{$r.Name}}-{{$ss.Name}}.ign {{end}}\
 	{{end}}\
-	{{range $s := .Spines}}{{$s.Name}}.ign{{end}}
+	{{range $s := .Spines}}{{$s.Name}}.ign {{end}}
 images = cybozu-bird-2.0.aci cybozu-ubuntu-debug-18.04.aci
 
 default: start

@@ -5,12 +5,19 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
 
 	"github.com/cybozu-go/log"
 	menu "github.com/cybozu-go/placemat-menu"
+)
+
+const (
+	staticFilesSource   = "statics"
+	templateFilesSource = "templates"
 )
 
 var (
@@ -107,6 +114,11 @@ func main() {
 			log.ErrorExit(err)
 		}
 	}
+
+	err = copyStatics(*flagOutDir)
+	if err != nil {
+		log.ErrorExit(err)
+	}
 }
 
 func export(inputFileName string, outputFileName string, args interface{}) error {
@@ -115,6 +127,43 @@ func export(inputFileName string, outputFileName string, args interface{}) error
 		return err
 	}
 	defer f.Close()
-	t := template.Must(template.ParseFiles(filepath.Join("templates", inputFileName)))
+	t := template.Must(template.ParseFiles(filepath.Join(templateFilesSource, inputFileName)))
 	return menu.Export(t, args, f)
+}
+
+func copyStatics(outputDirName string) error {
+	fileInfos, err := ioutil.ReadDir(staticFilesSource)
+	if err != nil {
+		return err
+	}
+
+	for _, fileInfo := range fileInfos {
+		if fileInfo.IsDir() {
+			return errors.New("cannot copy directory from " + staticFilesSource)
+		}
+
+		src, err := os.Open(filepath.Join(staticFilesSource, fileInfo.Name()))
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+
+		dst, err := os.Create(filepath.Join(outputDirName, fileInfo.Name()))
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+
+		err = dst.Chmod(fileInfo.Mode())
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

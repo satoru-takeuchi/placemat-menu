@@ -7,7 +7,7 @@ local ignition_version = "2.1.0";
   "{{$spine.Name}}.ign": {
     ignition: { version: ignition_version },
     passwd: ign.Passwd(),
-    storage: ign.Storage("spine"),
+    storage: ign.Storage("{{$spine.Name}}"),
     networkd: ign.RouterNetwork(["{{$spine.ExtnetAddress}}",{{range $addr := $spine.ToRAddresses}}"{{$addr}}",{{end}}]),
     systemd: ign.Systemd([]),
   },

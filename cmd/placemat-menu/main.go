@@ -41,12 +41,17 @@ func main() {
 		log.ErrorExit(err)
 	}
 	defer f.Close()
-	m, err := readYAML(bufio.NewReader(f))
+	m, err := menu.ReadYAML(bufio.NewReader(f))
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
 	ta, err := menu.ToTemplateArgs(m)
+	if err != nil {
+		log.ErrorExit(err)
+	}
+
+	err = export("Makefile", "Makefile", ta)
 	if err != nil {
 		log.ErrorExit(err)
 	}

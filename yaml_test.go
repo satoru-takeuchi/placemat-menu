@@ -1,11 +1,9 @@
-package main
+package menu
 
 import (
 	"net"
 	"reflect"
 	"testing"
-
-	menu "github.com/cybozu-go/placemat-menu"
 )
 
 func testUnmarshalNetwork(t *testing.T) {
@@ -19,7 +17,7 @@ func testUnmarshalNetwork(t *testing.T) {
 
 	cases := []struct {
 		source   string
-		expected menu.NetworkMenu
+		expected NetworkMenu
 	}{
 		{
 			source: `
@@ -34,7 +32,7 @@ spec:
     bastion: 10.72.48.0/26
     ingress: 10.72.48.64/26
 `,
-			expected: menu.NetworkMenu{
+			expected: NetworkMenu{
 				ASNBase:      64600,
 				External:     external,
 				SpineTor:     net.ParseIP("10.0.1.0"),
@@ -110,7 +108,7 @@ func testUnmarshalInventory(t *testing.T) {
 
 	cases := []struct {
 		source   string
-		expected menu.InventoryMenu
+		expected InventoryMenu
 	}{
 		{
 			source: `
@@ -125,9 +123,9 @@ spec:
     - cs: 0
       ss: 3
 `,
-			expected: menu.InventoryMenu{
+			expected: InventoryMenu{
 				Spine: 3,
-				Rack: []menu.RackMenu{
+				Rack: []RackMenu{
 					{CS: 3, SS: 0},
 					{CS: 2, SS: 2},
 					{CS: 0, SS: 3},
@@ -170,7 +168,7 @@ func testUnmarshalNode(t *testing.T) {
 
 	cases := []struct {
 		source   string
-		expected menu.NodeMenu
+		expected NodeMenu
 	}{
 		{
 			source: `
@@ -180,8 +178,8 @@ spec:
   cpu: 1
   memory: 2G
 `,
-			expected: menu.NodeMenu{
-				Type:   menu.BootNode,
+			expected: NodeMenu{
+				Type:   BootNode,
 				CPU:    1,
 				Memory: "2G",
 			},
@@ -194,8 +192,8 @@ spec:
   cpu: 2
   memory: 4G
 `,
-			expected: menu.NodeMenu{
-				Type:   menu.CSNode,
+			expected: NodeMenu{
+				Type:   CSNode,
 				CPU:    2,
 				Memory: "4G",
 			},
@@ -208,8 +206,8 @@ spec:
   cpu: 1
   memory: 1G
 `,
-			expected: menu.NodeMenu{
-				Type:   menu.SSNode,
+			expected: NodeMenu{
+				Type:   SSNode,
 				CPU:    1,
 				Memory: "1G",
 			},
@@ -257,7 +255,7 @@ func testUnmarshalAccount(t *testing.T) {
 
 	cases := []struct {
 		source   string
-		expected menu.AccountMenu
+		expected AccountMenu
 	}{
 		{
 			source: `
@@ -266,7 +264,7 @@ spec:
   username: scott
   password-hash: qawsedrftgyhujikolp
 `,
-			expected: menu.AccountMenu{
+			expected: AccountMenu{
 				UserName:     "scott",
 				PasswordHash: "qawsedrftgyhujikolp",
 			},

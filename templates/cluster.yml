@@ -23,12 +23,12 @@ spec:
 {{end -}}
 {{range $rack := .Racks -}}
 kind: Network
-name: {{$rack.Name}}-node1
+name: {{$rack.ShortName}}-node1
 spec:
   internal: true
 ---
 kind: Network
-name: {{$rack.Name}}-node2
+name: {{$rack.ShortName}}-node2
 spec:
   internal: true
 ---
@@ -97,90 +97,121 @@ spec:
 ---
 {{$racks := .Racks -}}
 {{range $spine := .Spines -}}
-kind: Node
+kind: Pod
 name: {{$spine.Name}}
 spec:
+  init-scripts:
+    - setup-iptables
   interfaces:
-    - ext-net
-    {{- range $rack := $racks}}
-    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
-    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
+    - network: ext-net
+      addresses:
+        - {{$spine.ExtnetAddress}}
+    {{- range $i, $rack := $racks}}
+    - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
+      addresses:
+        - {{$spine.ToR1Address $i}}
+    - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
+      addresses:
+        - {{$spine.ToR2Address $i}}
     {{- end}}
   volumes:
-    - kind: image
-      name: root
-      spec:
-        image: coreos-image
-        copy-on-write: true
-    - kind: vvfat
-      name: common
-      spec:
-        folder: common-data
-    - kind: vvfat
-      name: local
-      spec:
-        folder: {{$spine.Name}}-data
-  ignition: {{$spine.Name}}.ign
-  resources:
-    cpu: 2
-    memory: 1G
+    - name: config
+      kind: host
+      folder: {{$spine.Name}}-data
+      readonly: true
+    - name: run
+      kind: empty
+  apps:
+    - name: bird
+      image: docker://quay.io/cybozu/bird:2.0
+      readonly-rootfs: true
+      mount:
+        - volume: config
+          target: /etc/bird
+        - volume: run
+          target: /run/bird
+      caps-retain:
+        - CAP_NET_ADMIN
+        - CAP_NET_BIND_SERVICE
+        - CAP_NET_RAW
+    - name: debug
+      image: docker://quay.io/cybozu/ubuntu-debug:18.04
+      readonly-rootfs: true
 ---
 {{end -}}
 {{$spines := .Spines -}}
 {{range $rack := .Racks -}}
-kind: Node
+kind: Pod
 name: {{$rack.Name}}-tor1
 spec:
   interfaces:
-    {{range $spine := $spines -}}
-    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
+    {{range $spineIdx, $spine := $spines -}}
+    - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
+      addresses:
+        - {{index $rack.ToR1SpineAddresses $spineIdx}}
     {{end -}}
-    - {{$rack.Name}}-node1
+    - network: {{$rack.ShortName}}-node1
+      addresses:
+        - {{$rack.ToR1NodeAddress}}
   volumes:
-    - kind: image
-      name: root
-      spec:
-        image: coreos-image
-        copy-on-write: true
-    - kind: vvfat
-      name: common
-      spec:
-        folder: common-data
-    - kind: vvfat
-      name: local
-      spec:
-        folder: {{$rack.Name}}-tor1-data
-  ignition: {{$rack.Name}}-tor1.ign
-  resources:
-    cpu: 2
-    memory: 1G
+    - name: config
+      kind: host
+      folder: {{$rack.Name}}-tor1-data
+      readonly: true
+    - name: run
+      kind: empty
+  apps:
+    - name: bird
+      image: docker://quay.io/cybozu/bird:2.0
+      readonly-rootfs: true
+      mount:
+        - volume: config
+          target: /etc/bird
+        - volume: run
+          target: /run/bird
+      caps-retain:
+        - CAP_NET_ADMIN
+        - CAP_NET_BIND_SERVICE
+        - CAP_NET_RAW
+    - name: debug
+      image: docker://quay.io/cybozu/ubuntu-debug:18.04
+      readonly-rootfs: true
 ---
-kind: Node
+kind: Pod
 name: {{$rack.Name}}-tor2
 spec:
   interfaces:
-    {{range $spine := $spines -}}
-    - {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
+    {{range $spineIdx, $spine := $spines -}}
+    - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
+      addresses:
+        - {{index $rack.ToR2SpineAddresses $spineIdx}}
     {{end -}}
-    - {{$rack.Name}}-node2
+    - network: {{$rack.ShortName}}-node2
+      addresses:
+        - {{$rack.ToR2NodeAddress}}
   volumes:
-    - kind: image
-      name: root
-      spec:
-        image: coreos-image
-        copy-on-write: true
-    - kind: vvfat
-      name: common
-      spec:
-        folder: common-data
-    - kind: vvfat
-      name: local
-      spec:
-        folder: {{$rack.Name}}-tor2-data
-  ignition: {{$rack.Name}}-tor2.ign
-  resources:
-    cpu: 2
-    memory: 1G
+    - name: config
+      kind: host
+      folder: {{$rack.Name}}-tor2-data
+      readonly: true
+    - name: run
+      kind: empty
+  apps:
+    - name: bird
+      image: docker://quay.io/cybozu/bird:2.0
+      readonly-rootfs: true
+      mount:
+        - volume: config
+          target: /etc/bird
+        - volume: run
+          target: /run/bird
+      caps-retain:
+        - CAP_NET_ADMIN
+        - CAP_NET_BIND_SERVICE
+        - CAP_NET_RAW
+    - name: debug
+      image: docker://quay.io/cybozu/ubuntu-debug:18.04
+      readonly-rootfs: true
 ---
 {{end -}}
 {{$csSpec := .CS -}}
@@ -191,8 +222,8 @@ kind: Node
 name: {{$rack.Name}}-boot
 spec:
   interfaces:
-    - {{$rack.Name}}-node1
-    - {{$rack.Name}}-node2
+    - {{$rack.ShortName}}-node1
+    - {{$rack.ShortName}}-node2
   volumes:
     - kind: image
       name: root
@@ -217,8 +248,8 @@ kind: Node
 name: {{$rack.Name}}-{{$csNode.Name}}
 spec:
   interfaces:
-    - {{$rack.Name}}-node1
-    - {{$rack.Name}}-node2
+    - {{$rack.ShortName}}-node1
+    - {{$rack.ShortName}}-node2
   volumes:
     - kind: image
       name: root
@@ -244,8 +275,8 @@ kind: Node
 name: {{$rack.Name}}-{{$ssNode.Name}}
 spec:
   interfaces:
-    - {{$rack.Name}}-node1
-    - {{$rack.Name}}-node2
+    - {{$rack.ShortName}}-node1
+    - {{$rack.ShortName}}-node2
   volumes:
     - kind: image
       name: root

@@ -1,4 +1,6 @@
 {
+  Version: "2.1.0",
+
   Passwd(): {
     users: [
       {
@@ -69,10 +71,6 @@
     }
     for i in std.range(0, std.length(addresses)-1)
   ],
-
-  RouterNetwork(addresses): {
-    units: EthNetworkUnits(addresses),
-  },
 
   VMNetwork(addr0, addr1, addr2): {
     units: DummyNetworkUnits("node0", addr0) + EthNetworkUnits([addr1, addr2]),

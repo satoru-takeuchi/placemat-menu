@@ -6,6 +6,8 @@ jobs:
     working_directory: /go/src/github.com/cybozu-go/placemat-menu
     steps:
       - checkout
+      - run: go get -u github.com/coreos/ignition/validate
+      - run: go get -u github.com/google/go-jsonnet
       - run: go get github.com/golang/lint/golint
       - run: go get golang.org/x/tools/cmd/goimports
       - run: (! $GOPATH/bin/goimports -d . 2>&1 | read _)

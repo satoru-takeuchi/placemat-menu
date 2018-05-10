@@ -1,14 +1,12 @@
-ignitions = {{range $r := .Racks}}{{$r.Name}}-boot.ign {{$r.Name}}-tor1.ign {{$r.Name}}-tor2.ign \
+ignitions = ext-vm.ign {{range $r := .Racks}}{{$r.Name}}-boot.ign \
 	{{range $cs := $r.CSList}}{{$r.Name}}-{{$cs.Name}}.ign {{end}}\
-	{{range $ss := $r.SSList}}{{$r.Name}}-{{$ss.Name}}.ign {{end}}\
-	{{end}}\
-	{{range $s := .Spines}}{{$s.Name}}.ign {{end}}
+	{{range $ss := $r.SSList}}{{$r.Name}}-{{$ss.Name}}.ign {{end}}{{end}}
 images = cybozu-bird-2.0.aci cybozu-ubuntu-debug-18.04.aci
 
 default: start
 
-$(ignitions): ign.jsonnet ign.libsonnet
-	jsonnet -m . ign.jsonnet
+%.ign: %.jsonnet ign.libsonnet
+	jsonnet -o $@ $<
 	validate $@
 
 cybozu-bird-2.0.aci:

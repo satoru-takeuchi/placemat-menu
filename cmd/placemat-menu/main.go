@@ -83,6 +83,11 @@ func main() {
 		log.ErrorExit(err)
 	}
 
+	err = export("ext-vm.jsonnet", "ext-vm.jsonnet", ta)
+	if err != nil {
+		log.ErrorExit(err)
+	}
+
 	for spineIdx := range ta.Spines {
 		err = export("bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
@@ -92,7 +97,14 @@ func main() {
 		}
 	}
 
-	for rackIdx := range ta.Racks {
+	for rackIdx, rack := range ta.Racks {
+		err = export("rack-boot.jsonnet",
+			fmt.Sprintf("rack%d-boot.jsonnet", rackIdx),
+			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
+		if err != nil {
+			log.ErrorExit(err)
+		}
+
 		err = export("bird_rack-tor1.conf",
 			fmt.Sprintf("bird_rack%d-tor1.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
@@ -112,6 +124,22 @@ func main() {
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			log.ErrorExit(err)
+		}
+		for csIdx, cs := range rack.CSList {
+			err = export("rack-node.jsonnet",
+				fmt.Sprintf("rack%d-cs%d.jsonnet", rackIdx, csIdx),
+				menu.NodeTemplateArgs{rack, cs})
+			if err != nil {
+				log.ErrorExit(err)
+			}
+		}
+		for ssIdx, ss := range rack.SSList {
+			err = export("rack-node.jsonnet",
+				fmt.Sprintf("rack%d-ss%d.jsonnet", rackIdx, ssIdx),
+				menu.NodeTemplateArgs{rack, ss})
+			if err != nil {
+				log.ErrorExit(err)
+			}
 		}
 	}
 

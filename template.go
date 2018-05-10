@@ -93,6 +93,12 @@ type TemplateArgs struct {
 	}
 }
 
+// NodeTemplateArgs is args to config files for specific node
+type NodeTemplateArgs struct {
+	Rack Rack
+	Node Node
+}
+
 // BIRDRackTemplateArgs is args to generate bird config for each rack
 type BIRDRackTemplateArgs struct {
 	Args    TemplateArgs

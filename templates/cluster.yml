@@ -23,12 +23,12 @@ spec:
 {{end -}}
 {{range $rack := .Racks -}}
 kind: Network
-name: {{$rack.Name}}-node1
+name: {{$rack.ShortName}}-node1
 spec:
   internal: true
 ---
 kind: Network
-name: {{$rack.Name}}-node2
+name: {{$rack.ShortName}}-node2
 spec:
   internal: true
 ---
@@ -222,8 +222,8 @@ kind: Node
 name: {{$rack.Name}}-boot
 spec:
   interfaces:
-    - {{$rack.Name}}-node1
-    - {{$rack.Name}}-node2
+    - {{$rack.ShortName}}-node1
+    - {{$rack.ShortName}}-node2
   volumes:
     - kind: image
       name: root
@@ -248,8 +248,8 @@ kind: Node
 name: {{$rack.Name}}-{{$csNode.Name}}
 spec:
   interfaces:
-    - {{$rack.Name}}-node1
-    - {{$rack.Name}}-node2
+    - {{$rack.ShortName}}-node1
+    - {{$rack.ShortName}}-node2
   volumes:
     - kind: image
       name: root
@@ -275,8 +275,8 @@ kind: Node
 name: {{$rack.Name}}-{{$ssNode.Name}}
 spec:
   interfaces:
-    - {{$rack.Name}}-node1
-    - {{$rack.Name}}-node2
+    - {{$rack.ShortName}}-node1
+    - {{$rack.ShortName}}-node2
   volumes:
     - kind: image
       name: root

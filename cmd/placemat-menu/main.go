@@ -127,7 +127,7 @@ func main() {
 		}
 		for csIdx, cs := range rack.CSList {
 			err = export("rack-node.jsonnet",
-				fmt.Sprintf("rack%d-cs%d.jsonnet", rackIdx, csIdx),
+				fmt.Sprintf("rack%d-cs%d.jsonnet", rackIdx, csIdx+1),
 				menu.NodeTemplateArgs{rack, cs})
 			if err != nil {
 				log.ErrorExit(err)
@@ -135,7 +135,7 @@ func main() {
 		}
 		for ssIdx, ss := range rack.SSList {
 			err = export("rack-node.jsonnet",
-				fmt.Sprintf("rack%d-ss%d.jsonnet", rackIdx, ssIdx),
+				fmt.Sprintf("rack%d-ss%d.jsonnet", rackIdx, ssIdx+1),
 				menu.NodeTemplateArgs{rack, ss})
 			if err != nil {
 				log.ErrorExit(err)

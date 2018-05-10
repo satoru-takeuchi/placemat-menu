@@ -16,7 +16,7 @@ cybozu-ubuntu-debug-18.04.aci:
 	docker2aci docker://quay.io/cybozu/ubuntu-debug:18.04
 
 start: $(ignitions) $(images)
-	@echo "Please run: $(GOPATH)/bin/placemat cluster.yaml"
+	@echo "Please run: $(GOPATH)/bin/placemat cluster.yml"
 
 clean:
 	rm -f $(ignitions)

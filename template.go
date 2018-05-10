@@ -87,16 +87,20 @@ type TemplateArgs struct {
 	CS      VMResource
 	SS      VMResource
 	Boot    VMResource
-	Account struct {
-		Name         string
-		PasswordHash string
-	}
+	Account Account
+}
+
+// Account is setting data to create linux user account
+type Account struct {
+	Name         string
+	PasswordHash string
 }
 
 // NodeTemplateArgs is args to config files for specific node
 type NodeTemplateArgs struct {
-	Rack Rack
-	Node Node
+	Rack    Rack
+	Node    Node
+	Account Account
 }
 
 // BIRDRackTemplateArgs is args to generate bird config for each rack

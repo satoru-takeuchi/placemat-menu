@@ -4,7 +4,7 @@ local ign = import 'ign.libsonnet';
 
 {
   ignition: { version: ign.Version },
-  passwd: ign.Passwd(),
+  passwd: ign.Passwd("{{.Args.Account.Name}}", "{{.Args.Account.PasswordHash}}"),
   storage: ign.Storage("{{$self.Name}}-boot"),
 
   networkd: ign.BootServerNetwork({{range $addr := $self.BootAddresses}}"{{$addr}}",{{end}}),

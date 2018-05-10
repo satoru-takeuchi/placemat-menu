@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/cybozu-go/log"
 	menu "github.com/cybozu-go/placemat-menu"
 )
 
@@ -27,126 +26,111 @@ var (
 
 func main() {
 	flag.Parse()
+	err := run()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
 
+func run() error {
 	fi, err := os.Stat(*flagOutDir)
 	switch {
 	case err == nil:
 		if !fi.IsDir() {
-			log.ErrorExit(errors.New(*flagOutDir + "is not a directory"))
+			return errors.New(*flagOutDir + "is not a directory")
 		}
 	case os.IsNotExist(err):
 		err = os.MkdirAll(*flagOutDir, 0755)
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 	default:
-		log.ErrorExit(err)
+		return err
 	}
-
 	f, err := os.Open(*flagConfig)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
 	defer f.Close()
 	m, err := menu.ReadYAML(bufio.NewReader(f))
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
-
 	ta, err := menu.ToTemplateArgs(m)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
-
 	err = export("Makefile", "Makefile", ta)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
-
 	err = export("cluster.yml", "cluster.yml", ta)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
-
-	err = export("ign.jsonnet", "ign.jsonnet", ta)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
-	err = export("ign.libsonnet", "ign.libsonnet", ta)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
 	err = export("bird_vm.conf", "bird_vm.conf", ta)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
-
 	err = export("ext-vm.jsonnet", "ext-vm.jsonnet", ta)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
-
 	for spineIdx := range ta.Spines {
 		err = export("bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
 			menu.BIRDSpineTemplateArgs{Args: *ta, SpineIdx: spineIdx})
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 	}
-
 	for rackIdx, rack := range ta.Racks {
 		err = export("rack-boot.jsonnet",
 			fmt.Sprintf("rack%d-boot.jsonnet", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 
 		err = export("bird_rack-tor1.conf",
 			fmt.Sprintf("bird_rack%d-tor1.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 
 		err = export("bird_rack-tor2.conf",
 			fmt.Sprintf("bird_rack%d-tor2.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 
 		err = export("bird_rack-node.conf",
 			fmt.Sprintf("bird_rack%d-node.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 		for csIdx, cs := range rack.CSList {
 			err = export("rack-node.jsonnet",
 				fmt.Sprintf("rack%d-cs%d.jsonnet", rackIdx, csIdx+1),
-				menu.NodeTemplateArgs{rack, cs})
+				menu.NodeTemplateArgs{rack, cs, ta.Account})
 			if err != nil {
-				log.ErrorExit(err)
+				return err
 			}
 		}
 		for ssIdx, ss := range rack.SSList {
 			err = export("rack-node.jsonnet",
 				fmt.Sprintf("rack%d-ss%d.jsonnet", rackIdx, ssIdx+1),
-				menu.NodeTemplateArgs{rack, ss})
+				menu.NodeTemplateArgs{rack, ss, ta.Account})
 			if err != nil {
-				log.ErrorExit(err)
+				return err
 			}
 		}
 	}
-
-	err = copyStatics(*flagOutDir)
-	if err != nil {
-		log.ErrorExit(err)
-	}
+	return copyStatics(*flagOutDir)
 }
 
 func export(inputFileName string, outputFileName string, args interface{}) error {

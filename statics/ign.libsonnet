@@ -1,11 +1,11 @@
 {
   Version: "2.1.0",
 
-  Passwd(): {
+  Passwd(name, passwordHash): {
     users: [
       {
-        name: "{{.Account.Name}}",
-        passwordHash: "{{.Account.PasswordHash}}",
+        name: name,
+        passwordHash: passwordHash,
         groups: [
           "sudo",
           "docker"

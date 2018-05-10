@@ -68,16 +68,6 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	err = export("ign.jsonnet", "ign.jsonnet", ta)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
-	err = export("ign.libsonnet", "ign.libsonnet", ta)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
 	err = export("bird_vm.conf", "bird_vm.conf", ta)
 	if err != nil {
 		log.ErrorExit(err)
@@ -128,7 +118,7 @@ func main() {
 		for csIdx, cs := range rack.CSList {
 			err = export("rack-node.jsonnet",
 				fmt.Sprintf("rack%d-cs%d.jsonnet", rackIdx, csIdx+1),
-				menu.NodeTemplateArgs{rack, cs})
+				menu.NodeTemplateArgs{rack, cs, ta.Account})
 			if err != nil {
 				log.ErrorExit(err)
 			}
@@ -136,7 +126,7 @@ func main() {
 		for ssIdx, ss := range rack.SSList {
 			err = export("rack-node.jsonnet",
 				fmt.Sprintf("rack%d-ss%d.jsonnet", rackIdx, ssIdx+1),
-				menu.NodeTemplateArgs{rack, ss})
+				menu.NodeTemplateArgs{rack, ss, ta.Account})
 			if err != nil {
 				log.ErrorExit(err)
 			}

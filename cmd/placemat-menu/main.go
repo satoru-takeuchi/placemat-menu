@@ -1,3 +1,5 @@
+//go:generate statik -src=./public
+
 package main
 
 import (
@@ -6,18 +8,28 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
 
+	"net/http"
+
 	menu "github.com/cybozu-go/placemat-menu"
+	_ "github.com/cybozu-go/placemat-menu/statik"
+	"github.com/rakyll/statik/fs"
 )
 
 const (
-	staticFilesSource   = "statics"
 	templateFilesSource = "templates"
 )
+
+var staticFiles = []string{
+	"/static/bashrc",
+	"/static/ign.libsonnet",
+	"/static/rkt-fetch",
+	"/static/setup-iptables",
+	"/static/setup-rp-filter",
+}
 
 var (
 	flagConfig = flag.String("f", "", "Template file for placemat-menu")
@@ -34,6 +46,11 @@ func main() {
 }
 
 func run() error {
+	staticFS, err := fs.New()
+	if err != nil {
+		return err
+	}
+
 	fi, err := os.Stat(*flagOutDir)
 	switch {
 	case err == nil:
@@ -130,7 +147,7 @@ func run() error {
 			}
 		}
 	}
-	return copyStatics(*flagOutDir)
+	return copyStatics(staticFS, staticFiles, *flagOutDir)
 }
 
 func export(inputFileName string, outputFileName string, args interface{}) error {
@@ -143,39 +160,40 @@ func export(inputFileName string, outputFileName string, args interface{}) error
 	return menu.Export(t, args, f)
 }
 
-func copyStatics(outputDirName string) error {
-	fileInfos, err := ioutil.ReadDir(staticFilesSource)
+func copyStatics(fs http.FileSystem, inputs []string, outputDirName string) error {
+	for _, fileName := range inputs {
+		err := copyStatic(fs, fileName, outputDirName)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+func copyStatic(fs http.FileSystem, fileName string, outputDirName string) error {
+	src, err := fs.Open(fileName)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	fi, err := src.Stat()
 	if err != nil {
 		return err
 	}
 
-	for _, fileInfo := range fileInfos {
-		if fileInfo.IsDir() {
-			return errors.New("cannot copy directory from " + staticFilesSource)
-		}
+	dst, err := os.Create(filepath.Join(outputDirName, filepath.Base(fileName)))
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
 
-		src, err := os.Open(filepath.Join(staticFilesSource, fileInfo.Name()))
-		if err != nil {
-			return err
-		}
-		defer src.Close()
-
-		dst, err := os.Create(filepath.Join(outputDirName, fileInfo.Name()))
-		if err != nil {
-			return err
-		}
-		defer dst.Close()
-
-		err = dst.Chmod(fileInfo.Mode())
-		if err != nil {
-			return err
-		}
-
-		_, err = io.Copy(dst, src)
-		if err != nil {
-			return err
-		}
+	err = dst.Chmod(fi.Mode())
+	if err != nil {
+		return err
 	}
 
-	return nil
+	_, err = io.Copy(dst, src)
+	return err
 }

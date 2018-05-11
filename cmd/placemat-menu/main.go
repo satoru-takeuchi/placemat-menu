@@ -1,4 +1,4 @@
-//go:generate statik -src=./public
+//go:generate statik -f -src=./public
 
 package main
 
@@ -8,11 +8,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"text/template"
-
-	"net/http"
 
 	menu "github.com/cybozu-go/placemat-menu"
 	_ "github.com/cybozu-go/placemat-menu/cmd/placemat-menu/statik"
@@ -46,7 +46,7 @@ func main() {
 }
 
 func run() error {
-	staticFS, err := fs.New()
+	statikFS, err := fs.New()
 	if err != nil {
 		return err
 	}
@@ -78,24 +78,24 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	err = export("Makefile", "Makefile", ta)
+	err = export(statikFS, "/templates/Makefile", "Makefile", ta)
 	if err != nil {
 		return err
 	}
-	err = export("cluster.yml", "cluster.yml", ta)
+	err = export(statikFS, "/templates/cluster.yml", "cluster.yml", ta)
 	if err != nil {
 		return err
 	}
-	err = export("bird_vm.conf", "bird_vm.conf", ta)
+	err = export(statikFS, "/templates/bird_vm.conf", "bird_vm.conf", ta)
 	if err != nil {
 		return err
 	}
-	err = export("ext-vm.jsonnet", "ext-vm.jsonnet", ta)
+	err = export(statikFS, "/templates/ext-vm.jsonnet", "ext-vm.jsonnet", ta)
 	if err != nil {
 		return err
 	}
 	for spineIdx := range ta.Spines {
-		err = export("bird_spine.conf",
+		err = export(statikFS, "/templates/bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
 			menu.BIRDSpineTemplateArgs{Args: *ta, SpineIdx: spineIdx})
 		if err != nil {
@@ -103,35 +103,35 @@ func run() error {
 		}
 	}
 	for rackIdx, rack := range ta.Racks {
-		err = export("rack-boot.jsonnet",
+		err = export(statikFS, "/templates/rack-boot.jsonnet",
 			fmt.Sprintf("rack%d-boot.jsonnet", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			return err
 		}
 
-		err = export("bird_rack-tor1.conf",
+		err = export(statikFS, "/templates/bird_rack-tor1.conf",
 			fmt.Sprintf("bird_rack%d-tor1.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			return err
 		}
 
-		err = export("bird_rack-tor2.conf",
+		err = export(statikFS, "/templates/bird_rack-tor2.conf",
 			fmt.Sprintf("bird_rack%d-tor2.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			return err
 		}
 
-		err = export("bird_rack-node.conf",
+		err = export(statikFS, "/templates/bird_rack-node.conf",
 			fmt.Sprintf("bird_rack%d-node.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			return err
 		}
 		for csIdx, cs := range rack.CSList {
-			err = export("rack-node.jsonnet",
+			err = export(statikFS, "/templates/rack-node.jsonnet",
 				fmt.Sprintf("rack%d-cs%d.jsonnet", rackIdx, csIdx+1),
 				menu.NodeTemplateArgs{rack, cs, ta.Account})
 			if err != nil {
@@ -139,7 +139,7 @@ func run() error {
 			}
 		}
 		for ssIdx, ss := range rack.SSList {
-			err = export("rack-node.jsonnet",
+			err = export(statikFS, "/templates/rack-node.jsonnet",
 				fmt.Sprintf("rack%d-ss%d.jsonnet", rackIdx, ssIdx+1),
 				menu.NodeTemplateArgs{rack, ss, ta.Account})
 			if err != nil {
@@ -147,17 +147,30 @@ func run() error {
 			}
 		}
 	}
-	return copyStatics(staticFS, staticFiles, *flagOutDir)
+	return copyStatics(statikFS, staticFiles, *flagOutDir)
 }
 
-func export(inputFileName string, outputFileName string, args interface{}) error {
-	f, err := os.Create(filepath.Join(*flagOutDir, outputFileName))
+func export(fs http.FileSystem, input string, output string, args interface{}) error {
+	f, err := os.Create(filepath.Join(*flagOutDir, output))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	t := template.Must(template.ParseFiles(filepath.Join(templateFilesSource, inputFileName)))
-	return menu.Export(t, args, f)
+
+	templateFile, err := fs.Open(input)
+	if err != nil {
+		return err
+	}
+	content, err := ioutil.ReadAll(templateFile)
+	if err != nil {
+		return err
+	}
+
+	tmpl, err := template.New(input).Parse(string(content))
+	if err != nil {
+		panic(err)
+	}
+	return tmpl.Execute(f, args)
 }
 
 func copyStatics(fs http.FileSystem, inputs []string, outputDirName string) error {

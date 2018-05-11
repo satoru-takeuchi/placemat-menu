@@ -15,7 +15,7 @@ import (
 	"net/http"
 
 	menu "github.com/cybozu-go/placemat-menu"
-	_ "github.com/cybozu-go/placemat-menu/statik"
+	_ "github.com/cybozu-go/placemat-menu/cmd/placemat-menu/statik"
 	"github.com/rakyll/statik/fs"
 )
 

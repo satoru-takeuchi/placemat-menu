@@ -66,10 +66,12 @@
       "units": [
          {
             "contents": "[Unit]\nBefore=local-fs.target\n\n[Mount]\nWhat=/dev/vdb1\nWhere=/mnt/containers\nType=vfat\nOptions=ro\n",
+            "enabled": false,
             "name": "mnt-containers.mount"
          },
          {
             "contents": "[Unit]\nAfter=mnt-containers.mount\nRequires=mnt-containers.mount\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStart=/bin/sh /mnt/containers/rkt-fetch\n",
+            "enabled": false,
             "name": "rkt-fetch.service"
          },
          {
@@ -79,6 +81,7 @@
          },
          {
             "contents": "[Unit]\nAfter=mnt-bird.mount\nConditionPathExists=!/etc/bird\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/cp -r /mnt/bird /etc/bird\nRemainAfterExit=yes\n",
+            "enabled": false,
             "name": "copy-bird-conf.service"
          },
          {

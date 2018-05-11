@@ -1,4 +1,4 @@
-ignitions = ext-vm.ign {{range $r := .Racks}}{{$r.Name}}-boot.ign \
+ignitions = ext-vm.ign {{range $r := .Racks}} \
 	{{range $cs := $r.CSList}}{{$r.Name}}-{{$cs.Name}}.ign {{end}}\
 	{{range $ss := $r.SSList}}{{$r.Name}}-{{$ss.Name}}.ign {{end}}{{end}}
 images = cybozu-bird-2.0.aci cybozu-ubuntu-debug-18.04.aci

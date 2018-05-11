@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -103,12 +104,10 @@ func run() error {
 		}
 	}
 	for rackIdx, rack := range ta.Racks {
-		err = export(statikFS, "/templates/rack-boot.jsonnet",
-			fmt.Sprintf("rack%d-boot.jsonnet", rackIdx),
-			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
-		if err != nil {
-			return err
-		}
+		err = exportJSON(
+			fmt.Sprintf("rack%d-boot.ign", rackIdx),
+			menu.BootNodeIgnition(ta.Account, rack),
+		)
 
 		err = export(statikFS, "/templates/bird_rack-tor1.conf",
 			fmt.Sprintf("bird_rack%d-tor1.conf", rackIdx),
@@ -148,6 +147,17 @@ func run() error {
 		}
 	}
 	return copyStatics(statikFS, staticFiles, *flagOutDir)
+}
+
+func exportJSON(output string, ignition menu.Ignition) error {
+	f, err := os.Create(filepath.Join(*flagOutDir, output))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(ignition)
 }
 
 func export(fs http.FileSystem, input string, output string, args interface{}) error {

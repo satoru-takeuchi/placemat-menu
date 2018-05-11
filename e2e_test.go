@@ -1,10 +1,12 @@
 package menu
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -22,6 +24,34 @@ func assertFileEqual(t *testing.T, f1, f2 string) {
 	}
 }
 
+func assertJSONFileEqual(t *testing.T, name1, name2 string) {
+	var ign1, ign2 Ignition
+
+	f1, err := os.Open(name1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f1.Close()
+	f2, err := os.Open(name2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f2.Close()
+
+	err = json.NewDecoder(f1).Decode(&ign1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.NewDecoder(f2).Decode(&ign2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(ign1, ign2) {
+		t.Error("unexpected file content: " + filepath.Base(f1.Name()))
+	}
+}
+
 func TestE2E(t *testing.T) {
 	dir, err := ioutil.TempDir("", "placemat-menu-test")
 	if err != nil {
@@ -29,10 +59,10 @@ func TestE2E(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	targets, err := ioutil.ReadDir("testdata")
-	if err != nil {
-		t.Fatal(err)
-	}
+	targets := []string{"bird_rack0-node.conf", "bird_rack0-tor2.conf", "bird_rack1-tor1.conf", "bird_spine1.conf", "bird_vm.conf", "ext-vm.ign", "rack0-cs2.ign", "rack1-cs1.ign", "rack1-ss1.ign",
+		"bird_rack0-tor1.conf", "bird_rack1-node.conf", "bird_rack1-tor2.conf", "bird_spine2.conf", "cluster.yml", "Makefile", "rack0-cs1.ign", "rack1-cs2.ign", "rack1-ss2.ign"}
+
+	targetJSONs := []string{"rack1-boot.ign", "rack0-boot.ign"}
 
 	cmd := exec.Command("go", "run", "cmd/placemat-menu/main.go", "-f", "example.yml", "-o", dir)
 	cmd.Stdout = os.Stdout
@@ -52,8 +82,14 @@ func TestE2E(t *testing.T) {
 	}
 
 	for _, f := range targets {
-		f1 := filepath.Join(dir, f.Name())
-		f2 := filepath.Join("testdata", f.Name())
+		f1 := filepath.Join(dir, f)
+		f2 := filepath.Join("testdata", f)
 		assertFileEqual(t, f1, f2)
+	}
+
+	for _, f := range targetJSONs {
+		f1 := filepath.Join(dir, f)
+		f2 := filepath.Join("testdata", f)
+		assertJSONFileEqual(t, f1, f2)
 	}
 }

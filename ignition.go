@@ -5,35 +5,42 @@ import (
 	"net"
 )
 
+// IgnitionPasswdUser contains passwd user information
 type IgnitionPasswdUser struct {
 	Groups       []string `json:"groups"`
 	Name         string   `json:"name"`
 	PasswordHash string   `json:"passwordHash"`
 }
 
+// IgnitionPasswd contains passwd information
 type IgnitionPasswd struct {
-	Users []IgnitionPasswdUser
+	Users []IgnitionPasswdUser `json:"users"`
 }
 
+// IgnitionSystemdUnit contains systemd unit information
 type IgnitionSystemdUnit struct {
 	Contents string `json:"contents"`
 	Name     string `json:"name"`
 	Enabled  bool   `json:"enabled"`
 }
 
+// IgnitionSystemd contains systemd information
 type IgnitionSystemd struct {
 	Units []IgnitionSystemdUnit `json:"units"`
 }
 
+// IgnitionNetworkdUnit contains networkd unit information
 type IgnitionNetworkdUnit struct {
 	Contents string `json:"contents"`
 	Name     string `json:"name"`
 }
 
+// IgnitionNetworkd contains networkd information
 type IgnitionNetworkd struct {
 	Units []IgnitionNetworkdUnit `json:"units"`
 }
 
+// IgnitionStorageFile contains storage by file information
 type IgnitionStorageFile struct {
 	Contents struct {
 		Source string `json:"source"`
@@ -43,10 +50,12 @@ type IgnitionStorageFile struct {
 	Path       string `json:"path"`
 }
 
+// IgnitionStorage contains storage information
 type IgnitionStorage struct {
 	Files []IgnitionStorageFile `json:"files"`
 }
 
+// Ignition contains an igniration information
 type Ignition struct {
 	Ignition struct {
 		Version string `json:"version"`
@@ -59,6 +68,7 @@ type Ignition struct {
 	Networkd IgnitionNetworkd `json:"networkd"`
 }
 
+// IgnitionNode is an interface to generate ignition
 type IgnitionNode interface {
 	Hostname() string
 	Networkd() IgnitionNetworkd
@@ -256,10 +266,19 @@ WantedBy=multi-user.target
 	return IgnitionSystemd{Units: units}
 }
 
-func NodeIgnition(passwd IgnitionPasswd, node IgnitionNode) Ignition {
+// NodeIgnition returns an Ignition by passwd and node
+func NodeIgnition(account Account, node IgnitionNode) Ignition {
 	ign := Ignition{}
 	ign.Ignition.Version = "2.1.0"
-	ign.Passwd = passwd
+	ign.Passwd = IgnitionPasswd{
+		Users: []IgnitionPasswdUser{
+			{
+				[]string{"sudo", "docker"},
+				account.Name,
+				account.PasswordHash,
+			},
+		},
+	}
 	ign.Storage.Files = []IgnitionStorageFile{
 		{
 			Contents: struct {
@@ -287,53 +306,166 @@ func NodeIgnition(passwd IgnitionPasswd, node IgnitionNode) Ignition {
 	return ign
 }
 
+// BootNodeInfo contains boot server in a rack
 type BootNodeInfo struct {
 	name             string
 	bastionAddr      *net.IPNet
-	Node0Addr        *net.IPNet
-	Node1Addr        *net.IPNet
-	Node2Addr        *net.IPNet
-	Node0SystemdAddr net.IP
-	Node1SystemdAddr net.IP
-	Node2SystemdAddr net.IP
+	node0Addr        *net.IPNet
+	node1Addr        *net.IPNet
+	node2Addr        *net.IPNet
+	node0SystemdAddr net.IP
+	node1SystemdAddr net.IP
+	node2SystemdAddr net.IP
 }
 
+// Hostname returns hostname
 func (b *BootNodeInfo) Hostname() string {
 	return b.name
 }
 
+// Networkd returns networkd definitions
 func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, dummyNetworkUnits("node0", b.Node0Addr)...)
-	units = append(units, ethNetworkUnits([]*net.IPNet{b.Node1Addr, b.Node2Addr})...)
+	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
 	units = append(units, dummyNetworkUnits("bastion", b.bastionAddr)...)
 	return IgnitionNetworkd{Units: units}
 }
 
+// Systemd returns systemd definitions
 func (b *BootNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.Node0SystemdAddr, b.Node1SystemdAddr, b.Node2SystemdAddr})
+	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
 }
 
-func BootNodeIgnition(account Account, rack Rack) Ignition {
-	ps := IgnitionPasswd{
-		Users: []IgnitionPasswdUser{
-			{
-				[]string{"sudo", "docker"},
-				account.Name,
-				account.PasswordHash,
-			},
-		},
-	}
+// CSNodeInfo contains cs/ss server in a rack
+type CSNodeInfo struct {
+	name             string
+	node0Addr        *net.IPNet
+	node1Addr        *net.IPNet
+	node2Addr        *net.IPNet
+	node0SystemdAddr net.IP
+	node1SystemdAddr net.IP
+	node2SystemdAddr net.IP
+}
 
+// Hostname returns hostname
+func (b *CSNodeInfo) Hostname() string {
+	return b.name
+}
+
+// Networkd returns networkd definitions
+func (b *CSNodeInfo) Networkd() IgnitionNetworkd {
+	units := make([]IgnitionNetworkdUnit, 0)
+	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	return IgnitionNetworkd{Units: units}
+
+}
+
+// Systemd returns systemd definitions
+func (b *CSNodeInfo) Systemd() IgnitionSystemd {
+	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+}
+
+// SSNodeInfo contains cs/ss server in a rack
+type SSNodeInfo struct {
+	name             string
+	node0Addr        *net.IPNet
+	node1Addr        *net.IPNet
+	node2Addr        *net.IPNet
+	node0SystemdAddr net.IP
+	node1SystemdAddr net.IP
+	node2SystemdAddr net.IP
+}
+
+// Hostname returns hostname
+func (b *SSNodeInfo) Hostname() string {
+	return b.name
+}
+
+// Networkd returns networkd definitions
+func (b *SSNodeInfo) Networkd() IgnitionNetworkd {
+	units := make([]IgnitionNetworkdUnit, 0)
+	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	return IgnitionNetworkd{Units: units}
+
+}
+
+// Systemd returns systemd definitions
+func (b *SSNodeInfo) Systemd() IgnitionSystemd {
+	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+}
+
+// ExtVMNodeInfo contains external network as VM
+type ExtVMNodeInfo struct {
+	vmAddr *net.IPNet
+}
+
+// Hostname returns hostname
+func (b *ExtVMNodeInfo) Hostname() string {
+	return "forest"
+}
+
+// Networkd returns networkd definitions
+func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
+	units := ethNetworkUnits([]*net.IPNet{b.vmAddr})
+	return IgnitionNetworkd{Units: units}
+
+}
+
+// Systemd returns systemd definitions
+func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
+	return defaultSystemd([]net.IP{})
+}
+
+// BootNodeIgnition returns an Ignition for boot node
+func BootNodeIgnition(account Account, rack Rack) Ignition {
 	node := &BootNodeInfo{
 		name:             rack.Name + "-boot",
-		Node0Addr:        rack.BootAddresses[0],
-		Node1Addr:        rack.BootAddresses[1],
-		Node2Addr:        rack.BootAddresses[2],
+		node0Addr:        rack.BootAddresses[0],
+		node1Addr:        rack.BootAddresses[1],
+		node2Addr:        rack.BootAddresses[2],
 		bastionAddr:      rack.BootAddresses[3],
-		Node0SystemdAddr: rack.BootAddresses[0].IP,
-		Node1SystemdAddr: rack.BootSystemdAddresses[1].IP,
-		Node2SystemdAddr: rack.BootSystemdAddresses[2].IP,
+		node0SystemdAddr: rack.BootAddresses[0].IP,
+		node1SystemdAddr: rack.BootSystemdAddresses[1].IP,
+		node2SystemdAddr: rack.BootSystemdAddresses[2].IP,
 	}
-	return NodeIgnition(ps, node)
+	return NodeIgnition(account, node)
+}
+
+// CSNodeIgnition returns an Ignition for cs/ss servers
+func CSNodeIgnition(account Account, rack Rack, node Node) Ignition {
+	info := &CSNodeInfo{
+		name:             rack.Name + "-" + node.Name,
+		node0Addr:        node.Addresses[0],
+		node1Addr:        node.Addresses[1],
+		node2Addr:        node.Addresses[2],
+		node0SystemdAddr: node.Addresses[0].IP,
+		node1SystemdAddr: node.SystemdAddresses[1].IP,
+		node2SystemdAddr: node.SystemdAddresses[2].IP,
+	}
+	return NodeIgnition(account, info)
+}
+
+// SSNodeIgnition returns an Ignition for cs/ss servers
+func SSNodeIgnition(account Account, rack Rack, node Node) Ignition {
+	info := &SSNodeInfo{
+		name:             rack.Name + "-" + node.Name,
+		node0Addr:        node.Addresses[0],
+		node1Addr:        node.Addresses[1],
+		node2Addr:        node.Addresses[2],
+		node0SystemdAddr: node.Addresses[0].IP,
+		node1SystemdAddr: node.SystemdAddresses[1].IP,
+		node2SystemdAddr: node.SystemdAddresses[2].IP,
+	}
+	return NodeIgnition(account, info)
+}
+
+// ExtVMIgnition returns an Ignition for ext-vm
+func ExtVMIgnition(account Account, extVMAddr *net.IPNet) Ignition {
+	node := &ExtVMNodeInfo{
+		vmAddr: extVMAddr,
+	}
+	return NodeIgnition(account, node)
 }

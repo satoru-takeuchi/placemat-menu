@@ -20,10 +20,6 @@ import (
 	"github.com/rakyll/statik/fs"
 )
 
-const (
-	templateFilesSource = "templates"
-)
-
 var staticFiles = []string{
 	"/static/bashrc",
 	"/static/ign.libsonnet",
@@ -91,7 +87,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	err = export(statikFS, "/templates/ext-vm.jsonnet", "ext-vm.jsonnet", ta)
+	err = exportJSON(
+		"ext-vm.ign",
+		menu.ExtVMIgnition(ta.Account, ta.Network.External.VM))
 	if err != nil {
 		return err
 	}
@@ -130,17 +128,17 @@ func run() error {
 			return err
 		}
 		for csIdx, cs := range rack.CSList {
-			err = export(statikFS, "/templates/rack-node.jsonnet",
-				fmt.Sprintf("rack%d-cs%d.jsonnet", rackIdx, csIdx+1),
-				menu.NodeTemplateArgs{rack, cs, ta.Account})
+			err = exportJSON(
+				fmt.Sprintf("rack%d-cs%d.ign", rackIdx, csIdx+1),
+				menu.CSNodeIgnition(ta.Account, rack, cs))
 			if err != nil {
 				return err
 			}
 		}
 		for ssIdx, ss := range rack.SSList {
-			err = export(statikFS, "/templates/rack-node.jsonnet",
-				fmt.Sprintf("rack%d-ss%d.jsonnet", rackIdx, ssIdx+1),
-				menu.NodeTemplateArgs{rack, ss, ta.Account})
+			err = exportJSON(
+				fmt.Sprintf("rack%d-ss%d.ign", rackIdx, ssIdx+1),
+				menu.SSNodeIgnition(ta.Account, rack, ss))
 			if err != nil {
 				return err
 			}

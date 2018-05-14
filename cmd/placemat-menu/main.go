@@ -21,8 +21,8 @@ import (
 )
 
 var staticFiles = []string{
+	"/static/Makefile",
 	"/static/bashrc",
-	"/static/ign.libsonnet",
 	"/static/rkt-fetch",
 	"/static/setup-iptables",
 	"/static/setup-rp-filter",
@@ -72,10 +72,6 @@ func run() error {
 		return err
 	}
 	ta, err := menu.ToTemplateArgs(m)
-	if err != nil {
-		return err
-	}
-	err = export(statikFS, "/templates/Makefile", "Makefile", ta)
 	if err != nil {
 		return err
 	}

@@ -70,7 +70,6 @@ func TestE2E(t *testing.T) {
 		"bird_rack1-tor2.conf",
 		"bird_spine2.conf",
 		"cluster.yml",
-		"Makefile",
 	}
 
 	targetJSONs := []string{

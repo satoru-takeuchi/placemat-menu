@@ -26,6 +26,7 @@ var staticFiles = []string{
 	"/static/rkt-fetch",
 	"/static/setup-iptables",
 	"/static/setup-rp-filter",
+	"/static/setup-rp-filter-0",
 }
 
 var (

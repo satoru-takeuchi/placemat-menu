@@ -161,6 +161,7 @@ name: spine1
 spec:
   init-scripts:
     - setup-iptables
+    - setup-rp-filter-0
   interfaces:
     - network: ext-net
       addresses:
@@ -206,6 +207,7 @@ name: spine2
 spec:
   init-scripts:
     - setup-iptables
+    - setup-rp-filter-0
   interfaces:
     - network: ext-net
       addresses:

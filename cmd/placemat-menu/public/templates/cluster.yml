@@ -102,6 +102,7 @@ name: {{$spine.Name}}
 spec:
   init-scripts:
     - setup-iptables
+    - setup-rp-filter-0
   interfaces:
     - network: ext-net
       addresses:

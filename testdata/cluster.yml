@@ -249,6 +249,8 @@ spec:
 kind: Pod
 name: rack0-tor1
 spec:
+  init-scripts:
+    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r0-1
       addresses:
@@ -286,6 +288,8 @@ spec:
 kind: Pod
 name: rack0-tor2
 spec:
+  init-scripts:
+    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r0-2
       addresses:
@@ -323,6 +327,8 @@ spec:
 kind: Pod
 name: rack1-tor1
 spec:
+  init-scripts:
+    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r1-1
       addresses:
@@ -360,6 +366,8 @@ spec:
 kind: Pod
 name: rack1-tor2
 spec:
+  init-scripts:
+    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r1-2
       addresses:

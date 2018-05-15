@@ -286,6 +286,19 @@ spec:
     - name: debug
       image: docker://quay.io/cybozu/ubuntu-debug:18.04
       readonly-rootfs: true
+    - name: dhcp-relay
+      image: docker://quay.io/cybozu/dnsmasq:2.79
+      readonly-rootfs: true
+      caps-retain:
+        - CAP_NET_BIND_SERVICE
+        - CAP_NET_RAW
+        - CAP_NET_BROADCAST
+      args:
+        - "--no-daemon"
+        - "--dhcp-relay"
+        - "10.69.0.65,10.69.0.3"
+        - "--dhcp-relay"
+        - "10.69.0.65,10.69.0.195"
 ---
 kind: Pod
 name: rack0-tor2
@@ -325,6 +338,19 @@ spec:
     - name: debug
       image: docker://quay.io/cybozu/ubuntu-debug:18.04
       readonly-rootfs: true
+    - name: dhcp-relay
+      image: docker://quay.io/cybozu/dnsmasq:2.79
+      readonly-rootfs: true
+      caps-retain:
+        - CAP_NET_BIND_SERVICE
+        - CAP_NET_RAW
+        - CAP_NET_BROADCAST
+      args:
+        - "--no-daemon"
+        - "--dhcp-relay"
+        - "10.69.0.129,10.69.0.3"
+        - "--dhcp-relay"
+        - "10.69.0.129,10.69.0.195"
 ---
 kind: Pod
 name: rack1-tor1
@@ -364,6 +390,19 @@ spec:
     - name: debug
       image: docker://quay.io/cybozu/ubuntu-debug:18.04
       readonly-rootfs: true
+    - name: dhcp-relay
+      image: docker://quay.io/cybozu/dnsmasq:2.79
+      readonly-rootfs: true
+      caps-retain:
+        - CAP_NET_BIND_SERVICE
+        - CAP_NET_RAW
+        - CAP_NET_BROADCAST
+      args:
+        - "--no-daemon"
+        - "--dhcp-relay"
+        - "10.69.1.1,10.69.0.3"
+        - "--dhcp-relay"
+        - "10.69.1.1,10.69.0.195"
 ---
 kind: Pod
 name: rack1-tor2
@@ -403,6 +442,19 @@ spec:
     - name: debug
       image: docker://quay.io/cybozu/ubuntu-debug:18.04
       readonly-rootfs: true
+    - name: dhcp-relay
+      image: docker://quay.io/cybozu/dnsmasq:2.79
+      readonly-rootfs: true
+      caps-retain:
+        - CAP_NET_BIND_SERVICE
+        - CAP_NET_RAW
+        - CAP_NET_BROADCAST
+      args:
+        - "--no-daemon"
+        - "--dhcp-relay"
+        - "10.69.1.65,10.69.0.3"
+        - "--dhcp-relay"
+        - "10.69.1.65,10.69.0.195"
 ---
 kind: Node
 name: rack0-boot

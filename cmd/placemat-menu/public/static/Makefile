@@ -1,4 +1,4 @@
-images = cybozu-bird-2.0.aci cybozu-ubuntu-debug-18.04.aci
+images = cybozu-bird-2.0.aci cybozu-ubuntu-debug-18.04.aci cybozu-dnsmasq-2.79.aci
 
 default: start
 
@@ -7,6 +7,9 @@ cybozu-bird-2.0.aci:
 
 cybozu-ubuntu-debug-18.04.aci:
 	docker2aci docker://quay.io/cybozu/ubuntu-debug:18.04
+
+cybozu-dnsmasq-2.79.aci:
+	docker2aci docker://quay.io/cybozu/dnsmasq:2.79
 
 start: $(images)
 	@echo "Please run: $(GOPATH)/bin/placemat cluster.yml"

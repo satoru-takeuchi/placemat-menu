@@ -80,6 +80,8 @@ spec:
       file: cybozu-bird-2.0.aci
     - name: ubuntu-debug.aci
       file: cybozu-ubuntu-debug-18.04.aci
+    - name: dnsmasq.aci
+      file: cybozu-dnsmasq-2.79.aci
     - name: rkt-fetch
       file: rkt-fetch
     - name: bashrc

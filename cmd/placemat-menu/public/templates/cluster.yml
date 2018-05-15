@@ -188,6 +188,8 @@ spec:
         - CAP_NET_RAW
         - CAP_NET_BROADCAST
       args:
+        - "--log-queries"
+        - "--log-dhcp"
         - "--no-daemon"
         {{- range $rack2 := $racks}}
         - "--dhcp-relay"
@@ -239,6 +241,8 @@ spec:
         - CAP_NET_RAW
         - CAP_NET_BROADCAST
       args:
+        - "--log-queries"
+        - "--log-dhcp"
         - "--no-daemon"
         {{- range $rack2 := $racks}}
         - "--dhcp-relay"

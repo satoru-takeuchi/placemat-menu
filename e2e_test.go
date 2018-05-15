@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	ignition "github.com/coreos/ignition/config/v2_2"
 )
 
 func assertFileEqual(t *testing.T, f1, f2 string) {
@@ -50,6 +52,23 @@ func assertJSONFileEqual(t *testing.T, name1, name2 string) {
 	if !reflect.DeepEqual(ign1, ign2) {
 		t.Error("unexpected file content: " + filepath.Base(f1.Name()))
 	}
+}
+
+func assertValidIgnition(t *testing.T, path string) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, rpt, err := ignition.Parse(content)
+	if err != nil {
+		t.Errorf("invalid ignition: %s: %s", filepath.Base(path), err)
+	}
+
+	if rpt.IsFatal() {
+		t.Errorf("invalid ignition: %s: %s", filepath.Base(path), rpt.String())
+	}
+
 }
 
 func TestE2E(t *testing.T) {
@@ -102,5 +121,9 @@ func TestE2E(t *testing.T) {
 		f1 := filepath.Join(dir, f)
 		f2 := filepath.Join("testdata", f)
 		assertJSONFileEqual(t, f1, f2)
+	}
+	for _, f := range targetJSONs {
+		p := filepath.Join("testdata", f)
+		assertValidIgnition(t, p)
 	}
 }

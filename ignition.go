@@ -111,28 +111,8 @@ Address=%s
 	return units
 }
 
-func defaultSystemd(addresses []net.IP) IgnitionSystemd {
-	getAddressesCommandLine := func(addresses []net.IP) string {
-		if len(addresses) == 0 {
-			return "/bin/true"
-		}
-		return fmt.Sprintf("/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s dev eth0 nexthop via %s dev eth1", addresses[0], addresses[1], addresses[2])
-	}
-
-	setupRouteSystemdContent := func(cmd string) string {
-		return fmt.Sprintf(`[Unit]
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=%s
-
-[Install]
-WantedBy=multi-user.target
-`, cmd)
-	}
-
-	units := []IgnitionSystemdUnit{
+func defaultSystemdUnits() []IgnitionSystemdUnit {
+	return []IgnitionSystemdUnit{
 		{
 			Name: "mnt-containers.mount",
 			Contents: `[Unit]
@@ -242,10 +222,6 @@ ExecStart=/bin/sh /mnt/bird/setup-iptables
 WantedBy=multi-user.target
 `,
 		}, {
-			Name:     "setup-route.service",
-			Enabled:  true,
-			Contents: setupRouteSystemdContent(getAddressesCommandLine(addresses)),
-		}, {
 			Name:    "disable-rp-filter.service",
 			Enabled: true,
 			Contents: `[Unit]
@@ -263,6 +239,31 @@ WantedBy=multi-user.target
 `,
 		},
 	}
+}
+
+func setupRouteUnit(src, tor1addr, tor2addr net.IP) IgnitionSystemdUnit {
+	cmd := fmt.Sprintf("/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s dev eth0 nexthop via %s dev eth1", src, tor1addr, tor2addr)
+	content := fmt.Sprintf(`[Unit]
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=%s
+
+[Install]
+WantedBy=multi-user.target
+`, cmd)
+
+	return IgnitionSystemdUnit{
+		Name:     "setup-route.service",
+		Enabled:  true,
+		Contents: content,
+	}
+}
+
+func nodeSystemd(src, tor1addr, tor2addr net.IP) IgnitionSystemd {
+	units := defaultSystemdUnits()
+	units = append(units, setupRouteUnit(src, tor1addr, tor2addr))
 	return IgnitionSystemd{Units: units}
 }
 
@@ -333,7 +334,7 @@ func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *BootNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.node0Addr.IP, b.ToR1Addr, b.ToR2Addr})
+	return nodeSystemd(b.node0Addr.IP, b.ToR1Addr, b.ToR2Addr)
 }
 
 // CSNodeInfo contains cs/ss server in a rack
@@ -363,7 +364,7 @@ func (b *CSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *CSNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+	return nodeSystemd(b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr)
 }
 
 // SSNodeInfo contains cs/ss server in a rack
@@ -393,7 +394,7 @@ func (b *SSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *SSNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+	return nodeSystemd(b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr)
 }
 
 // ExtVMNodeInfo contains external network as VM
@@ -415,7 +416,8 @@ func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{})
+	units := defaultSystemdUnits()
+	return IgnitionSystemd{Units: units}
 }
 
 // BootNodeIgnition returns an Ignition for boot node

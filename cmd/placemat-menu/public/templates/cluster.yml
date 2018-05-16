@@ -154,11 +154,11 @@ spec:
     {{range $spineIdx, $spine := $spines -}}
     - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
       addresses:
-        - {{index $rack.ToR1SpineAddresses $spineIdx}}
+        - {{index $rack.ToR1.SpineAddresses $spineIdx}}
     {{end -}}
     - network: {{$rack.ShortName}}-node1
       addresses:
-        - {{$rack.ToR1NodeAddress}}
+        - {{$rack.ToR1.NodeAddress}}
   volumes:
     - name: config
       kind: host
@@ -195,7 +195,7 @@ spec:
         - "--no-daemon"
         {{- range $rack2 := $racks}}
         - "--dhcp-relay"
-        - "{{$rack.ToR1NodeAddress.IP}},{{(index $rack2.BootAddresses 0).IP}}"
+        - "{{$rack.ToR1.NodeAddress.IP}},{{$rack2.BootNode.Node0Address.IP}}"
         {{- end }}
 ---
 kind: Pod
@@ -207,11 +207,11 @@ spec:
     {{range $spineIdx, $spine := $spines -}}
     - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-2
       addresses:
-        - {{index $rack.ToR2SpineAddresses $spineIdx}}
+        - {{index $rack.ToR2.SpineAddresses $spineIdx}}
     {{end -}}
     - network: {{$rack.ShortName}}-node2
       addresses:
-        - {{$rack.ToR2NodeAddress}}
+        - {{$rack.ToR2.NodeAddress}}
   volumes:
     - name: config
       kind: host
@@ -248,7 +248,7 @@ spec:
         - "--no-daemon"
         {{- range $rack2 := $racks}}
         - "--dhcp-relay"
-        - "{{$rack.ToR2NodeAddress.IP}},{{(index $rack2.BootAddresses 0).IP}}"
+        - "{{$rack.ToR2.NodeAddress.IP}},{{$rack2.BootNode.Node0Address.IP}}"
         {{- end }}
 ---
 {{end -}}

@@ -111,28 +111,8 @@ Address=%s
 	return units
 }
 
-func defaultSystemd(addresses []net.IP) IgnitionSystemd {
-	getAddressesCommandLine := func(addresses []net.IP) string {
-		if len(addresses) == 0 {
-			return "/bin/true"
-		}
-		return fmt.Sprintf("/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s dev eth0 nexthop via %s dev eth1", addresses[0], addresses[1], addresses[2])
-	}
-
-	setupRouteSystemdContent := func(cmd string) string {
-		return fmt.Sprintf(`[Unit]
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=%s
-
-[Install]
-WantedBy=multi-user.target
-`, cmd)
-	}
-
-	units := []IgnitionSystemdUnit{
+func defaultSystemdUnits() []IgnitionSystemdUnit {
+	return []IgnitionSystemdUnit{
 		{
 			Name: "mnt-containers.mount",
 			Contents: `[Unit]
@@ -242,10 +222,6 @@ ExecStart=/bin/sh /mnt/bird/setup-iptables
 WantedBy=multi-user.target
 `,
 		}, {
-			Name:     "setup-route.service",
-			Enabled:  true,
-			Contents: setupRouteSystemdContent(getAddressesCommandLine(addresses)),
-		}, {
 			Name:    "disable-rp-filter.service",
 			Enabled: true,
 			Contents: `[Unit]
@@ -263,6 +239,31 @@ WantedBy=multi-user.target
 `,
 		},
 	}
+}
+
+func setupRouteUnit(src, tor1addr, tor2addr net.IP) IgnitionSystemdUnit {
+	cmd := fmt.Sprintf("/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s dev eth0 nexthop via %s dev eth1", src, tor1addr, tor2addr)
+	content := fmt.Sprintf(`[Unit]
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=%s
+
+[Install]
+WantedBy=multi-user.target
+`, cmd)
+
+	return IgnitionSystemdUnit{
+		Name:     "setup-route.service",
+		Enabled:  true,
+		Contents: content,
+	}
+}
+
+func nodeSystemd(src, tor1addr, tor2addr net.IP) IgnitionSystemd {
+	units := defaultSystemdUnits()
+	units = append(units, setupRouteUnit(src, tor1addr, tor2addr))
 	return IgnitionSystemd{Units: units}
 }
 
@@ -308,14 +309,13 @@ func NodeIgnition(account Account, node IgnitionNode) Ignition {
 
 // BootNodeInfo contains boot server in a rack
 type BootNodeInfo struct {
-	name             string
-	bastionAddr      *net.IPNet
-	node0Addr        *net.IPNet
-	node1Addr        *net.IPNet
-	node2Addr        *net.IPNet
-	node0SystemdAddr net.IP
-	node1SystemdAddr net.IP
-	node2SystemdAddr net.IP
+	name        string
+	bastionAddr *net.IPNet
+	node0Addr   *net.IPNet
+	node1Addr   *net.IPNet
+	node2Addr   *net.IPNet
+	ToR1Addr    net.IP
+	ToR2Addr    net.IP
 }
 
 // Hostname returns hostname
@@ -334,7 +334,7 @@ func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *BootNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+	return nodeSystemd(b.node0Addr.IP, b.ToR1Addr, b.ToR2Addr)
 }
 
 // CSNodeInfo contains cs/ss server in a rack
@@ -364,7 +364,7 @@ func (b *CSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *CSNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+	return nodeSystemd(b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr)
 }
 
 // SSNodeInfo contains cs/ss server in a rack
@@ -394,7 +394,7 @@ func (b *SSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *SSNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+	return nodeSystemd(b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr)
 }
 
 // ExtVMNodeInfo contains external network as VM
@@ -404,7 +404,7 @@ type ExtVMNodeInfo struct {
 
 // Hostname returns hostname
 func (b *ExtVMNodeInfo) Hostname() string {
-	return "forest"
+	return "ext-vm"
 }
 
 // Networkd returns networkd definitions
@@ -416,20 +416,20 @@ func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{})
+	units := defaultSystemdUnits()
+	return IgnitionSystemd{Units: units}
 }
 
 // BootNodeIgnition returns an Ignition for boot node
 func BootNodeIgnition(account Account, rack Rack) Ignition {
 	node := &BootNodeInfo{
-		name:             rack.Name + "-boot",
-		node0Addr:        rack.BootAddresses[0],
-		node1Addr:        rack.BootAddresses[1],
-		node2Addr:        rack.BootAddresses[2],
-		bastionAddr:      rack.BootAddresses[3],
-		node0SystemdAddr: rack.BootAddresses[0].IP,
-		node1SystemdAddr: rack.BootSystemdAddresses[1].IP,
-		node2SystemdAddr: rack.BootSystemdAddresses[2].IP,
+		name:        rack.Name + "-boot",
+		node0Addr:   rack.BootNode.Node0Address,
+		node1Addr:   rack.BootNode.Node1Address,
+		node2Addr:   rack.BootNode.Node2Address,
+		bastionAddr: rack.BootNode.BastionAddress,
+		ToR1Addr:    rack.BootNode.ToR1Address.IP,
+		ToR2Addr:    rack.BootNode.ToR2Address.IP,
 	}
 	return NodeIgnition(account, node)
 }
@@ -438,12 +438,12 @@ func BootNodeIgnition(account Account, rack Rack) Ignition {
 func CSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 	info := &CSNodeInfo{
 		name:             rack.Name + "-" + node.Name,
-		node0Addr:        node.Addresses[0],
-		node1Addr:        node.Addresses[1],
-		node2Addr:        node.Addresses[2],
-		node0SystemdAddr: node.Addresses[0].IP,
-		node1SystemdAddr: node.SystemdAddresses[1].IP,
-		node2SystemdAddr: node.SystemdAddresses[2].IP,
+		node0Addr:        node.Node0Address,
+		node1Addr:        node.Node1Address,
+		node2Addr:        node.Node2Address,
+		node0SystemdAddr: node.Node0Address.IP,
+		node1SystemdAddr: node.ToR1Address.IP,
+		node2SystemdAddr: node.ToR2Address.IP,
 	}
 	return NodeIgnition(account, info)
 }
@@ -452,12 +452,12 @@ func CSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 func SSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 	info := &SSNodeInfo{
 		name:             rack.Name + "-" + node.Name,
-		node0Addr:        node.Addresses[0],
-		node1Addr:        node.Addresses[1],
-		node2Addr:        node.Addresses[2],
-		node0SystemdAddr: node.Addresses[0].IP,
-		node1SystemdAddr: node.SystemdAddresses[1].IP,
-		node2SystemdAddr: node.SystemdAddresses[2].IP,
+		node0Addr:        node.Node0Address,
+		node1Addr:        node.Node1Address,
+		node2Addr:        node.Node2Address,
+		node0SystemdAddr: node.Node0Address.IP,
+		node1SystemdAddr: node.ToR1Address.IP,
+		node2SystemdAddr: node.ToR2Address.IP,
 	}
 	return NodeIgnition(account, info)
 }

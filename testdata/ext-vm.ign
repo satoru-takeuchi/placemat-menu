@@ -26,7 +26,7 @@
       "files": [
          {
             "contents": {
-               "source": "data:,forest"
+               "source": "data:,ext-vm"
             },
             "filesystem": "root",
             "mode": 420,
@@ -75,11 +75,6 @@
             "contents": "[Unit]\nAfter=mnt-bird.mount\nConditionPathExists=/mnt/bird/setup-iptables\n\n[Service]\nType=oneshot\nExecStart=/bin/sh /mnt/bird/setup-iptables\n\n[Install]\nWantedBy=multi-user.target\n",
             "enabled": true,
             "name": "setup-iptables.service"
-         },
-         {
-            "contents": "[Unit]\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/bin/true\n\n[Install]\nWantedBy=multi-user.target\n",
-            "enabled": true,
-            "name": "setup-route.service"
          },
          {
             "contents": "[Unit]\nAfter=mnt-bird.mount\nBefore=network-pre.target\nWants=network-pre.target\nConditionPathExists=/mnt/bird/setup-rp-filter\n\n[Service]\nType=oneshot\nExecStart=/bin/sh /mnt/bird/setup-rp-filter\n\n[Install]\nWantedBy=multi-user.target\n",

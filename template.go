@@ -29,12 +29,8 @@ type Rack struct {
 	ShortName             string
 	ASN                   int
 	NodeNetworkPrefixSize int
-	ToR1SpineAddresses    []*net.IPNet
-	ToR1NodeAddress       *net.IPNet
-	ToR1NodeInterface     string
-	ToR2SpineAddresses    []*net.IPNet
-	ToR2NodeAddress       *net.IPNet
-	ToR2NodeInterface     string
+	ToR1                  ToR
+	ToR2                  ToR
 	BootNode              BootNodeEntity
 	CSList                []Node
 	SSList                []Node
@@ -51,6 +47,14 @@ type Node struct {
 	Node2Address *net.IPNet
 	ToR1Address  *net.IPNet
 	ToR2Address  *net.IPNet
+}
+
+// ToR is template args for a tor
+type ToR struct {
+	Name           string
+	SpineAddresses []*net.IPNet
+	NodeAddress    *net.IPNet
+	NodeInterface  string
 }
 
 // BootNodeEntity is template args for a boot node
@@ -245,19 +249,19 @@ func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
 }
 
 func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu, bases [][]net.IP) {
-	rack.ToR1SpineAddresses = make([]*net.IPNet, menu.Inventory.Spine)
+	rack.ToR1.SpineAddresses = make([]*net.IPNet, menu.Inventory.Spine)
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-		rack.ToR1SpineAddresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 1, 31)
+		rack.ToR1.SpineAddresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 1, 31)
 	}
-	rack.ToR1NodeAddress = addToIPNet(rack.node1Network, offsetNodenetToR)
-	rack.ToR1NodeInterface = fmt.Sprintf("eth%d", menu.Inventory.Spine)
+	rack.ToR1.NodeAddress = addToIPNet(rack.node1Network, offsetNodenetToR)
+	rack.ToR1.NodeInterface = fmt.Sprintf("eth%d", menu.Inventory.Spine)
 
-	rack.ToR2SpineAddresses = make([]*net.IPNet, menu.Inventory.Spine)
+	rack.ToR2.SpineAddresses = make([]*net.IPNet, menu.Inventory.Spine)
 	for spineIdx := 0; spineIdx < menu.Inventory.Spine; spineIdx++ {
-		rack.ToR2SpineAddresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 3, 31)
+		rack.ToR2.SpineAddresses[spineIdx] = addToIP(bases[spineIdx][rackIdx], 3, 31)
 	}
-	rack.ToR2NodeAddress = addToIPNet(rack.node2Network, offsetNodenetToR)
-	rack.ToR2NodeInterface = fmt.Sprintf("eth%d", menu.Inventory.Spine)
+	rack.ToR2.NodeAddress = addToIPNet(rack.node2Network, offsetNodenetToR)
+	rack.ToR2.NodeInterface = fmt.Sprintf("eth%d", menu.Inventory.Spine)
 }
 
 func addToIPNet(netAddr *net.IPNet, offset int) *net.IPNet {

@@ -403,7 +403,7 @@ type ExtVMNodeInfo struct {
 
 // Hostname returns hostname
 func (b *ExtVMNodeInfo) Hostname() string {
-	return "forest"
+	return "ext-vm"
 }
 
 // Networkd returns networkd definitions

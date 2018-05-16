@@ -26,7 +26,7 @@
       "files": [
          {
             "contents": {
-               "source": "data:,forest"
+               "source": "data:,ext-vm"
             },
             "filesystem": "root",
             "mode": 420,

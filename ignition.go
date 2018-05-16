@@ -422,12 +422,12 @@ func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
 func BootNodeIgnition(account Account, rack Rack) Ignition {
 	node := &BootNodeInfo{
 		name:        rack.Name + "-boot",
-		node0Addr:   rack.BootAddresses[0],
-		node1Addr:   rack.BootAddresses[1],
-		node2Addr:   rack.BootAddresses[2],
-		bastionAddr: rack.BootAddresses[3],
-		ToR1Addr:    rack.BootSystemdAddresses[0].IP,
-		ToR2Addr:    rack.BootSystemdAddresses[1].IP,
+		node0Addr:   rack.BootNode.Node0Address,
+		node1Addr:   rack.BootNode.Node1Address,
+		node2Addr:   rack.BootNode.Node2Address,
+		bastionAddr: rack.BootNode.BastionAddress,
+		ToR1Addr:    rack.BootNode.ToR1Address.IP,
+		ToR2Addr:    rack.BootNode.ToR2Address.IP,
 	}
 	return NodeIgnition(account, node)
 }

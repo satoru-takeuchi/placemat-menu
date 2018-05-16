@@ -308,14 +308,13 @@ func NodeIgnition(account Account, node IgnitionNode) Ignition {
 
 // BootNodeInfo contains boot server in a rack
 type BootNodeInfo struct {
-	name             string
-	bastionAddr      *net.IPNet
-	node0Addr        *net.IPNet
-	node1Addr        *net.IPNet
-	node2Addr        *net.IPNet
-	node0SystemdAddr net.IP
-	node1SystemdAddr net.IP
-	node2SystemdAddr net.IP
+	name        string
+	bastionAddr *net.IPNet
+	node0Addr   *net.IPNet
+	node1Addr   *net.IPNet
+	node2Addr   *net.IPNet
+	ToR1Addr    net.IP
+	ToR2Addr    net.IP
 }
 
 // Hostname returns hostname
@@ -334,7 +333,7 @@ func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *BootNodeInfo) Systemd() IgnitionSystemd {
-	return defaultSystemd([]net.IP{b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr})
+	return defaultSystemd([]net.IP{b.node0Addr.IP, b.ToR1Addr, b.ToR2Addr})
 }
 
 // CSNodeInfo contains cs/ss server in a rack
@@ -422,14 +421,13 @@ func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
 // BootNodeIgnition returns an Ignition for boot node
 func BootNodeIgnition(account Account, rack Rack) Ignition {
 	node := &BootNodeInfo{
-		name:             rack.Name + "-boot",
-		node0Addr:        rack.BootAddresses[0],
-		node1Addr:        rack.BootAddresses[1],
-		node2Addr:        rack.BootAddresses[2],
-		bastionAddr:      rack.BootAddresses[3],
-		node0SystemdAddr: rack.BootAddresses[0].IP,
-		node1SystemdAddr: rack.BootSystemdAddresses[1].IP,
-		node2SystemdAddr: rack.BootSystemdAddresses[2].IP,
+		name:        rack.Name + "-boot",
+		node0Addr:   rack.BootAddresses[0],
+		node1Addr:   rack.BootAddresses[1],
+		node2Addr:   rack.BootAddresses[2],
+		bastionAddr: rack.BootAddresses[3],
+		ToR1Addr:    rack.BootSystemdAddresses[0].IP,
+		ToR2Addr:    rack.BootSystemdAddresses[1].IP,
 	}
 	return NodeIgnition(account, node)
 }
@@ -438,12 +436,12 @@ func BootNodeIgnition(account Account, rack Rack) Ignition {
 func CSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 	info := &CSNodeInfo{
 		name:             rack.Name + "-" + node.Name,
-		node0Addr:        node.Addresses[0],
-		node1Addr:        node.Addresses[1],
-		node2Addr:        node.Addresses[2],
-		node0SystemdAddr: node.Addresses[0].IP,
-		node1SystemdAddr: node.SystemdAddresses[1].IP,
-		node2SystemdAddr: node.SystemdAddresses[2].IP,
+		node0Addr:        node.Node0Address,
+		node1Addr:        node.Node1Address,
+		node2Addr:        node.Node2Address,
+		node0SystemdAddr: node.Node0Address.IP,
+		node1SystemdAddr: node.ToR1Address.IP,
+		node2SystemdAddr: node.ToR2Address.IP,
 	}
 	return NodeIgnition(account, info)
 }
@@ -452,12 +450,12 @@ func CSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 func SSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 	info := &SSNodeInfo{
 		name:             rack.Name + "-" + node.Name,
-		node0Addr:        node.Addresses[0],
-		node1Addr:        node.Addresses[1],
-		node2Addr:        node.Addresses[2],
-		node0SystemdAddr: node.Addresses[0].IP,
-		node1SystemdAddr: node.SystemdAddresses[1].IP,
-		node2SystemdAddr: node.SystemdAddresses[2].IP,
+		node0Addr:        node.Node0Address,
+		node1Addr:        node.Node1Address,
+		node2Addr:        node.Node2Address,
+		node0SystemdAddr: node.Node0Address.IP,
+		node1SystemdAddr: node.ToR1Address.IP,
+		node2SystemdAddr: node.ToR2Address.IP,
 	}
 	return NodeIgnition(account, info)
 }

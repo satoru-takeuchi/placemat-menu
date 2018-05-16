@@ -44,9 +44,12 @@ type Rack struct {
 
 // Node is template args for Node
 type Node struct {
-	Name             string
-	Addresses        []*net.IPNet
-	SystemdAddresses []*net.IPNet
+	Name         string
+	Node0Address *net.IPNet
+	Node1Address *net.IPNet
+	Node2Address *net.IPNet
+	ToR1Address  *net.IPNet
+	ToR2Address  *net.IPNet
 }
 
 // Spine is template args for Spine
@@ -214,16 +217,13 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	node := Node{}
 	node.Name = fmt.Sprintf("%v%d", basename, idx+1)
-	node.Addresses = make([]*net.IPNet, 3)
-	node.SystemdAddresses = make([]*net.IPNet, 3)
 	offset := offsetStart + idx
 
-	node.Addresses[0] = addToIP(rack.nodeNetworks[0].IP, offset, 32)
-	node.Addresses[1] = addToIPNet(rack.nodeNetworks[1], offset)
-	node.Addresses[2] = addToIPNet(rack.nodeNetworks[2], offset)
-	node.SystemdAddresses[0] = node.Addresses[0]
-	node.SystemdAddresses[1] = rack.BootSystemdAddresses[1]
-	node.SystemdAddresses[2] = rack.BootSystemdAddresses[2]
+	node.Node0Address = addToIP(rack.nodeNetworks[0].IP, offset, 32)
+	node.Node1Address = addToIPNet(rack.nodeNetworks[1], offset)
+	node.Node2Address = addToIPNet(rack.nodeNetworks[2], offset)
+	node.ToR1Address = rack.BootSystemdAddresses[0]
+	node.ToR2Address = rack.BootSystemdAddresses[1]
 	return node
 }
 
@@ -234,10 +234,9 @@ func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
 	rack.BootAddresses[2] = addToIPNet(rack.nodeNetworks[2], offsetNodenetBoot)
 	rack.BootAddresses[3] = addToIP(menu.Network.Bastion.IP, rackIdx, 32)
 
-	rack.BootSystemdAddresses = make([]*net.IPNet, 3)
-	rack.BootSystemdAddresses[0] = rack.BootAddresses[0]
-	rack.BootSystemdAddresses[1] = addToIPNet(rack.nodeNetworks[1], offsetNodenetToR)
-	rack.BootSystemdAddresses[2] = addToIPNet(rack.nodeNetworks[2], offsetNodenetToR)
+	rack.BootSystemdAddresses = make([]*net.IPNet, 2)
+	rack.BootSystemdAddresses[0] = addToIPNet(rack.nodeNetworks[1], offsetNodenetToR)
+	rack.BootSystemdAddresses[1] = addToIPNet(rack.nodeNetworks[2], offsetNodenetToR)
 }
 
 func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu, bases [][]net.IP) {

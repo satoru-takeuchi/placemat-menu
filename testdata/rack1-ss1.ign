@@ -89,7 +89,7 @@
             "name": "setup-iptables.service"
          },
          {
-            "contents": "[Unit]\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/ip route add 0.0.0.0/0 src 10.69.0.198 nexthop via 10.69.1.1 dev eth0 nexthop via 10.69.1.65 dev eth1\n\n[Install]\nWantedBy=multi-user.target\n",
+            "contents": "[Unit]\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/ip route add 0.0.0.0/0 nexthop via 10.69.1.1 dev eth0 nexthop via 10.69.1.65 dev eth1\n\n[Install]\nWantedBy=multi-user.target\n",
             "enabled": true,
             "name": "setup-route.service"
          }

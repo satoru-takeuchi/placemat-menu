@@ -105,11 +105,10 @@ Name=eth%d
 [Network]
 LLDP=true
 EmitLLDP=nearest-bridge
-Address=%s
 [Address]
 Address=%s
 Scope=link
-`, i, addr, addr)
+`, i, addr)
 	}
 	return units
 }

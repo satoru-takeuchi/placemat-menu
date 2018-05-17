@@ -18,7 +18,7 @@ import (
 	"github.com/cybozu-go/placemat-menu"
 	_ "github.com/cybozu-go/placemat-menu/cmd/placemat-menu/statik"
 	"github.com/rakyll/statik/fs"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var staticFiles = []string{

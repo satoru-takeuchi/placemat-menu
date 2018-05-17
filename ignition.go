@@ -221,22 +221,6 @@ ExecStart=/bin/sh /mnt/bird/setup-iptables
 [Install]
 WantedBy=multi-user.target
 `,
-		}, {
-			Name:    "disable-rp-filter.service",
-			Enabled: true,
-			Contents: `[Unit]
-After=mnt-bird.mount
-Before=network-pre.target
-Wants=network-pre.target
-ConditionPathExists=/mnt/bird/setup-rp-filter
-
-[Service]
-Type=oneshot
-ExecStart=/bin/sh /mnt/bird/setup-rp-filter
-
-[Install]
-WantedBy=multi-user.target
-`,
 		},
 	}
 }

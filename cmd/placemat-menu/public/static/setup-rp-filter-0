@@ -1,5 +1,0 @@
-#!/bin/sh -e
-
-for interface in $(cd /proc/sys/net/ipv4/conf; ls); do
-    sysctl -w net.ipv4.conf.${interface}.rp_filter=0
-done

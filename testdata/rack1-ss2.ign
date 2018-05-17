@@ -89,11 +89,6 @@
             "name": "setup-iptables.service"
          },
          {
-            "contents": "[Unit]\nAfter=mnt-bird.mount\nBefore=network-pre.target\nWants=network-pre.target\nConditionPathExists=/mnt/bird/setup-rp-filter\n\n[Service]\nType=oneshot\nExecStart=/bin/sh /mnt/bird/setup-rp-filter\n\n[Install]\nWantedBy=multi-user.target\n",
-            "enabled": true,
-            "name": "disable-rp-filter.service"
-         },
-         {
             "contents": "[Unit]\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/ip route add 0.0.0.0/0 src 10.69.0.199 nexthop via 10.69.1.1 dev eth0 nexthop via 10.69.1.65 dev eth1\n\n[Install]\nWantedBy=multi-user.target\n",
             "enabled": true,
             "name": "setup-route.service"

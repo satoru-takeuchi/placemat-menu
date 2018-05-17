@@ -123,8 +123,6 @@ kind: DataFolder
 name: rack0-bird-data
 spec:
   files:
-    - name: setup-rp-filter
-      file: setup-rp-filter
     - name: bird.conf
       file: bird_rack0-node.conf
 ---
@@ -146,8 +144,6 @@ kind: DataFolder
 name: rack1-bird-data
 spec:
   files:
-    - name: setup-rp-filter
-      file: setup-rp-filter
     - name: bird.conf
       file: bird_rack1-node.conf
 ---
@@ -163,7 +159,6 @@ name: spine1
 spec:
   init-scripts:
     - setup-iptables
-    - setup-rp-filter-0
   interfaces:
     - network: ext-net
       addresses:
@@ -209,7 +204,6 @@ name: spine2
 spec:
   init-scripts:
     - setup-iptables
-    - setup-rp-filter-0
   interfaces:
     - network: ext-net
       addresses:
@@ -253,8 +247,6 @@ spec:
 kind: Pod
 name: rack0-tor1
 spec:
-  init-scripts:
-    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r0-1
       addresses:
@@ -307,8 +299,6 @@ spec:
 kind: Pod
 name: rack0-tor2
 spec:
-  init-scripts:
-    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r0-2
       addresses:
@@ -361,8 +351,6 @@ spec:
 kind: Pod
 name: rack1-tor1
 spec:
-  init-scripts:
-    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r1-1
       addresses:
@@ -415,8 +403,6 @@ spec:
 kind: Pod
 name: rack1-tor2
 spec:
-  init-scripts:
-    - setup-rp-filter-0
   interfaces:
     - network: s1-to-r1-2
       addresses:

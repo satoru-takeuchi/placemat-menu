@@ -84,8 +84,6 @@ kind: DataFolder
 name: {{$rack.Name}}-bird-data
 spec:
   files:
-    - name: setup-rp-filter
-      file: setup-rp-filter
     - name: bird.conf
       file: bird_{{$rack.Name}}-node.conf
 ---
@@ -104,7 +102,6 @@ name: {{$spine.Name}}
 spec:
   init-scripts:
     - setup-iptables
-    - setup-rp-filter-0
   interfaces:
     - network: ext-net
       addresses:
@@ -148,8 +145,6 @@ spec:
 kind: Pod
 name: {{$rack.Name}}-tor1
 spec:
-  init-scripts:
-    - setup-rp-filter-0
   interfaces:
     {{range $spineIdx, $spine := $spines -}}
     - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-1
@@ -201,8 +196,6 @@ spec:
 kind: Pod
 name: {{$rack.Name}}-tor2
 spec:
-  init-scripts:
-    - setup-rp-filter-0
   interfaces:
     {{range $spineIdx, $spine := $spines -}}
     - network: {{$spine.ShortName}}-to-{{$rack.ShortName}}-2

@@ -106,7 +106,10 @@ Name=eth%d
 LLDP=true
 EmitLLDP=nearest-bridge
 Address=%s
-`, i, addr)
+[Address]
+Address=%s
+Scope=link
+`, i, addr, addr)
 	}
 	return units
 }

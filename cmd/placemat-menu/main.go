@@ -156,7 +156,7 @@ func exportJSON(output string, ignition menu.Ignition) error {
 	return encoder.Encode(ignition)
 }
 
-func exportYAML(output string, cluster *Cluster) error {
+func exportYAML(output string, cluster *cluster) error {
 	f, err := os.Create(filepath.Join(*flagOutDir, output))
 	if err != nil {
 		return err

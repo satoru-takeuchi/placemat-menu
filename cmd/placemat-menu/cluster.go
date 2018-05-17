@@ -7,7 +7,7 @@ import (
 	placemat "github.com/cybozu-go/placemat/yaml"
 )
 
-type Cluster struct {
+type cluster struct {
 	networks    []*placemat.NetworkConfig
 	images      []*placemat.ImageConfig
 	dataFolders []*placemat.DataFolderConfig
@@ -15,8 +15,8 @@ type Cluster struct {
 	nodes       []*placemat.NodeConfig
 }
 
-func generateCluster(ta *menu.TemplateArgs) *Cluster {
-	cluster := new(Cluster)
+func generateCluster(ta *menu.TemplateArgs) *cluster {
+	cluster := new(cluster)
 	cluster.networks = append(
 		cluster.networks,
 		&placemat.NetworkConfig{

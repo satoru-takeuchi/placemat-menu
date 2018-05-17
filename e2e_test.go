@@ -51,6 +51,7 @@ func assertJSONFileEqual(t *testing.T, name1, name2 string) {
 
 	if !reflect.DeepEqual(ign1, ign2) {
 		t.Error("unexpected file content: " + filepath.Base(f1.Name()))
+		//t.Logf("%#v\n%#v\n", ign1, ign2)
 	}
 }
 

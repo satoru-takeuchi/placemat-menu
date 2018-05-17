@@ -55,7 +55,7 @@ type IgnitionStorage struct {
 	Files []IgnitionStorageFile `json:"files"`
 }
 
-// Ignition contains an igniration information
+// Ignition contains information to generate an ignition file.
 type Ignition struct {
 	Ignition struct {
 		Version string `json:"version"`
@@ -105,6 +105,7 @@ Name=eth%d
 [Network]
 LLDP=true
 EmitLLDP=nearest-bridge
+
 [Address]
 Address=%s
 Scope=link
@@ -227,18 +228,17 @@ WantedBy=multi-user.target
 	}
 }
 
-func setupRouteUnit(tor1addr, tor2addr net.IP) IgnitionSystemdUnit {
-	cmd := fmt.Sprintf("/usr/bin/ip route add 0.0.0.0/0 nexthop via %s dev eth0 nexthop via %s dev eth1", tor1addr, tor2addr)
+func setupRouteUnit(src, tor1addr, tor2addr net.IP) IgnitionSystemdUnit {
 	content := fmt.Sprintf(`[Unit]
 After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=%s
+ExecStart=/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
 
 [Install]
 WantedBy=multi-user.target
-`, cmd)
+`, src, tor1addr, tor2addr)
 
 	return IgnitionSystemdUnit{
 		Name:     "setup-route.service",
@@ -247,10 +247,12 @@ WantedBy=multi-user.target
 	}
 }
 
-func nodeSystemd(tor1addr, tor2addr net.IP) IgnitionSystemd {
-	units := defaultSystemdUnits()
-	units = append(units, setupRouteUnit(tor1addr, tor2addr))
-	return IgnitionSystemd{Units: units}
+func nodeSystemd() IgnitionSystemd {
+	return IgnitionSystemd{Units: defaultSystemdUnits()}
+}
+
+func bootSystemd(src, ip1, ip2 net.IP) IgnitionSystemd {
+	return IgnitionSystemd{Units: append(defaultSystemdUnits(), setupRouteUnit(src, ip1, ip2))}
 }
 
 // NodeIgnition returns an Ignition by passwd and node
@@ -320,7 +322,7 @@ func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *BootNodeInfo) Systemd() IgnitionSystemd {
-	return nodeSystemd(b.ToR1Addr, b.ToR2Addr)
+	return bootSystemd(b.bastionAddr.IP, b.ToR1Addr, b.ToR2Addr)
 }
 
 // CSNodeInfo contains cs/ss server in a rack
@@ -350,7 +352,7 @@ func (b *CSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *CSNodeInfo) Systemd() IgnitionSystemd {
-	return nodeSystemd(b.node1SystemdAddr, b.node2SystemdAddr)
+	return nodeSystemd()
 }
 
 // SSNodeInfo contains cs/ss server in a rack
@@ -380,7 +382,7 @@ func (b *SSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *SSNodeInfo) Systemd() IgnitionSystemd {
-	return nodeSystemd(b.node1SystemdAddr, b.node2SystemdAddr)
+	return nodeSystemd()
 }
 
 // ExtVMNodeInfo contains external network as VM
@@ -402,8 +404,7 @@ func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
-	units := defaultSystemdUnits()
-	return IgnitionSystemd{Units: units}
+	return nodeSystemd()
 }
 
 // BootNodeIgnition returns an Ignition for boot node

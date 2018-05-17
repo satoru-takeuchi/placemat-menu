@@ -13,11 +13,11 @@
             "name": "10-node0.network"
          },
          {
-            "contents": "[Match]\nName=eth0\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\nAddress=10.69.0.67/26\n",
+            "contents": "[Match]\nName=eth0\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\n\n[Address]\nAddress=10.69.0.67/26\nScope=link\n",
             "name": "10-eth0.network"
          },
          {
-            "contents": "[Match]\nName=eth1\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\nAddress=10.69.0.131/26\n",
+            "contents": "[Match]\nName=eth1\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\n\n[Address]\nAddress=10.69.0.131/26\nScope=link\n",
             "name": "10-eth1.network"
          },
          {
@@ -100,7 +100,7 @@
             "name": "setup-iptables.service"
          },
          {
-            "contents": "[Unit]\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/ip route add 0.0.0.0/0 nexthop via 10.69.0.65 dev eth0 nexthop via 10.69.0.129 dev eth1\n\n[Install]\nWantedBy=multi-user.target\n",
+            "contents": "[Unit]\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/ip route add 0.0.0.0/0 src 10.72.48.0 nexthop via 10.69.0.65 nexthop via 10.69.0.129\n\n[Install]\nWantedBy=multi-user.target\n",
             "enabled": true,
             "name": "setup-route.service"
          }

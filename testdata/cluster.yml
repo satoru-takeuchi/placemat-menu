@@ -554,59 +554,6 @@ spec:
     - CAP_NET_BROADCAST
 ---
 kind: Pod
-name: rack1-tor1
-spec:
-  interfaces:
-  - network: s1-to-r1-1
-    addresses:
-    - 10.0.1.5/31
-  - network: s2-to-r1-1
-    addresses:
-    - 10.0.1.13/31
-  - network: r1-node1
-    addresses:
-    - 10.69.1.1/26
-  volumes:
-  - name: config
-    kind: host
-    folder: rack1-tor1-data
-    readonly: true
-  - name: run
-    kind: empty
-    readonly: false
-  apps:
-  - name: bird
-    image: docker://quay.io/cybozu/bird:2.0
-    readonly-rootfs: true
-    caps-retain:
-    - CAP_NET_ADMIN
-    - CAP_NET_BIND_SERVICE
-    - CAP_NET_RAW
-    mount:
-    - volume: config
-      target: /etc/bird
-    - volume: run
-      target: /run/bird
-  - name: debug
-    image: docker://quay.io/cybozu/ubuntu-debug:18.04
-    readonly-rootfs: true
-  - name: dhcp-relay
-    image: docker://quay.io/cybozu/dnsmasq:2.79
-    readonly-rootfs: true
-    args:
-    - --log-queries
-    - --log-dhcp
-    - --no-daemon
-    - --dhcp-relay
-    - 10.69.1.1,10.69.0.3
-    - --dhcp-relay
-    - 10.69.1.1,10.69.0.195
-    caps-retain:
-    - CAP_NET_BIND_SERVICE
-    - CAP_NET_RAW
-    - CAP_NET_BROADCAST
----
-kind: Pod
 name: rack0-tor2
 spec:
   interfaces:
@@ -654,6 +601,59 @@ spec:
     - 10.69.0.129,10.69.0.3
     - --dhcp-relay
     - 10.69.0.129,10.69.0.195
+    caps-retain:
+    - CAP_NET_BIND_SERVICE
+    - CAP_NET_RAW
+    - CAP_NET_BROADCAST
+---
+kind: Pod
+name: rack1-tor1
+spec:
+  interfaces:
+  - network: s1-to-r1-1
+    addresses:
+    - 10.0.1.5/31
+  - network: s2-to-r1-1
+    addresses:
+    - 10.0.1.13/31
+  - network: r1-node1
+    addresses:
+    - 10.69.1.1/26
+  volumes:
+  - name: config
+    kind: host
+    folder: rack1-tor1-data
+    readonly: true
+  - name: run
+    kind: empty
+    readonly: false
+  apps:
+  - name: bird
+    image: docker://quay.io/cybozu/bird:2.0
+    readonly-rootfs: true
+    caps-retain:
+    - CAP_NET_ADMIN
+    - CAP_NET_BIND_SERVICE
+    - CAP_NET_RAW
+    mount:
+    - volume: config
+      target: /etc/bird
+    - volume: run
+      target: /run/bird
+  - name: debug
+    image: docker://quay.io/cybozu/ubuntu-debug:18.04
+    readonly-rootfs: true
+  - name: dhcp-relay
+    image: docker://quay.io/cybozu/dnsmasq:2.79
+    readonly-rootfs: true
+    args:
+    - --log-queries
+    - --log-dhcp
+    - --no-daemon
+    - --dhcp-relay
+    - 10.69.1.1,10.69.0.3
+    - --dhcp-relay
+    - 10.69.1.1,10.69.0.195
     caps-retain:
     - CAP_NET_BIND_SERVICE
     - CAP_NET_RAW

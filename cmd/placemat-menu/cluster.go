@@ -17,6 +17,33 @@ const (
 	aciDnsmasq = "cybozu-dnsmasq-2.79.aci"
 )
 
+var birdContainer = placemat.PodAppConfig{
+	Name:           "bird",
+	Image:          dockerImageBird,
+	ReadOnlyRootfs: true,
+	Mount: []placemat.PodAppMountConfig{
+		{
+			Volume: "config",
+			Target: "/etc/bird",
+		},
+		{
+			Volume: "run",
+			Target: "/run/bird",
+		},
+	},
+	CapsRetain: []string{
+		"CAP_NET_ADMIN",
+		"CAP_NET_BIND_SERVICE",
+		"CAP_NET_RAW",
+	},
+}
+
+var debugContainer = placemat.PodAppConfig{
+	Name:           "debug",
+	Image:          dockerImageDebug,
+	ReadOnlyRootfs: true,
+}
+
 type cluster struct {
 	networks    []*placemat.NetworkConfig
 	images      []*placemat.ImageConfig
@@ -46,138 +73,64 @@ func generateCluster(ta *menu.TemplateArgs) *cluster {
 
 	spinePod(ta, cluster)
 
-	tor1Pod(ta, cluster)
-
-	tor2Pod(ta, cluster)
+	torPods(ta, cluster)
 
 	nodes(ta, cluster)
 
 	return cluster
 }
 
-func nodes(ta *menu.TemplateArgs, cluster *cluster) {
-	for _, rack := range ta.Racks {
-		cluster.nodes = append(cluster.nodes, &placemat.NodeConfig{
-			Kind: "Node",
-			Name: fmt.Sprintf("%s-boot", rack.Name),
-			Spec: placemat.NodeSpec{
-				Interfaces: []string{
-					fmt.Sprintf("%s-node1", rack.ShortName),
-					fmt.Sprintf("%s-node2", rack.ShortName),
-				},
-				Volumes: []placemat.NodeVolumeConfig{
-					{
-						Kind: "image",
-						Name: "root",
-						Spec: placemat.NodeVolumeSpec{
-							Image:       "coreos-image",
-							CopyOnWrite: true,
-						},
-					},
-					{
-						Kind: "vvfat",
-						Name: "common",
-						Spec: placemat.NodeVolumeSpec{
-							Folder: "common-data",
-						},
-					},
-					{
-						Kind: "vvfat",
-						Name: "local",
-						Spec: placemat.NodeVolumeSpec{
-							Folder: fmt.Sprintf("%s-bird-data", rack.Name),
-						},
+func node(rackName, rackShortName, nodeName string, resource *menu.VMResource) *placemat.NodeConfig {
+
+	return &placemat.NodeConfig{
+		Kind: "Node",
+		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
+		Spec: placemat.NodeSpec{
+			Interfaces: []string{
+				fmt.Sprintf("%s-node1", rackShortName),
+				fmt.Sprintf("%s-node2", rackShortName),
+			},
+			Volumes: []placemat.NodeVolumeConfig{
+				{
+					Kind: "image",
+					Name: "root",
+					Spec: placemat.NodeVolumeSpec{
+						Image:       "coreos-image",
+						CopyOnWrite: true,
 					},
 				},
-				IgnitionFile: fmt.Sprintf("%s-boot.ign", rack.Name),
-				Resources: placemat.NodeResourceConfig{
-					CPU:    fmt.Sprint(ta.Boot.CPU),
-					Memory: ta.Boot.Memory,
+				{
+					Kind: "vvfat",
+					Name: "common",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: "common-data",
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "local",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: fmt.Sprintf("%s-bird-data", rackName),
+					},
 				},
 			},
-		})
+			IgnitionFile: fmt.Sprintf("%s-%s.ign", rackName, nodeName),
+			Resources: placemat.NodeResourceConfig{
+				CPU:    fmt.Sprint(resource.CPU),
+				Memory: resource.Memory,
+			},
+		},
+	}
+}
+func nodes(ta *menu.TemplateArgs, cluster *cluster) {
+	for _, rack := range ta.Racks {
+		cluster.nodes = append(cluster.nodes, node(rack.Name, rack.ShortName, "boot", &ta.Boot))
 
 		for _, cs := range rack.CSList {
-			cluster.nodes = append(cluster.nodes, &placemat.NodeConfig{
-				Kind: "Node",
-				Name: fmt.Sprintf("%s-%s", rack.Name, cs.Name),
-				Spec: placemat.NodeSpec{
-					Interfaces: []string{
-						fmt.Sprintf("%s-node1", rack.ShortName),
-						fmt.Sprintf("%s-node2", rack.ShortName),
-					},
-					Volumes: []placemat.NodeVolumeConfig{
-						{
-							Kind: "image",
-							Name: "root",
-							Spec: placemat.NodeVolumeSpec{
-								Image:       "coreos-image",
-								CopyOnWrite: true,
-							},
-						},
-						{
-							Kind: "vvfat",
-							Name: "common",
-							Spec: placemat.NodeVolumeSpec{
-								Folder: "common-data",
-							},
-						},
-						{
-							Kind: "vvfat",
-							Name: "local",
-							Spec: placemat.NodeVolumeSpec{
-								Folder: fmt.Sprintf("%s-bird-data", rack.Name),
-							},
-						},
-					},
-					IgnitionFile: fmt.Sprintf("%s-%s.ign", rack.Name, cs.Name),
-					Resources: placemat.NodeResourceConfig{
-						CPU:    fmt.Sprint(ta.CS.CPU),
-						Memory: ta.CS.Memory,
-					},
-				},
-			})
+			cluster.nodes = append(cluster.nodes, node(rack.Name, rack.ShortName, cs.Name, &ta.CS))
 		}
 		for _, ss := range rack.SSList {
-			cluster.nodes = append(cluster.nodes, &placemat.NodeConfig{
-				Kind: "Node",
-				Name: fmt.Sprintf("%s-%s", rack.Name, ss.Name),
-				Spec: placemat.NodeSpec{
-					Interfaces: []string{
-						fmt.Sprintf("%s-node1", rack.ShortName),
-						fmt.Sprintf("%s-node2", rack.ShortName),
-					},
-					Volumes: []placemat.NodeVolumeConfig{
-						{
-							Kind: "image",
-							Name: "root",
-							Spec: placemat.NodeVolumeSpec{
-								Image:       "coreos-image",
-								CopyOnWrite: true,
-							},
-						},
-						{
-							Kind: "vvfat",
-							Name: "common",
-							Spec: placemat.NodeVolumeSpec{
-								Folder: "common-data",
-							},
-						},
-						{
-							Kind: "vvfat",
-							Name: "local",
-							Spec: placemat.NodeVolumeSpec{
-								Folder: fmt.Sprintf("%s-bird-data", rack.Name),
-							},
-						},
-					},
-					IgnitionFile: fmt.Sprintf("%s-%s.ign", rack.Name, ss.Name),
-					Resources: placemat.NodeResourceConfig{
-						CPU:    fmt.Sprint(ta.SS.CPU),
-						Memory: ta.SS.Memory,
-					},
-				},
-			})
+			cluster.nodes = append(cluster.nodes, node(rack.Name, rack.ShortName, ss.Name, &ta.SS))
 		}
 	}
 	cluster.nodes = append(cluster.nodes, &placemat.NodeConfig{
@@ -216,175 +169,74 @@ func nodes(ta *menu.TemplateArgs, cluster *cluster) {
 	})
 }
 
-func tor2Pod(ta *menu.TemplateArgs, cluster *cluster) {
-	for _, rack := range ta.Racks {
-		var spineIfs []placemat.PodInterfaceConfig
-		for i, spine := range ta.Spines {
-			spineIfs = append(spineIfs,
-				placemat.PodInterfaceConfig{
-					Network:   fmt.Sprintf("%s-to-%s-2", spine.ShortName, rack.ShortName),
-					Addresses: []string{rack.ToR2.SpineAddresses[i].String()},
-				},
-			)
-		}
-		spineIfs = append(spineIfs, placemat.PodInterfaceConfig{
-			Network:   fmt.Sprintf("%s-node2", rack.ShortName),
-			Addresses: []string{rack.ToR2.NodeAddress.String()},
-		})
+func torPod(rackName, rackShortName string, tor menu.ToR, torNumber int, ta *menu.TemplateArgs) *placemat.PodConfig {
 
-		dhcpRelayArgs := []string{
-			"--log-queries",
-			"--log-dhcp",
-			"--no-daemon",
-		}
-		for _, rack2 := range ta.Racks {
-			dhcpRelayArgs = append(dhcpRelayArgs, "--dhcp-relay")
-			dhcpRelayArgs = append(dhcpRelayArgs, rack.ToR2.NodeAddress.IP.String()+","+rack2.BootNode.Node0Address.IP.String())
-		}
+	var spineIfs []placemat.PodInterfaceConfig
+	for i, spine := range ta.Spines {
+		spineIfs = append(spineIfs,
+			placemat.PodInterfaceConfig{
+				Network:   fmt.Sprintf("%s-to-%s-%d", spine.ShortName, rackShortName, torNumber),
+				Addresses: []string{tor.SpineAddresses[i].String()},
+			},
+		)
+	}
+	spineIfs = append(spineIfs, placemat.PodInterfaceConfig{
+		Network:   fmt.Sprintf("%s-node%d", rackShortName, torNumber),
+		Addresses: []string{tor.NodeAddress.String()},
+	})
 
-		cluster.pods = append(cluster.pods, &placemat.PodConfig{
-			Kind: "Pod",
-			Name: fmt.Sprintf("%s-tor2", rack.Name),
-			Spec: placemat.PodSpec{
-				Interfaces: spineIfs,
-				Volumes: []placemat.PodVolumeConfig{
-					{
-						Name:     "config",
-						Kind:     "host",
-						Folder:   fmt.Sprintf("%s-tor2-data", rack.Name),
-						ReadOnly: true,
-					},
-					{
-						Name: "run",
-						Kind: "empty",
-					},
+	dhcpRelayArgs := []string{
+		"--log-queries",
+		"--log-dhcp",
+		"--no-daemon",
+	}
+	for _, r := range ta.Racks {
+		dhcpRelayArgs = append(dhcpRelayArgs, "--dhcp-relay")
+		dhcpRelayArgs = append(dhcpRelayArgs, tor.NodeAddress.IP.String()+","+r.BootNode.Node0Address.IP.String())
+	}
+
+	return &placemat.PodConfig{
+		Kind: "Pod",
+		Name: fmt.Sprintf("%s-tor%d", rackName, torNumber),
+		Spec: placemat.PodSpec{
+			Interfaces: spineIfs,
+			Volumes: []placemat.PodVolumeConfig{
+				{
+					Name:     "config",
+					Kind:     "host",
+					Folder:   fmt.Sprintf("%s-tor%d-data", rackName, torNumber),
+					ReadOnly: true,
 				},
-				Apps: []placemat.PodAppConfig{
-					{
-						Name:           "bird",
-						Image:          dockerImageBird,
-						ReadOnlyRootfs: true,
-						Mount: []placemat.PodAppMountConfig{
-							{
-								Volume: "config",
-								Target: "/etc/bird",
-							},
-							{
-								Volume: "run",
-								Target: "/run/bird",
-							},
-						},
-						CapsRetain: []string{
-							"CAP_NET_ADMIN",
-							"CAP_NET_BIND_SERVICE",
-							"CAP_NET_RAW",
-						},
-					},
-					{
-						Name:           "debug",
-						Image:          dockerImageDebug,
-						ReadOnlyRootfs: true,
-					},
-					{
-						Name:           "dhcp-relay",
-						Image:          dockerImageDnsmasq,
-						ReadOnlyRootfs: true,
-						CapsRetain: []string{
-							"CAP_NET_BIND_SERVICE",
-							"CAP_NET_RAW",
-							"CAP_NET_BROADCAST",
-						},
-						Args: dhcpRelayArgs,
-					},
+				{
+					Name: "run",
+					Kind: "empty",
 				},
 			},
-		})
+			Apps: []placemat.PodAppConfig{
+				birdContainer,
+				debugContainer,
+				{
+					Name:           "dhcp-relay",
+					Image:          dockerImageDnsmasq,
+					ReadOnlyRootfs: true,
+					CapsRetain: []string{
+						"CAP_NET_BIND_SERVICE",
+						"CAP_NET_RAW",
+						"CAP_NET_BROADCAST",
+					},
+					Args: dhcpRelayArgs,
+				},
+			},
+		},
 	}
 }
 
-func tor1Pod(ta *menu.TemplateArgs, cluster *cluster) {
+func torPods(ta *menu.TemplateArgs, cluster *cluster) {
 	for _, rack := range ta.Racks {
-		var spineIfs []placemat.PodInterfaceConfig
-		for i, spine := range ta.Spines {
-			spineIfs = append(spineIfs,
-				placemat.PodInterfaceConfig{
-					Network:   fmt.Sprintf("%s-to-%s-1", spine.ShortName, rack.ShortName),
-					Addresses: []string{rack.ToR1.SpineAddresses[i].String()},
-				},
-			)
-		}
-		spineIfs = append(spineIfs, placemat.PodInterfaceConfig{
-			Network:   fmt.Sprintf("%s-node1", rack.ShortName),
-			Addresses: []string{rack.ToR1.NodeAddress.String()},
-		})
-
-		dhcpRelayArgs := []string{
-			"--log-queries",
-			"--log-dhcp",
-			"--no-daemon",
-		}
-		for _, rack2 := range ta.Racks {
-			dhcpRelayArgs = append(dhcpRelayArgs, "--dhcp-relay")
-			dhcpRelayArgs = append(dhcpRelayArgs, rack.ToR1.NodeAddress.IP.String()+","+rack2.BootNode.Node0Address.IP.String())
-		}
-
-		cluster.pods = append(cluster.pods, &placemat.PodConfig{
-			Kind: "Pod",
-			Name: fmt.Sprintf("%s-tor1", rack.Name),
-			Spec: placemat.PodSpec{
-				Interfaces: spineIfs,
-				Volumes: []placemat.PodVolumeConfig{
-					{
-						Name:     "config",
-						Kind:     "host",
-						Folder:   fmt.Sprintf("%s-tor1-data", rack.Name),
-						ReadOnly: true,
-					},
-					{
-						Name: "run",
-						Kind: "empty",
-					},
-				},
-				Apps: []placemat.PodAppConfig{
-					{
-						Name:           "bird",
-						Image:          dockerImageBird,
-						ReadOnlyRootfs: true,
-						Mount: []placemat.PodAppMountConfig{
-							{
-								Volume: "config",
-								Target: "/etc/bird",
-							},
-							{
-								Volume: "run",
-								Target: "/run/bird",
-							},
-						},
-						CapsRetain: []string{
-							"CAP_NET_ADMIN",
-							"CAP_NET_BIND_SERVICE",
-							"CAP_NET_RAW",
-						},
-					},
-					{
-						Name:           "debug",
-						Image:          dockerImageDebug,
-						ReadOnlyRootfs: true,
-					},
-					{
-						Name:           "dhcp-relay",
-						Image:          dockerImageDnsmasq,
-						ReadOnlyRootfs: true,
-						CapsRetain: []string{
-							"CAP_NET_BIND_SERVICE",
-							"CAP_NET_RAW",
-							"CAP_NET_BROADCAST",
-						},
-						Args: dhcpRelayArgs,
-					},
-				},
-			},
-		})
+		cluster.pods = append(cluster.pods,
+			torPod(rack.Name, rack.ShortName, rack.ToR1, 1, ta),
+			torPod(rack.Name, rack.ShortName, rack.ToR2, 2, ta),
+		)
 	}
 }
 
@@ -427,31 +279,8 @@ func spinePod(ta *menu.TemplateArgs, cluster *cluster) {
 					},
 				},
 				Apps: []placemat.PodAppConfig{
-					{
-						Name:           "bird",
-						Image:          dockerImageBird,
-						ReadOnlyRootfs: true,
-						Mount: []placemat.PodAppMountConfig{
-							{
-								Volume: "config",
-								Target: "/etc/bird",
-							},
-							{
-								Volume: "run",
-								Target: "/run/bird",
-							},
-						},
-						CapsRetain: []string{
-							"CAP_NET_ADMIN",
-							"CAP_NET_BIND_SERVICE",
-							"CAP_NET_RAW",
-						},
-					},
-					{
-						Name:           "debug",
-						Image:          dockerImageDebug,
-						ReadOnlyRootfs: true,
-					},
+					birdContainer,
+					debugContainer,
 				},
 			},
 		})

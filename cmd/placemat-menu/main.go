@@ -15,9 +15,10 @@ import (
 	"path/filepath"
 	"text/template"
 
-	menu "github.com/cybozu-go/placemat-menu"
+	"github.com/cybozu-go/placemat-menu"
 	_ "github.com/cybozu-go/placemat-menu/cmd/placemat-menu/statik"
 	"github.com/rakyll/statik/fs"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var staticFiles = []string{
@@ -76,7 +77,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	err = export(statikFS, "/templates/cluster.yml", "cluster.yml", ta)
+	err = exportYAML("cluster.yml", generateCluster(ta))
 	if err != nil {
 		return err
 	}
@@ -153,6 +154,46 @@ func exportJSON(output string, ignition menu.Ignition) error {
 	encoder := json.NewEncoder(f)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(ignition)
+}
+
+func exportYAML(output string, cluster *cluster) error {
+	f, err := os.Create(filepath.Join(*flagOutDir, output))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	encoder := yaml.NewEncoder(f)
+	for _, n := range cluster.networks {
+		err = encoder.Encode(n)
+		if err != nil {
+			return err
+		}
+	}
+	for _, i := range cluster.images {
+		err = encoder.Encode(i)
+		if err != nil {
+			return err
+		}
+	}
+	for _, f := range cluster.dataFolders {
+		err = encoder.Encode(f)
+		if err != nil {
+			return err
+		}
+	}
+	for _, n := range cluster.nodes {
+		err = encoder.Encode(n)
+		if err != nil {
+			return err
+		}
+	}
+	for _, p := range cluster.pods {
+		err = encoder.Encode(p)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func export(fs http.FileSystem, input string, output string, args interface{}) error {

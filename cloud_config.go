@@ -105,5 +105,8 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{rack.BootNode.Node1Address, rack.BootNode.Node2Address})...)
 	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", rack.BootNode.BastionAddress)...)
 
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
+
+	fmt.Fprintln(w, "#cloud-config")
 	return yaml.NewEncoder(w).Encode(seed)
 }

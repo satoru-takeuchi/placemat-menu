@@ -1,3 +1,4 @@
+#cloud-config
 hostname: rack1-boot
 users:
 - name: cybozu
@@ -56,3 +57,7 @@ write_files:
 
     [Network]
     Address=10.72.48.1/32
+runcmd:
+- - systemctl
+  - restart
+  - systemd-networkd.service

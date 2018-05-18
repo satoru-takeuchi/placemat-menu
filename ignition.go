@@ -114,6 +114,22 @@ Scope=link
 	return units
 }
 
+func extVMEthNetwork(addresses []*net.IPNet) []IgnitionNetworkdUnit {
+	units := make([]IgnitionNetworkdUnit, len(addresses))
+	for i, addr := range addresses {
+		units[i].Name = fmt.Sprintf("10-eth%d.network", i)
+		units[i].Contents = fmt.Sprintf(`[Match]
+Name=eth%d
+
+[Network]
+LLDP=true
+EmitLLDP=nearest-bridge
+Address=%s
+`, i, addr)
+	}
+	return units
+}
+
 func defaultSystemdUnits() []IgnitionSystemdUnit {
 	return []IgnitionSystemdUnit{
 		{
@@ -397,7 +413,7 @@ func (b *ExtVMNodeInfo) Hostname() string {
 
 // Networkd returns networkd definitions
 func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
-	units := ethNetworkUnits([]*net.IPNet{b.vmAddr})
+	units := extVMEthNetwork([]*net.IPNet{b.vmAddr})
 	return IgnitionNetworkd{Units: units}
 
 }

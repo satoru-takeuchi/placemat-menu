@@ -1,0 +1,58 @@
+hostname: rack0-boot
+users:
+- name: cybozu
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  groups: users, admin, systemd-journal, rkt
+  lock_passwd: false
+  passwd: $6$rounds=4096$m3AVOWeB$EPystoHozf.eJNCm4tWyRHpJzgTDymYuGOONWxRN8uk4amLvxwB4Pc7.tEkZdeXewoVEBEX5ujUon9wSpEf1N.
+  shell: /bin/bash
+fs_setup: []
+write_files:
+- path: /etc/systemd/network/10-node0.netdev
+  content: |
+    [NetDev]
+    Name=node0
+    Kind=dummy
+- path: /etc/systemd/network/10-node0.network
+  content: |
+    [Match]
+    Name=node0
+
+    [Network]
+    Address=10.69.0.3/32
+- path: /etc/systemd/network/10-eth0.network
+  content: |
+    [Match]
+    Name=eth0
+
+    [Network]
+    LLDP=true
+    EmitLLDP=nearest-bridge
+
+    [Address]
+    Address=10.69.0.67/26
+    Scope=link
+- path: /etc/systemd/network/10-eth1.network
+  content: |
+    [Match]
+    Name=eth1
+
+    [Network]
+    LLDP=true
+    EmitLLDP=nearest-bridge
+
+    [Address]
+    Address=10.69.0.131/26
+    Scope=link
+- path: /etc/systemd/network/10-bastion.netdev
+  content: |
+    [NetDev]
+    Name=bastion
+    Kind=dummy
+- path: /etc/systemd/network/10-bastion.network
+  content: |
+    [Match]
+    Name=bastion
+
+    [Network]
+    Address=10.72.48.0/32

@@ -196,8 +196,8 @@ spec:
   - kind: localds
     name: seed
     spec:
-      user-data: rack0-boot-seed.yml
-      network-config: rack0-boot-network.yml
+      user-data: seed_rack0-boot.yml
+      network-config: network_rack0-boot.yml
       copy-on-write: false
   resources:
     cpu: "2"
@@ -282,8 +282,8 @@ spec:
   - kind: localds
     name: seed
     spec:
-      user-data: rack1-boot-seed.yml
-      network-config: rack1-boot-network.yml
+      user-data: seed_rack1-boot.yml
+      network-config: network_rack1-boot.yml
       copy-on-write: false
   resources:
     cpu: "2"

@@ -87,12 +87,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	err = exportJSON(
-		"ext-vm.ign",
-		menu.ExtVMIgnition(ta.Account, ta.Network.External.VM))
-	if err != nil {
-		return err
-	}
+
 	for spineIdx := range ta.Spines {
 		err = export(statikFS, "/templates/bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
@@ -102,10 +97,24 @@ func run() error {
 		}
 	}
 	for rackIdx, rack := range ta.Racks {
+		err := func() error {
+			seedFile, err := os.Create(filepath.Join(*flagOutDir, fmt.Sprintf("seed_%s-boot.yml", rack.Name)))
+			if err != nil {
+				return err
+			}
+			defer seedFile.Close()
+			return menu.ExportSeed(seedFile, &ta.Account, &rack)
+		}()
+		if err != nil {
+			return err
+		}
+
 		err = exportJSON(
-			fmt.Sprintf("rack%d-boot.ign", rackIdx),
-			menu.BootNodeIgnition(ta.Account, rack),
-		)
+			"ext-vm.ign",
+			menu.ExtVMIgnition(ta.Account, ta.Network.External.VM))
+		if err != nil {
+			return err
+		}
 
 		err = export(statikFS, "/templates/bird_rack-tor1.conf",
 			fmt.Sprintf("bird_rack%d-tor1.conf", rackIdx),

@@ -49,13 +49,13 @@ type Seed struct {
 func seedDummyNetworkUnits(name string, address *net.IPNet) []SeedWriteFile {
 	return []SeedWriteFile{
 		{
-			Path: "/etc/systemd/network/10-%s.netdev",
+			Path: fmt.Sprintf("/etc/systemd/network/10-%s.netdev", name),
 			Content: fmt.Sprintf(`[NetDev]
 Name=%s
 Kind=dummy
 `, name),
 		}, {
-			Path: "/etc/systemd/network/10-network.netdev",
+			Path: fmt.Sprintf("/etc/systemd/network/10-%s.network", name),
 			Content: fmt.Sprintf(`[Match]
 Name=%s
 
@@ -101,7 +101,7 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 		},
 	}
 
-	seed.WriteFiles = seedDummyNetworkUnits("node", rack.BootNode.Node0Address)
+	seed.WriteFiles = seedDummyNetworkUnits("node0", rack.BootNode.Node0Address)
 	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{rack.BootNode.Node1Address, rack.BootNode.Node2Address})...)
 	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", rack.BootNode.BastionAddress)...)
 

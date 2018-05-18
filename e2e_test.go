@@ -88,15 +88,15 @@ func TestE2E(t *testing.T) {
 		"bird_rack1-node.conf",
 		"bird_rack1-tor2.conf",
 		"bird_spine2.conf",
+		"seed_rack0-boot.yml",
+		"seed_rack1-boot.yml",
 		"cluster.yml",
 	}
 
 	targetJSONs := []string{
 		"ext-vm.ign",
-		"rack0-boot.ign",
 		"rack0-cs1.ign",
 		"rack0-cs2.ign",
-		"rack1-boot.ign",
 		"rack1-cs1.ign",
 		"rack1-cs2.ign",
 		"rack1-ss1.ign",

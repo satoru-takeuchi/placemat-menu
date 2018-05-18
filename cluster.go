@@ -162,8 +162,8 @@ func ubuntuNode(rackName, rackShortName, nodeName string, resource *VMResource) 
 					Kind: "localds",
 					Name: "seed",
 					Spec: placemat.NodeVolumeSpec{
-						UserData:      fmt.Sprintf("%s-%s-seed.yml", rackName, nodeName),
-						NetworkConfig: fmt.Sprintf("%s-%s-network.yml", rackName, nodeName),
+						UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+						NetworkConfig: fmt.Sprintf("network_%s-%s.yml", rackName, nodeName),
 					},
 				},
 			},

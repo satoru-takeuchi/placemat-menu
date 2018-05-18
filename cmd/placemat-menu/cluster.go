@@ -15,6 +15,8 @@ const (
 	aciBird    = "cybozu-bird-2.0.aci"
 	aciDebug   = "cybozu-ubuntu-debug-18.04.aci"
 	aciDnsmasq = "cybozu-dnsmasq-2.79.aci"
+
+	qemuImageCoreOS = "https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2"
 )
 
 var birdContainer = placemat.PodAppConfig{
@@ -55,32 +57,32 @@ type cluster struct {
 func generateCluster(ta *menu.TemplateArgs) *cluster {
 	cluster := new(cluster)
 
-	externalNetwork(cluster, ta)
+	cluster.appendExternalNetwork(ta)
 
-	spineToRackNetwork(ta, cluster)
+	cluster.appendSpineToRackNetwork(ta)
 
-	rackNetwork(ta, cluster)
+	cluster.appendRackNetwork(ta)
 
-	coreosImage(cluster)
+	cluster.appendCoreOSImage()
 
-	commonDataFolder(cluster)
+	cluster.appendCommonDataFolder()
 
-	spineDataFolder(ta, cluster)
+	cluster.appendSpineDataFolder(ta)
 
-	rackDataFolder(ta, cluster)
+	cluster.appendRackDataFolder(ta)
 
-	extVMDataFolder(cluster)
+	cluster.appendExtVMDataFolder()
 
-	spinePod(ta, cluster)
+	cluster.appendSpinePod(ta)
 
-	torPods(ta, cluster)
+	cluster.appendToRPods(ta)
 
-	nodes(ta, cluster)
+	cluster.appendNodes(ta)
 
 	return cluster
 }
 
-func node(rackName, rackShortName, nodeName string, resource *menu.VMResource) *placemat.NodeConfig {
+func coreOSNode(rackName, rackShortName, nodeName string, resource *menu.VMResource) *placemat.NodeConfig {
 
 	return &placemat.NodeConfig{
 		Kind: "Node",
@@ -122,18 +124,18 @@ func node(rackName, rackShortName, nodeName string, resource *menu.VMResource) *
 		},
 	}
 }
-func nodes(ta *menu.TemplateArgs, cluster *cluster) {
+func (c *cluster) appendNodes(ta *menu.TemplateArgs) {
 	for _, rack := range ta.Racks {
-		cluster.nodes = append(cluster.nodes, node(rack.Name, rack.ShortName, "boot", &ta.Boot))
+		c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
 
 		for _, cs := range rack.CSList {
-			cluster.nodes = append(cluster.nodes, node(rack.Name, rack.ShortName, cs.Name, &ta.CS))
+			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, cs.Name, &ta.CS))
 		}
 		for _, ss := range rack.SSList {
-			cluster.nodes = append(cluster.nodes, node(rack.Name, rack.ShortName, ss.Name, &ta.SS))
+			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, ss.Name, &ta.SS))
 		}
 	}
-	cluster.nodes = append(cluster.nodes, &placemat.NodeConfig{
+	c.nodes = append(c.nodes, &placemat.NodeConfig{
 		Kind: "Node",
 		Name: "ext-vm",
 		Spec: placemat.NodeSpec{
@@ -231,16 +233,16 @@ func torPod(rackName, rackShortName string, tor menu.ToR, torNumber int, ta *men
 	}
 }
 
-func torPods(ta *menu.TemplateArgs, cluster *cluster) {
+func (c *cluster) appendToRPods(ta *menu.TemplateArgs) {
 	for _, rack := range ta.Racks {
-		cluster.pods = append(cluster.pods,
+		c.pods = append(c.pods,
 			torPod(rack.Name, rack.ShortName, rack.ToR1, 1, ta),
 			torPod(rack.Name, rack.ShortName, rack.ToR2, 2, ta),
 		)
 	}
 }
 
-func spinePod(ta *menu.TemplateArgs, cluster *cluster) {
+func (c *cluster) appendSpinePod(ta *menu.TemplateArgs) {
 	for _, spine := range ta.Spines {
 		var rackIfs []placemat.PodInterfaceConfig
 		rackIfs = append(rackIfs, placemat.PodInterfaceConfig{
@@ -260,7 +262,7 @@ func spinePod(ta *menu.TemplateArgs, cluster *cluster) {
 			)
 		}
 
-		cluster.pods = append(cluster.pods, &placemat.PodConfig{
+		c.pods = append(c.pods, &placemat.PodConfig{
 			Kind: "Pod",
 			Name: spine.Name,
 			Spec: placemat.PodSpec{
@@ -287,8 +289,8 @@ func spinePod(ta *menu.TemplateArgs, cluster *cluster) {
 	}
 }
 
-func extVMDataFolder(cluster *cluster) {
-	cluster.dataFolders = append(cluster.dataFolders,
+func (c *cluster) appendExtVMDataFolder() {
+	c.dataFolders = append(c.dataFolders,
 		&placemat.DataFolderConfig{
 			Kind: "DataFolder",
 			Name: "ext-vm-data",
@@ -303,9 +305,9 @@ func extVMDataFolder(cluster *cluster) {
 		})
 }
 
-func rackDataFolder(ta *menu.TemplateArgs, cluster *cluster) {
+func (c *cluster) appendRackDataFolder(ta *menu.TemplateArgs) {
 	for _, rack := range ta.Racks {
-		cluster.dataFolders = append(cluster.dataFolders,
+		c.dataFolders = append(c.dataFolders,
 			&placemat.DataFolderConfig{
 				Kind: "DataFolder",
 				Name: fmt.Sprintf("%s-tor1-data", rack.Name),
@@ -346,9 +348,9 @@ func rackDataFolder(ta *menu.TemplateArgs, cluster *cluster) {
 	}
 }
 
-func spineDataFolder(ta *menu.TemplateArgs, cluster *cluster) {
+func (c *cluster) appendSpineDataFolder(ta *menu.TemplateArgs) {
 	for _, spine := range ta.Spines {
-		cluster.dataFolders = append(cluster.dataFolders,
+		c.dataFolders = append(c.dataFolders,
 			&placemat.DataFolderConfig{
 				Kind: "DataFolder",
 				Name: fmt.Sprintf("%s-data", spine.Name),
@@ -368,8 +370,8 @@ func spineDataFolder(ta *menu.TemplateArgs, cluster *cluster) {
 	}
 }
 
-func commonDataFolder(cluster *cluster) {
-	cluster.dataFolders = append(cluster.dataFolders, &placemat.DataFolderConfig{
+func (c *cluster) appendCommonDataFolder() {
+	c.dataFolders = append(c.dataFolders, &placemat.DataFolderConfig{
 		Kind: "DataFolder",
 		Name: "common-data",
 		Spec: placemat.DataFolderSpec{
@@ -399,21 +401,21 @@ func commonDataFolder(cluster *cluster) {
 	})
 }
 
-func coreosImage(cluster *cluster) {
-	cluster.images = append(cluster.images, &placemat.ImageConfig{
+func (c *cluster) appendCoreOSImage() {
+	c.images = append(c.images, &placemat.ImageConfig{
 		Kind: "Image",
 		Name: "coreos-image",
 		Spec: placemat.ImageSpec{
-			URL:               "https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2",
+			URL:               qemuImageCoreOS,
 			CompressionMethod: "bzip2",
 		},
 	})
 }
 
-func rackNetwork(ta *menu.TemplateArgs, cluster *cluster) {
+func (c *cluster) appendRackNetwork(ta *menu.TemplateArgs) {
 	for _, rack := range ta.Racks {
-		cluster.networks = append(
-			cluster.networks,
+		c.networks = append(
+			c.networks,
 			&placemat.NetworkConfig{
 				Kind: "Network",
 				Name: fmt.Sprintf("%s-node1", rack.ShortName),
@@ -432,11 +434,11 @@ func rackNetwork(ta *menu.TemplateArgs, cluster *cluster) {
 	}
 }
 
-func spineToRackNetwork(ta *menu.TemplateArgs, cluster *cluster) {
+func (c *cluster) appendSpineToRackNetwork(ta *menu.TemplateArgs) {
 	for _, spine := range ta.Spines {
 		for _, rack := range ta.Racks {
-			cluster.networks = append(
-				cluster.networks,
+			c.networks = append(
+				c.networks,
 				&placemat.NetworkConfig{
 					Kind: "Network",
 					Name: fmt.Sprintf("%s-to-%s-1", spine.ShortName, rack.ShortName),
@@ -456,9 +458,9 @@ func spineToRackNetwork(ta *menu.TemplateArgs, cluster *cluster) {
 	}
 }
 
-func externalNetwork(cluster *cluster, ta *menu.TemplateArgs) {
-	cluster.networks = append(
-		cluster.networks,
+func (c *cluster) appendExternalNetwork(ta *menu.TemplateArgs) {
+	c.networks = append(
+		c.networks,
 		&placemat.NetworkConfig{
 			Kind: "Network",
 			Name: "ext-net",

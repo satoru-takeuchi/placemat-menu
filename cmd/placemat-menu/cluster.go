@@ -17,6 +17,7 @@ const (
 	aciDnsmasq = "cybozu-dnsmasq-2.79.aci"
 
 	qemuImageCoreOS = "https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2"
+	qemuImageubuntu = "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
 )
 
 var birdContainer = placemat.PodAppConfig{
@@ -65,6 +66,8 @@ func generateCluster(ta *menu.TemplateArgs) *cluster {
 
 	cluster.appendCoreOSImage()
 
+	cluster.appendUbuntuImage()
+
 	cluster.appendCommonDataFolder()
 
 	cluster.appendSpineDataFolder(ta)
@@ -80,6 +83,56 @@ func generateCluster(ta *menu.TemplateArgs) *cluster {
 	cluster.appendNodes(ta)
 
 	return cluster
+}
+
+func ubuntuNode(rackName, rackShortName, nodeName string, resource *menu.VMResource) *placemat.NodeConfig {
+
+	return &placemat.NodeConfig{
+		Kind: "Node",
+		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
+		Spec: placemat.NodeSpec{
+			Interfaces: []string{
+				fmt.Sprintf("%s-node1", rackShortName),
+				fmt.Sprintf("%s-node2", rackShortName),
+			},
+			Volumes: []placemat.NodeVolumeConfig{
+				{
+					Kind: "image",
+					Name: "root",
+					Spec: placemat.NodeVolumeSpec{
+						Image:       "ubuntu-image",
+						CopyOnWrite: true,
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "common",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: "common-data",
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "local",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: fmt.Sprintf("%s-bird-data", rackName),
+					},
+				},
+				{
+					Kind: "localds",
+					Name: "seed",
+					Spec: placemat.NodeVolumeSpec{
+						UserData:      fmt.Sprintf("%s-%s-seed.yml", rackName, nodeName),
+						NetworkConfig: fmt.Sprintf("%s-%s-network.yml", rackName, nodeName),
+					},
+				},
+			},
+			Resources: placemat.NodeResourceConfig{
+				CPU:    fmt.Sprint(resource.CPU),
+				Memory: resource.Memory,
+			},
+		},
+	}
 }
 
 func coreOSNode(rackName, rackShortName, nodeName string, resource *menu.VMResource) *placemat.NodeConfig {
@@ -124,9 +177,10 @@ func coreOSNode(rackName, rackShortName, nodeName string, resource *menu.VMResou
 		},
 	}
 }
+
 func (c *cluster) appendNodes(ta *menu.TemplateArgs) {
 	for _, rack := range ta.Racks {
-		c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
+		c.nodes = append(c.nodes, ubuntuNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
 
 		for _, cs := range rack.CSList {
 			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, cs.Name, &ta.CS))
@@ -408,6 +462,16 @@ func (c *cluster) appendCoreOSImage() {
 		Spec: placemat.ImageSpec{
 			URL:               qemuImageCoreOS,
 			CompressionMethod: "bzip2",
+		},
+	})
+}
+
+func (c *cluster) appendUbuntuImage() {
+	c.images = append(c.images, &placemat.ImageConfig{
+		Kind: "Image",
+		Name: "ubuntu-image",
+		Spec: placemat.ImageSpec{
+			URL: qemuImageubuntu,
 		},
 	})
 }

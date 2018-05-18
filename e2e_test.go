@@ -103,7 +103,7 @@ func TestE2E(t *testing.T) {
 		"rack1-ss2.ign",
 	}
 
-	cmd := exec.Command("go", "run", "cmd/placemat-menu/main.go", "cmd/placemat-menu/cluster.go", "-f", "example.yml", "-o", dir)
+	cmd := exec.Command("go", "run", "cmd/placemat-menu/main.go", "-f", "example.yml", "-o", dir)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

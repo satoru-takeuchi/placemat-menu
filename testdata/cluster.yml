@@ -11,198 +11,159 @@ name: s1-to-r0-1
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: s1-to-r0-2
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: s1-to-r1-1
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: s1-to-r1-2
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: s2-to-r0-1
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: s2-to-r0-2
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: s2-to-r1-1
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: s2-to-r1-2
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: r0-node1
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: r0-node2
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: r1-node1
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Network
 name: r1-node2
 spec:
   internal: true
   use-nat: false
-  addresses: []
 ---
 kind: Image
 name: coreos-image
 spec:
   url: https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2
-  file: ""
   compression: bzip2
 ---
 kind: DataFolder
 name: common-data
 spec:
-  dir: ""
   files:
   - name: bird.aci
-    url: ""
     file: cybozu-bird-2.0.aci
   - name: ubuntu-debug.aci
-    url: ""
     file: cybozu-ubuntu-debug-18.04.aci
   - name: dnsmasq.aci
-    url: ""
     file: cybozu-dnsmasq-2.79.aci
   - name: rkt-fetch
-    url: ""
     file: rkt-fetch
   - name: bashrc
-    url: ""
     file: bashrc
 ---
 kind: DataFolder
 name: spine1-data
 spec:
-  dir: ""
   files:
   - name: setup-iptables
-    url: ""
     file: setup-iptables
   - name: bird.conf
-    url: ""
     file: bird_spine1.conf
 ---
 kind: DataFolder
 name: spine2-data
 spec:
-  dir: ""
   files:
   - name: setup-iptables
-    url: ""
     file: setup-iptables
   - name: bird.conf
-    url: ""
     file: bird_spine2.conf
 ---
 kind: DataFolder
 name: rack0-tor1-data
 spec:
-  dir: ""
   files:
   - name: bird.conf
-    url: ""
     file: bird_rack0-tor1.conf
 ---
 kind: DataFolder
 name: rack0-tor2-data
 spec:
-  dir: ""
   files:
   - name: bird.conf
-    url: ""
     file: bird_rack0-tor2.conf
 ---
 kind: DataFolder
 name: rack0-bird-data
 spec:
-  dir: ""
   files:
   - name: bird.conf
-    url: ""
     file: bird_rack0-node.conf
 ---
 kind: DataFolder
 name: rack1-tor1-data
 spec:
-  dir: ""
   files:
   - name: bird.conf
-    url: ""
     file: bird_rack1-tor1.conf
 ---
 kind: DataFolder
 name: rack1-tor2-data
 spec:
-  dir: ""
   files:
   - name: bird.conf
-    url: ""
     file: bird_rack1-tor2.conf
 ---
 kind: DataFolder
 name: rack1-bird-data
 spec:
-  dir: ""
   files:
   - name: bird.conf
-    url: ""
     file: bird_rack1-node.conf
 ---
 kind: DataFolder
 name: ext-vm-data
 spec:
-  dir: ""
   files:
   - name: bird.conf
-    url: ""
     file: bird_vm.conf
 ---
 kind: Node
@@ -214,43 +175,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack0-bird-data
       copy-on-write: false
   ignition: rack0-boot.ign
   resources:
     cpu: "2"
     memory: 2G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: rack0-cs1
@@ -261,43 +202,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack0-bird-data
       copy-on-write: false
   ignition: rack0-cs1.ign
   resources:
     cpu: "2"
     memory: 2G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: rack0-cs2
@@ -308,43 +229,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack0-bird-data
       copy-on-write: false
   ignition: rack0-cs2.ign
   resources:
     cpu: "2"
     memory: 2G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: rack1-boot
@@ -355,43 +256,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack1-bird-data
       copy-on-write: false
   ignition: rack1-boot.ign
   resources:
     cpu: "2"
     memory: 2G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: rack1-cs1
@@ -402,43 +283,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack1-bird-data
       copy-on-write: false
   ignition: rack1-cs1.ign
   resources:
     cpu: "2"
     memory: 2G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: rack1-cs2
@@ -449,43 +310,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack1-bird-data
       copy-on-write: false
   ignition: rack1-cs2.ign
   resources:
     cpu: "2"
     memory: 2G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: rack1-ss1
@@ -496,43 +337,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack1-bird-data
       copy-on-write: false
   ignition: rack1-ss1.ign
   resources:
     cpu: "1"
     memory: 1G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: rack1-ss2
@@ -543,43 +364,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: rack1-bird-data
       copy-on-write: false
   ignition: rack1-ss2.ign
   resources:
     cpu: "1"
     memory: 1G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Node
 name: ext-vm
@@ -589,43 +390,23 @@ spec:
   volumes:
   - kind: image
     name: root
-    recreatePolicy: ""
     spec:
       image: coreos-image
-      user-data: ""
-      network-config: ""
-      size: ""
-      folder: ""
       copy-on-write: true
   - kind: vvfat
     name: common
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: common-data
       copy-on-write: false
   - kind: vvfat
     name: local
-    recreatePolicy: ""
     spec:
-      image: ""
-      user-data: ""
-      network-config: ""
-      size: ""
       folder: ext-vm-data
       copy-on-write: false
   ignition: ext-vm.ign
   resources:
     cpu: "2"
     memory: 1G
-  bios: ""
-  smbios:
-    manufacturer: ""
-    product: ""
-    serial: ""
 ---
 kind: Pod
 name: spine1
@@ -653,25 +434,13 @@ spec:
     kind: host
     folder: spine1-data
     readonly: true
-    mode: ""
-    uid: ""
-    gid: ""
   - name: run
     kind: empty
-    folder: ""
     readonly: false
-    mode: ""
-    uid: ""
-    gid: ""
   apps:
   - name: bird
     image: docker://quay.io/cybozu/bird:2.0
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
     caps-retain:
     - CAP_NET_ADMIN
     - CAP_NET_BIND_SERVICE
@@ -684,13 +453,6 @@ spec:
   - name: debug
     image: docker://quay.io/cybozu/ubuntu-debug:18.04
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
-    caps-retain: []
-    mount: []
 ---
 kind: Pod
 name: spine2
@@ -718,25 +480,13 @@ spec:
     kind: host
     folder: spine2-data
     readonly: true
-    mode: ""
-    uid: ""
-    gid: ""
   - name: run
     kind: empty
-    folder: ""
     readonly: false
-    mode: ""
-    uid: ""
-    gid: ""
   apps:
   - name: bird
     image: docker://quay.io/cybozu/bird:2.0
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
     caps-retain:
     - CAP_NET_ADMIN
     - CAP_NET_BIND_SERVICE
@@ -749,18 +499,10 @@ spec:
   - name: debug
     image: docker://quay.io/cybozu/ubuntu-debug:18.04
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
-    caps-retain: []
-    mount: []
 ---
 kind: Pod
 name: rack0-tor1
 spec:
-  init-scripts: []
   interfaces:
   - network: s1-to-r0-1
     addresses:
@@ -776,25 +518,13 @@ spec:
     kind: host
     folder: rack0-tor1-data
     readonly: true
-    mode: ""
-    uid: ""
-    gid: ""
   - name: run
     kind: empty
-    folder: ""
     readonly: false
-    mode: ""
-    uid: ""
-    gid: ""
   apps:
   - name: bird
     image: docker://quay.io/cybozu/bird:2.0
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
     caps-retain:
     - CAP_NET_ADMIN
     - CAP_NET_BIND_SERVICE
@@ -807,19 +537,9 @@ spec:
   - name: debug
     image: docker://quay.io/cybozu/ubuntu-debug:18.04
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
-    caps-retain: []
-    mount: []
   - name: dhcp-relay
     image: docker://quay.io/cybozu/dnsmasq:2.79
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
     args:
     - --log-queries
     - --log-dhcp
@@ -828,17 +548,14 @@ spec:
     - 10.69.0.65,10.69.0.3
     - --dhcp-relay
     - 10.69.0.65,10.69.0.195
-    env: {}
     caps-retain:
     - CAP_NET_BIND_SERVICE
     - CAP_NET_RAW
     - CAP_NET_BROADCAST
-    mount: []
 ---
 kind: Pod
 name: rack1-tor1
 spec:
-  init-scripts: []
   interfaces:
   - network: s1-to-r1-1
     addresses:
@@ -854,25 +571,13 @@ spec:
     kind: host
     folder: rack1-tor1-data
     readonly: true
-    mode: ""
-    uid: ""
-    gid: ""
   - name: run
     kind: empty
-    folder: ""
     readonly: false
-    mode: ""
-    uid: ""
-    gid: ""
   apps:
   - name: bird
     image: docker://quay.io/cybozu/bird:2.0
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
     caps-retain:
     - CAP_NET_ADMIN
     - CAP_NET_BIND_SERVICE
@@ -885,19 +590,9 @@ spec:
   - name: debug
     image: docker://quay.io/cybozu/ubuntu-debug:18.04
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
-    caps-retain: []
-    mount: []
   - name: dhcp-relay
     image: docker://quay.io/cybozu/dnsmasq:2.79
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
     args:
     - --log-queries
     - --log-dhcp
@@ -906,17 +601,14 @@ spec:
     - 10.69.1.1,10.69.0.3
     - --dhcp-relay
     - 10.69.1.1,10.69.0.195
-    env: {}
     caps-retain:
     - CAP_NET_BIND_SERVICE
     - CAP_NET_RAW
     - CAP_NET_BROADCAST
-    mount: []
 ---
 kind: Pod
 name: rack0-tor2
 spec:
-  init-scripts: []
   interfaces:
   - network: s1-to-r0-2
     addresses:
@@ -932,25 +624,13 @@ spec:
     kind: host
     folder: rack0-tor2-data
     readonly: true
-    mode: ""
-    uid: ""
-    gid: ""
   - name: run
     kind: empty
-    folder: ""
     readonly: false
-    mode: ""
-    uid: ""
-    gid: ""
   apps:
   - name: bird
     image: docker://quay.io/cybozu/bird:2.0
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
     caps-retain:
     - CAP_NET_ADMIN
     - CAP_NET_BIND_SERVICE
@@ -963,19 +643,9 @@ spec:
   - name: debug
     image: docker://quay.io/cybozu/ubuntu-debug:18.04
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
-    caps-retain: []
-    mount: []
   - name: dhcp-relay
     image: docker://quay.io/cybozu/dnsmasq:2.79
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
     args:
     - --log-queries
     - --log-dhcp
@@ -984,17 +654,14 @@ spec:
     - 10.69.0.129,10.69.0.3
     - --dhcp-relay
     - 10.69.0.129,10.69.0.195
-    env: {}
     caps-retain:
     - CAP_NET_BIND_SERVICE
     - CAP_NET_RAW
     - CAP_NET_BROADCAST
-    mount: []
 ---
 kind: Pod
 name: rack1-tor2
 spec:
-  init-scripts: []
   interfaces:
   - network: s1-to-r1-2
     addresses:
@@ -1010,25 +677,13 @@ spec:
     kind: host
     folder: rack1-tor2-data
     readonly: true
-    mode: ""
-    uid: ""
-    gid: ""
   - name: run
     kind: empty
-    folder: ""
     readonly: false
-    mode: ""
-    uid: ""
-    gid: ""
   apps:
   - name: bird
     image: docker://quay.io/cybozu/bird:2.0
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
     caps-retain:
     - CAP_NET_ADMIN
     - CAP_NET_BIND_SERVICE
@@ -1041,19 +696,9 @@ spec:
   - name: debug
     image: docker://quay.io/cybozu/ubuntu-debug:18.04
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
-    args: []
-    env: {}
-    caps-retain: []
-    mount: []
   - name: dhcp-relay
     image: docker://quay.io/cybozu/dnsmasq:2.79
     readonly-rootfs: true
-    user: ""
-    group: ""
-    exec: ""
     args:
     - --log-queries
     - --log-dhcp
@@ -1062,9 +707,7 @@ spec:
     - 10.69.1.65,10.69.0.3
     - --dhcp-relay
     - 10.69.1.65,10.69.0.195
-    env: {}
     caps-retain:
     - CAP_NET_BIND_SERVICE
     - CAP_NET_RAW
     - CAP_NET_BROADCAST
-    mount: []

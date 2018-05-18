@@ -13,11 +13,11 @@
             "name": "10-node0.network"
          },
          {
-            "contents": "[Match]\nName=eth0\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\nAddress=10.69.1.7/26\n",
+            "contents": "[Match]\nName=eth0\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\n\n[Address]\nAddress=10.69.1.7/26\nScope=link\n",
             "name": "10-eth0.network"
          },
          {
-            "contents": "[Match]\nName=eth1\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\nAddress=10.69.1.71/26\n",
+            "contents": "[Match]\nName=eth1\n\n[Network]\nLLDP=true\nEmitLLDP=nearest-bridge\n\n[Address]\nAddress=10.69.1.71/26\nScope=link\n",
             "name": "10-eth1.network"
          }
       ]
@@ -87,16 +87,6 @@
             "contents": "[Unit]\nAfter=mnt-bird.mount\nConditionPathExists=/mnt/bird/setup-iptables\n\n[Service]\nType=oneshot\nExecStart=/bin/sh /mnt/bird/setup-iptables\n\n[Install]\nWantedBy=multi-user.target\n",
             "enabled": true,
             "name": "setup-iptables.service"
-         },
-         {
-            "contents": "[Unit]\nAfter=mnt-bird.mount\nBefore=network-pre.target\nWants=network-pre.target\nConditionPathExists=/mnt/bird/setup-rp-filter\n\n[Service]\nType=oneshot\nExecStart=/bin/sh /mnt/bird/setup-rp-filter\n\n[Install]\nWantedBy=multi-user.target\n",
-            "enabled": true,
-            "name": "disable-rp-filter.service"
-         },
-         {
-            "contents": "[Unit]\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/ip route add 0.0.0.0/0 src 10.69.0.199 nexthop via 10.69.1.1 dev eth0 nexthop via 10.69.1.65 dev eth1\n\n[Install]\nWantedBy=multi-user.target\n",
-            "enabled": true,
-            "name": "setup-route.service"
          }
       ]
    }

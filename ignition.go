@@ -55,7 +55,7 @@ type IgnitionStorage struct {
 	Files []IgnitionStorageFile `json:"files"`
 }
 
-// Ignition contains an igniration information
+// Ignition contains information to generate an ignition file.
 type Ignition struct {
 	Ignition struct {
 		Version string `json:"version"`
@@ -96,6 +96,25 @@ Address=%s
 }
 
 func ethNetworkUnits(addresses []*net.IPNet) []IgnitionNetworkdUnit {
+	units := make([]IgnitionNetworkdUnit, len(addresses))
+	for i, addr := range addresses {
+		units[i].Name = fmt.Sprintf("10-eth%d.network", i)
+		units[i].Contents = fmt.Sprintf(`[Match]
+Name=eth%d
+
+[Network]
+LLDP=true
+EmitLLDP=nearest-bridge
+
+[Address]
+Address=%s
+Scope=link
+`, i, addr)
+	}
+	return units
+}
+
+func extVMEthNetwork(addresses []*net.IPNet) []IgnitionNetworkdUnit {
 	units := make([]IgnitionNetworkdUnit, len(addresses))
 	for i, addr := range addresses {
 		units[i].Name = fmt.Sprintf("10-eth%d.network", i)
@@ -221,38 +240,21 @@ ExecStart=/bin/sh /mnt/bird/setup-iptables
 [Install]
 WantedBy=multi-user.target
 `,
-		}, {
-			Name:    "disable-rp-filter.service",
-			Enabled: true,
-			Contents: `[Unit]
-After=mnt-bird.mount
-Before=network-pre.target
-Wants=network-pre.target
-ConditionPathExists=/mnt/bird/setup-rp-filter
-
-[Service]
-Type=oneshot
-ExecStart=/bin/sh /mnt/bird/setup-rp-filter
-
-[Install]
-WantedBy=multi-user.target
-`,
 		},
 	}
 }
 
 func setupRouteUnit(src, tor1addr, tor2addr net.IP) IgnitionSystemdUnit {
-	cmd := fmt.Sprintf("/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s dev eth0 nexthop via %s dev eth1", src, tor1addr, tor2addr)
 	content := fmt.Sprintf(`[Unit]
 After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=%s
+ExecStart=/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
 
 [Install]
 WantedBy=multi-user.target
-`, cmd)
+`, src, tor1addr, tor2addr)
 
 	return IgnitionSystemdUnit{
 		Name:     "setup-route.service",
@@ -261,10 +263,12 @@ WantedBy=multi-user.target
 	}
 }
 
-func nodeSystemd(src, tor1addr, tor2addr net.IP) IgnitionSystemd {
-	units := defaultSystemdUnits()
-	units = append(units, setupRouteUnit(src, tor1addr, tor2addr))
-	return IgnitionSystemd{Units: units}
+func nodeSystemd() IgnitionSystemd {
+	return IgnitionSystemd{Units: defaultSystemdUnits()}
+}
+
+func bootSystemd(src, ip1, ip2 net.IP) IgnitionSystemd {
+	return IgnitionSystemd{Units: append(defaultSystemdUnits(), setupRouteUnit(src, ip1, ip2))}
 }
 
 // NodeIgnition returns an Ignition by passwd and node
@@ -334,18 +338,15 @@ func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *BootNodeInfo) Systemd() IgnitionSystemd {
-	return nodeSystemd(b.node0Addr.IP, b.ToR1Addr, b.ToR2Addr)
+	return bootSystemd(b.bastionAddr.IP, b.ToR1Addr, b.ToR2Addr)
 }
 
 // CSNodeInfo contains cs/ss server in a rack
 type CSNodeInfo struct {
-	name             string
-	node0Addr        *net.IPNet
-	node1Addr        *net.IPNet
-	node2Addr        *net.IPNet
-	node0SystemdAddr net.IP
-	node1SystemdAddr net.IP
-	node2SystemdAddr net.IP
+	name      string
+	node0Addr *net.IPNet
+	node1Addr *net.IPNet
+	node2Addr *net.IPNet
 }
 
 // Hostname returns hostname
@@ -364,18 +365,15 @@ func (b *CSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *CSNodeInfo) Systemd() IgnitionSystemd {
-	return nodeSystemd(b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr)
+	return nodeSystemd()
 }
 
 // SSNodeInfo contains cs/ss server in a rack
 type SSNodeInfo struct {
-	name             string
-	node0Addr        *net.IPNet
-	node1Addr        *net.IPNet
-	node2Addr        *net.IPNet
-	node0SystemdAddr net.IP
-	node1SystemdAddr net.IP
-	node2SystemdAddr net.IP
+	name      string
+	node0Addr *net.IPNet
+	node1Addr *net.IPNet
+	node2Addr *net.IPNet
 }
 
 // Hostname returns hostname
@@ -394,7 +392,7 @@ func (b *SSNodeInfo) Networkd() IgnitionNetworkd {
 
 // Systemd returns systemd definitions
 func (b *SSNodeInfo) Systemd() IgnitionSystemd {
-	return nodeSystemd(b.node0SystemdAddr, b.node1SystemdAddr, b.node2SystemdAddr)
+	return nodeSystemd()
 }
 
 // ExtVMNodeInfo contains external network as VM
@@ -409,15 +407,14 @@ func (b *ExtVMNodeInfo) Hostname() string {
 
 // Networkd returns networkd definitions
 func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
-	units := ethNetworkUnits([]*net.IPNet{b.vmAddr})
+	units := extVMEthNetwork([]*net.IPNet{b.vmAddr})
 	return IgnitionNetworkd{Units: units}
 
 }
 
 // Systemd returns systemd definitions
 func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
-	units := defaultSystemdUnits()
-	return IgnitionSystemd{Units: units}
+	return nodeSystemd()
 }
 
 // BootNodeIgnition returns an Ignition for boot node
@@ -437,13 +434,10 @@ func BootNodeIgnition(account Account, rack Rack) Ignition {
 // CSNodeIgnition returns an Ignition for cs/ss servers
 func CSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 	info := &CSNodeInfo{
-		name:             rack.Name + "-" + node.Name,
-		node0Addr:        node.Node0Address,
-		node1Addr:        node.Node1Address,
-		node2Addr:        node.Node2Address,
-		node0SystemdAddr: node.Node0Address.IP,
-		node1SystemdAddr: node.ToR1Address.IP,
-		node2SystemdAddr: node.ToR2Address.IP,
+		name:      rack.Name + "-" + node.Name,
+		node0Addr: node.Node0Address,
+		node1Addr: node.Node1Address,
+		node2Addr: node.Node2Address,
 	}
 	return NodeIgnition(account, info)
 }
@@ -451,13 +445,10 @@ func CSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 // SSNodeIgnition returns an Ignition for cs/ss servers
 func SSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 	info := &SSNodeInfo{
-		name:             rack.Name + "-" + node.Name,
-		node0Addr:        node.Node0Address,
-		node1Addr:        node.Node1Address,
-		node2Addr:        node.Node2Address,
-		node0SystemdAddr: node.Node0Address.IP,
-		node1SystemdAddr: node.ToR1Address.IP,
-		node2SystemdAddr: node.ToR2Address.IP,
+		name:      rack.Name + "-" + node.Name,
+		node0Addr: node.Node0Address,
+		node1Addr: node.Node1Address,
+		node2Addr: node.Node2Address,
 	}
 	return NodeIgnition(account, info)
 }

@@ -75,7 +75,7 @@ type IgnitionNode interface {
 	Systemd() IgnitionSystemd
 }
 
-func dummyNetworkUnits(name string, address *net.IPNet) []IgnitionNetworkdUnit {
+func ignDummyNetworkUnits(name string, address *net.IPNet) []IgnitionNetworkdUnit {
 	return []IgnitionNetworkdUnit{
 		{
 			Name: fmt.Sprintf("10-%s.netdev", name),
@@ -95,7 +95,7 @@ Address=%s
 	}
 }
 
-func ethNetworkUnits(addresses []*net.IPNet) []IgnitionNetworkdUnit {
+func ignEthNetworkUnits(addresses []*net.IPNet) []IgnitionNetworkdUnit {
 	units := make([]IgnitionNetworkdUnit, len(addresses))
 	for i, addr := range addresses {
 		units[i].Name = fmt.Sprintf("10-eth%d.network", i)
@@ -330,9 +330,9 @@ func (b *BootNodeInfo) Hostname() string {
 // Networkd returns networkd definitions
 func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
-	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
-	units = append(units, dummyNetworkUnits("bastion", b.bastionAddr)...)
+	units = append(units, ignDummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ignEthNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	units = append(units, ignDummyNetworkUnits("bastion", b.bastionAddr)...)
 	return IgnitionNetworkd{Units: units}
 }
 
@@ -357,8 +357,8 @@ func (b *CSNodeInfo) Hostname() string {
 // Networkd returns networkd definitions
 func (b *CSNodeInfo) Networkd() IgnitionNetworkd {
 	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
-	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	units = append(units, ignDummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ignEthNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
 	return IgnitionNetworkd{Units: units}
 
 }
@@ -384,8 +384,8 @@ func (b *SSNodeInfo) Hostname() string {
 // Networkd returns networkd definitions
 func (b *SSNodeInfo) Networkd() IgnitionNetworkd {
 	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
-	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	units = append(units, ignDummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ignEthNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
 	return IgnitionNetworkd{Units: units}
 
 }

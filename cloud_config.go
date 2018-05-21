@@ -79,7 +79,7 @@ func systemdWriteFiles() []SeedWriteFile {
 		},
 		{
 			Path:    "/etc/systemd/system/rkt-fetch.service",
-			Content: rktFetchServiceForUbuntu(),
+			Content: rktFetchService(),
 		},
 		{
 			Path:    "/etc/systemd/system/bird.service",

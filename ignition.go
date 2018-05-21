@@ -127,7 +127,7 @@ Options=ro
 `,
 		}, {
 			Name:     "rkt-fetch.service",
-			Contents: rktFetchServiceForCoreOS(),
+			Contents: rktFetchService(),
 		}, {
 			Name:    "mnt-bird.mount",
 			Enabled: true,

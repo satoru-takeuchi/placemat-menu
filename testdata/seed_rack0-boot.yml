@@ -89,6 +89,10 @@ write_files:
     RemainAfterExit=yes
 - path: /etc/systemd/system/rkt-fetch.service
   content: |
+    [Unit]
+    After=mnt-containers.mount
+    Requires=mnt-containers.mount
+
     [Service]
     Type=oneshot
     RemainAfterExit=yes

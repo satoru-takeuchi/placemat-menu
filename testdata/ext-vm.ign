@@ -58,16 +58,16 @@
             "name": "mnt-bird.mount"
          },
          {
-            "contents": "[Unit]\nAfter=mnt-bird.mount\nConditionPathExists=!/etc/bird\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/cp -r /mnt/bird /etc/bird\nRemainAfterExit=yes\n",
+            "contents": "[Unit]\nAfter=mnt-bird.mount\nConditionPathExists=!/etc/bird\n\n[Service]\nType=oneshot\nExecStart=/bin/cp -r /mnt/bird /etc/bird\nRemainAfterExit=yes\n",
             "name": "copy-bird-conf.service"
          },
          {
-            "contents": "[Unit]\nAfter=mnt-containers.mount\nAfter=usr.mount\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/mount --bind -o ro /mnt/containers/bashrc /usr/share/skel/.bashrc\n\n[Install]\nWantedBy=multi-user.target\n",
+            "contents": "[Unit]\nAfter=mnt-containers.mount\nAfter=usr.mount\n\n[Service]\nType=oneshot\nExecStart=/bin/mount --bind -o ro /mnt/containers/bashrc /usr/share/skel/.bashrc\n\n[Install]\nWantedBy=multi-user.target\n",
             "enabled": true,
             "name": "copy-bashrc.service"
          },
          {
-            "contents": "[Unit]\nDescription=bird\nAfter=copy-bird-conf.service\nWants=copy-bird-conf.service\nAfter=rkt-fetch.service\nRequires=rkt-fetch.service\n\n[Service]\nSlice=machine.slice\nExecStart=/usr/bin/rkt run \\\n  --volume run,kind=empty,readOnly=false \\\n  --volume etc,kind=host,source=/etc/bird,readOnly=true \\\n  --net=host \\\n  quay.io/cybozu/bird:2.0 \\\n    --readonly-rootfs=true \\\n    --caps-retain=CAP_NET_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW \\\n    --name bird \\\n    --mount volume=run,target=/run/bird \\\n    --mount volume=etc,target=/etc/bird \\\n  quay.io/cybozu/ubuntu-debug:18.04 \\\n    --readonly-rootfs=true \\\n    --name ubuntu-debug\nKillMode=mixed\nRestart=on-failure\nRestartForceExitStatus=SIGPIPE\n\n[Install]\nWantedBy=multi-user.target\n",
+            "contents": "[Unit]\nDescription=bird\nAfter=copy-bird-conf.service\nWants=copy-bird-conf.service\nAfter=rkt-fetch.service\nRequires=rkt-fetch.service\n\n[Service]\nSlice=machine.slice\nExecStart=/bin/rkt run \\\n  --volume run,kind=empty,readOnly=false \\\n  --volume etc,kind=host,source=/etc/bird,readOnly=true \\\n  --net=host \\\n  quay.io/cybozu/bird:2.0 \\\n    --readonly-rootfs=true \\\n    --caps-retain=CAP_NET_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW \\\n    --name bird \\\n    --mount volume=run,target=/run/bird \\\n    --mount volume=etc,target=/etc/bird \\\n  quay.io/cybozu/ubuntu-debug:18.04 \\\n    --readonly-rootfs=true \\\n    --name ubuntu-debug\nKillMode=mixed\nRestart=on-failure\nRestartForceExitStatus=SIGPIPE\n\n[Install]\nWantedBy=multi-user.target\n",
             "enabled": true,
             "name": "bird.service"
          },

@@ -42,7 +42,7 @@ ConditionPathExists=!/etc/bird
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/cp -r /mnt/bird /etc/bird
+ExecStart=/bin/cp -r /mnt/bird /etc/bird
 RemainAfterExit=yes
 `
 }
@@ -77,7 +77,7 @@ Requires=rkt-fetch.service
 
 [Service]
 Slice=machine.slice
-ExecStart=/usr/bin/rkt run \
+ExecStart=/bin/rkt run \
   --volume run,kind=empty,readOnly=false \
   --volume etc,kind=host,source=/etc/bird,readOnly=true \
   --net=host \

@@ -155,7 +155,7 @@ After=usr.mount
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/mount --bind -o ro /mnt/containers/bashrc /usr/share/skel/.bashrc
+ExecStart=/bin/mount --bind -o ro /mnt/containers/bashrc /usr/share/skel/.bashrc
 
 [Install]
 WantedBy=multi-user.target
@@ -188,7 +188,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
+ExecStart=/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
 
 [Install]
 WantedBy=multi-user.target

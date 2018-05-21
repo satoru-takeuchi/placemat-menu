@@ -39,7 +39,7 @@ type Rack struct {
 	node2Network          *net.IPNet
 }
 
-// Node is template args for a node
+// Node is a template args for a node
 type Node struct {
 	Name         string
 	Node0Address *net.IPNet
@@ -49,7 +49,7 @@ type Node struct {
 	ToR2Address  *net.IPNet
 }
 
-// ToR is template args for a tor
+// ToR is a template args for a ToR switch
 type ToR struct {
 	Name           string
 	SpineAddresses []*net.IPNet
@@ -57,14 +57,14 @@ type ToR struct {
 	NodeInterface  string
 }
 
-// BootNodeEntity is template args for a boot node
+// BootNodeEntity is a template args for a boot node
 type BootNodeEntity struct {
 	Node
 
 	BastionAddress *net.IPNet
 }
 
-// Spine is template args for Spine
+// Spine is a template args for Spine
 type Spine struct {
 	Name          string
 	ShortName     string
@@ -109,13 +109,6 @@ type TemplateArgs struct {
 type Account struct {
 	Name         string
 	PasswordHash string
-}
-
-// NodeTemplateArgs is args to config files for specific node
-type NodeTemplateArgs struct {
-	Rack    Rack
-	Node    Node
-	Account Account
 }
 
 // BIRDRackTemplateArgs is args to generate bird config for each rack

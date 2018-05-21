@@ -47,12 +47,20 @@ RemainAfterExit=yes
 `
 }
 
-func rktFetchService() string {
+func rktFetchServiceForCoreOS() string {
 	return `[Unit]
 After=mnt-containers.mount
 Requires=mnt-containers.mount
 
 [Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh /mnt/containers/rkt-fetch
+`
+}
+
+func rktFetchServiceForUbuntu() string {
+	return `[Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/bin/sh /mnt/containers/rkt-fetch

@@ -25,25 +25,29 @@ type SeedWriteFile struct {
 	Content string `yaml:"content"`
 }
 
+// SeedDiskSetup presents settings of disks
+type SeedDiskSetup struct {
+	TableType string `yaml:"table_type"`
+	Layout    bool   `yaml:"layout"`
+	Overwrite bool   `yaml:"overwrite,omitempty"`
+}
+
+// SeedFSSetup presents settings of the file system
+type SeedFSSetup struct {
+	Label      string `yaml:"label"`
+	Filesystem string `yaml:"filesystem"`
+	Device     string `yaml:"device"`
+}
+
 // Seed presents a seed file
 type Seed struct {
-	Hostname  string     `yaml:"hostname,omitempty"`
-	Users     []SeedUser `yaml:"users,omitempty"`
-	DiskSetup struct {
-		DevVdc struct {
-			TableType string `yaml:"table_type"`
-			Layout    []int  `yaml:"layout"`
-			Overwrite bool   `yaml:"overwrite,omitempty"`
-		} `yaml:"/dev/vdc"`
-	} `yaml:"disk_setup,omitempty"`
-	FsSetup []struct {
-		Label      string `yaml:"label"`
-		Filesystem string `yaml:"filesystem"`
-		Device     string `yaml:"device"`
-	} `yaml:"fs_setup"`
-	Mounts     [][]string      `yaml:"mounts,omitempty"`
-	WriteFiles []SeedWriteFile `yaml:"write_files,omitempty"`
-	Runcmd     [][]string      `yaml:"runcmd,omitempty"`
+	Hostname   string                   `yaml:"hostname,omitempty"`
+	Users      []SeedUser               `yaml:"users,omitempty"`
+	DiskSetup  map[string]SeedDiskSetup `yaml:"disk_setup,omitempty"`
+	FsSetup    []SeedFSSetup            `yaml:"fs_setup"`
+	Mounts     [][]string               `yaml:"mounts,omitempty"`
+	WriteFiles []SeedWriteFile          `yaml:"write_files,omitempty"`
+	Runcmd     [][]string               `yaml:"runcmd,omitempty"`
 }
 
 func seedDummyNetworkUnits(name string, address *net.IPNet) []SeedWriteFile {
@@ -75,7 +79,7 @@ func systemdWriteFiles() []SeedWriteFile {
 		},
 		{
 			Path:    "/etc/systemd/system/rkt-fetch.service",
-			Content: rktFetchService(),
+			Content: rktFetchServiceForUbuntu(),
 		},
 		{
 			Path:    "/etc/systemd/system/bird.service",
@@ -102,7 +106,13 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 
 	seed.Mounts = append(seed.Mounts,
 		[]string{"/dev/vdb1", "/mnt/containers", "auto", "defaults,ro"},
-		[]string{"/dev/vdc1", "/mnt/bird", "vfat", "defaults,ro"})
+		[]string{"/dev/vdc1", "/mnt/bird", "vfat", "defaults,ro"},
+		[]string{"/dev/vdd1", "/var/lib/rkt", "btrfs", "defaults"},
+	)
+
+	seed.DiskSetup = make(map[string]SeedDiskSetup)
+	seed.DiskSetup["/dev/vdd"] = SeedDiskSetup{TableType: "gpt", Layout: true, Overwrite: false}
+	seed.FsSetup = append(seed.FsSetup, SeedFSSetup{Label: "rkt", Filesystem: "btrfs", Device: "/dev/vdd1"})
 
 	seed.WriteFiles = seedDummyNetworkUnits("node0", rack.BootNode.Node0Address)
 	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{rack.BootNode.Node1Address, rack.BootNode.Node2Address})...)

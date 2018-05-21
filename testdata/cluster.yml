@@ -84,6 +84,11 @@ spec:
   url: https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2
   compression: bzip2
 ---
+kind: Image
+name: ubuntu-image
+spec:
+  url: https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img
+---
 kind: DataFolder
 name: common-data
 spec:
@@ -98,6 +103,8 @@ spec:
     file: rkt-fetch
   - name: bashrc
     file: bashrc
+  - name: rkt.deb
+    file: rkt_1.30.0-1_amd64.deb
 ---
 kind: DataFolder
 name: spine1-data
@@ -176,7 +183,7 @@ spec:
   - kind: image
     name: root
     spec:
-      image: coreos-image
+      image: ubuntu-image
       copy-on-write: true
   - kind: vvfat
     name: common
@@ -188,7 +195,17 @@ spec:
     spec:
       folder: rack0-bird-data
       copy-on-write: false
-  ignition: rack0-boot.ign
+  - kind: localds
+    name: seed
+    spec:
+      user-data: seed_rack0-boot.yml
+      network-config: network.yml
+      copy-on-write: false
+  - kind: raw
+    name: data
+    spec:
+      size: 30G
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -257,7 +274,7 @@ spec:
   - kind: image
     name: root
     spec:
-      image: coreos-image
+      image: ubuntu-image
       copy-on-write: true
   - kind: vvfat
     name: common
@@ -269,7 +286,17 @@ spec:
     spec:
       folder: rack1-bird-data
       copy-on-write: false
-  ignition: rack1-boot.ign
+  - kind: localds
+    name: seed
+    spec:
+      user-data: seed_rack1-boot.yml
+      network-config: network.yml
+      copy-on-write: false
+  - kind: raw
+    name: data
+    spec:
+      size: 30G
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G

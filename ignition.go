@@ -75,41 +75,23 @@ type IgnitionNode interface {
 	Systemd() IgnitionSystemd
 }
 
-func dummyNetworkUnits(name string, address *net.IPNet) []IgnitionNetworkdUnit {
+func ignDummyNetworkUnits(name string, address *net.IPNet) []IgnitionNetworkdUnit {
 	return []IgnitionNetworkdUnit{
 		{
-			Name: fmt.Sprintf("10-%s.netdev", name),
-			Contents: fmt.Sprintf(`[NetDev]
-Name=%s
-Kind=dummy
-`, name),
+			Name:     fmt.Sprintf("10-%s.netdev", name),
+			Contents: dummyNetdev(name),
 		}, {
-			Name: fmt.Sprintf("10-%s.network", name),
-			Contents: fmt.Sprintf(`[Match]
-Name=%s
-
-[Network]
-Address=%s
-`, name, address),
+			Name:     fmt.Sprintf("10-%s.network", name),
+			Contents: namedNetwork(name, address),
 		},
 	}
 }
 
-func ethNetworkUnits(addresses []*net.IPNet) []IgnitionNetworkdUnit {
+func ignEthNetworkUnits(addresses []*net.IPNet) []IgnitionNetworkdUnit {
 	units := make([]IgnitionNetworkdUnit, len(addresses))
 	for i, addr := range addresses {
 		units[i].Name = fmt.Sprintf("10-eth%d.network", i)
-		units[i].Contents = fmt.Sprintf(`[Match]
-Name=eth%d
-
-[Network]
-LLDP=true
-EmitLLDP=nearest-bridge
-
-[Address]
-Address=%s
-Scope=link
-`, i, addr)
+		units[i].Contents = ethNetwork(fmt.Sprintf("eth%d", i), addr)
 	}
 	return units
 }
@@ -144,16 +126,8 @@ Type=vfat
 Options=ro
 `,
 		}, {
-			Name: "rkt-fetch.service",
-			Contents: `[Unit]
-After=mnt-containers.mount
-Requires=mnt-containers.mount
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/sh /mnt/containers/rkt-fetch
-`,
+			Name:     "rkt-fetch.service",
+			Contents: rktFetchService(),
 		}, {
 			Name:    "mnt-bird.mount",
 			Enabled: true,
@@ -170,16 +144,8 @@ Options=ro
 WantedBy=local-fs.target
 `,
 		}, {
-			Name: "copy-bird-conf.service",
-			Contents: `[Unit]
-After=mnt-bird.mount
-ConditionPathExists=!/etc/bird
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/cp -r /mnt/bird /etc/bird
-RemainAfterExit=yes
-`,
+			Name:     "copy-bird-conf.service",
+			Contents: copyBirdConfService(),
 		}, {
 			Name:    "copy-bashrc.service",
 			Enabled: true,
@@ -189,43 +155,15 @@ After=usr.mount
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/mount --bind -o ro /mnt/containers/bashrc /usr/share/skel/.bashrc
+ExecStart=/bin/mount --bind -o ro /mnt/containers/bashrc /usr/share/skel/.bashrc
 
 [Install]
 WantedBy=multi-user.target
 `,
 		}, {
-			Name:    "bird.service",
-			Enabled: true,
-			Contents: `[Unit]
-Description=bird
-After=copy-bird-conf.service
-Wants=copy-bird-conf.service
-After=rkt-fetch.service
-Requires=rkt-fetch.service
-
-[Service]
-Slice=machine.slice
-ExecStart=/usr/bin/rkt run \
-  --volume run,kind=empty,readOnly=false \
-  --volume etc,kind=host,source=/etc/bird,readOnly=true \
-  --net=host \
-  quay.io/cybozu/bird:2.0 \
-    --readonly-rootfs=true \
-    --caps-retain=CAP_NET_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW \
-    --name bird \
-    --mount volume=run,target=/run/bird \
-    --mount volume=etc,target=/etc/bird \
-  quay.io/cybozu/ubuntu-debug:18.04 \
-    --readonly-rootfs=true \
-    --name ubuntu-debug
-KillMode=mixed
-Restart=on-failure
-RestartForceExitStatus=SIGPIPE
-
-[Install]
-WantedBy=multi-user.target
-`,
+			Name:     "bird.service",
+			Enabled:  true,
+			Contents: birdService(),
 		}, {
 			Name:    "setup-iptables.service",
 			Enabled: true,
@@ -250,7 +188,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
+ExecStart=/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
 
 [Install]
 WantedBy=multi-user.target
@@ -330,9 +268,9 @@ func (b *BootNodeInfo) Hostname() string {
 // Networkd returns networkd definitions
 func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
 	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
-	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
-	units = append(units, dummyNetworkUnits("bastion", b.bastionAddr)...)
+	units = append(units, ignDummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ignEthNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	units = append(units, ignDummyNetworkUnits("bastion", b.bastionAddr)...)
 	return IgnitionNetworkd{Units: units}
 }
 
@@ -357,8 +295,8 @@ func (b *CSNodeInfo) Hostname() string {
 // Networkd returns networkd definitions
 func (b *CSNodeInfo) Networkd() IgnitionNetworkd {
 	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
-	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	units = append(units, ignDummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ignEthNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
 	return IgnitionNetworkd{Units: units}
 
 }
@@ -384,8 +322,8 @@ func (b *SSNodeInfo) Hostname() string {
 // Networkd returns networkd definitions
 func (b *SSNodeInfo) Networkd() IgnitionNetworkd {
 	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, dummyNetworkUnits("node0", b.node0Addr)...)
-	units = append(units, ethNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
+	units = append(units, ignDummyNetworkUnits("node0", b.node0Addr)...)
+	units = append(units, ignEthNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
 	return IgnitionNetworkd{Units: units}
 
 }

@@ -1,10 +1,12 @@
-package main
+package menu
 
 import (
 	"fmt"
 
-	"github.com/cybozu-go/placemat-menu"
+	"io"
+
 	placemat "github.com/cybozu-go/placemat/yaml"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -16,7 +18,10 @@ const (
 	aciDebug   = "cybozu-ubuntu-debug-18.04.aci"
 	aciDnsmasq = "cybozu-dnsmasq-2.79.aci"
 
+	debRkt = "rkt_1.30.0-1_amd64.deb"
+
 	qemuImageCoreOS = "https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2"
+	qemuImageubuntu = "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
 )
 
 var birdContainer = placemat.PodAppConfig{
@@ -54,7 +59,45 @@ type cluster struct {
 	nodes       []*placemat.NodeConfig
 }
 
-func generateCluster(ta *menu.TemplateArgs) *cluster {
+// ExportCluster exports a placemat configuration to writer from TemplateArgs
+func ExportCluster(w io.Writer, ta *TemplateArgs) error {
+	cluster := generateCluster(ta)
+
+	encoder := yaml.NewEncoder(w)
+	for _, n := range cluster.networks {
+		err := encoder.Encode(n)
+		if err != nil {
+			return err
+		}
+	}
+	for _, i := range cluster.images {
+		err := encoder.Encode(i)
+		if err != nil {
+			return err
+		}
+	}
+	for _, f := range cluster.dataFolders {
+		err := encoder.Encode(f)
+		if err != nil {
+			return err
+		}
+	}
+	for _, n := range cluster.nodes {
+		err := encoder.Encode(n)
+		if err != nil {
+			return err
+		}
+	}
+	for _, p := range cluster.pods {
+		err := encoder.Encode(p)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func generateCluster(ta *TemplateArgs) *cluster {
 	cluster := new(cluster)
 
 	cluster.appendExternalNetwork(ta)
@@ -64,6 +107,8 @@ func generateCluster(ta *menu.TemplateArgs) *cluster {
 	cluster.appendRackNetwork(ta)
 
 	cluster.appendCoreOSImage()
+
+	cluster.appendUbuntuImage()
 
 	cluster.appendCommonDataFolder()
 
@@ -82,7 +127,64 @@ func generateCluster(ta *menu.TemplateArgs) *cluster {
 	return cluster
 }
 
-func coreOSNode(rackName, rackShortName, nodeName string, resource *menu.VMResource) *placemat.NodeConfig {
+func ubuntuNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
+
+	return &placemat.NodeConfig{
+		Kind: "Node",
+		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
+		Spec: placemat.NodeSpec{
+			Interfaces: []string{
+				fmt.Sprintf("%s-node1", rackShortName),
+				fmt.Sprintf("%s-node2", rackShortName),
+			},
+			Volumes: []placemat.NodeVolumeConfig{
+				{
+					Kind: "image",
+					Name: "root",
+					Spec: placemat.NodeVolumeSpec{
+						Image:       "ubuntu-image",
+						CopyOnWrite: true,
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "common",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: "common-data",
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "local",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: fmt.Sprintf("%s-bird-data", rackName),
+					},
+				},
+				{
+					Kind: "localds",
+					Name: "seed",
+					Spec: placemat.NodeVolumeSpec{
+						UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+						NetworkConfig: "network.yml",
+					},
+				},
+				{
+					Kind: "raw",
+					Name: "data",
+					Spec: placemat.NodeVolumeSpec{
+						Size: "30G",
+					},
+				},
+			},
+			Resources: placemat.NodeResourceConfig{
+				CPU:    fmt.Sprint(resource.CPU),
+				Memory: resource.Memory,
+			},
+		},
+	}
+}
+
+func coreOSNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
 
 	return &placemat.NodeConfig{
 		Kind: "Node",
@@ -124,9 +226,10 @@ func coreOSNode(rackName, rackShortName, nodeName string, resource *menu.VMResou
 		},
 	}
 }
-func (c *cluster) appendNodes(ta *menu.TemplateArgs) {
+
+func (c *cluster) appendNodes(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
-		c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
+		c.nodes = append(c.nodes, ubuntuNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
 
 		for _, cs := range rack.CSList {
 			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, cs.Name, &ta.CS))
@@ -171,7 +274,7 @@ func (c *cluster) appendNodes(ta *menu.TemplateArgs) {
 	})
 }
 
-func torPod(rackName, rackShortName string, tor menu.ToR, torNumber int, ta *menu.TemplateArgs) *placemat.PodConfig {
+func torPod(rackName, rackShortName string, tor ToR, torNumber int, ta *TemplateArgs) *placemat.PodConfig {
 
 	var spineIfs []placemat.PodInterfaceConfig
 	for i, spine := range ta.Spines {
@@ -233,7 +336,7 @@ func torPod(rackName, rackShortName string, tor menu.ToR, torNumber int, ta *men
 	}
 }
 
-func (c *cluster) appendToRPods(ta *menu.TemplateArgs) {
+func (c *cluster) appendToRPods(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
 		c.pods = append(c.pods,
 			torPod(rack.Name, rack.ShortName, rack.ToR1, 1, ta),
@@ -242,7 +345,7 @@ func (c *cluster) appendToRPods(ta *menu.TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendSpinePod(ta *menu.TemplateArgs) {
+func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
 		var rackIfs []placemat.PodInterfaceConfig
 		rackIfs = append(rackIfs, placemat.PodInterfaceConfig{
@@ -305,7 +408,7 @@ func (c *cluster) appendExtVMDataFolder() {
 		})
 }
 
-func (c *cluster) appendRackDataFolder(ta *menu.TemplateArgs) {
+func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
 		c.dataFolders = append(c.dataFolders,
 			&placemat.DataFolderConfig{
@@ -348,7 +451,7 @@ func (c *cluster) appendRackDataFolder(ta *menu.TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendSpineDataFolder(ta *menu.TemplateArgs) {
+func (c *cluster) appendSpineDataFolder(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
 		c.dataFolders = append(c.dataFolders,
 			&placemat.DataFolderConfig{
@@ -396,6 +499,10 @@ func (c *cluster) appendCommonDataFolder() {
 					Name: "bashrc",
 					File: "bashrc",
 				},
+				{
+					Name: "rkt.deb",
+					File: debRkt,
+				},
 			},
 		},
 	})
@@ -412,7 +519,17 @@ func (c *cluster) appendCoreOSImage() {
 	})
 }
 
-func (c *cluster) appendRackNetwork(ta *menu.TemplateArgs) {
+func (c *cluster) appendUbuntuImage() {
+	c.images = append(c.images, &placemat.ImageConfig{
+		Kind: "Image",
+		Name: "ubuntu-image",
+		Spec: placemat.ImageSpec{
+			URL: qemuImageubuntu,
+		},
+	})
+}
+
+func (c *cluster) appendRackNetwork(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
 		c.networks = append(
 			c.networks,
@@ -434,7 +551,7 @@ func (c *cluster) appendRackNetwork(ta *menu.TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendSpineToRackNetwork(ta *menu.TemplateArgs) {
+func (c *cluster) appendSpineToRackNetwork(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
 		for _, rack := range ta.Racks {
 			c.networks = append(
@@ -458,7 +575,7 @@ func (c *cluster) appendSpineToRackNetwork(ta *menu.TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendExternalNetwork(ta *menu.TemplateArgs) {
+func (c *cluster) appendExternalNetwork(ta *TemplateArgs) {
 	c.networks = append(
 		c.networks,
 		&placemat.NetworkConfig{

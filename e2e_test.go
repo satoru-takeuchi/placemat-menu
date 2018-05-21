@@ -88,22 +88,23 @@ func TestE2E(t *testing.T) {
 		"bird_rack1-node.conf",
 		"bird_rack1-tor2.conf",
 		"bird_spine2.conf",
+		"seed_rack0-boot.yml",
+		"seed_rack1-boot.yml",
 		"cluster.yml",
+		"network.yml",
 	}
 
 	targetJSONs := []string{
 		"ext-vm.ign",
-		"rack0-boot.ign",
 		"rack0-cs1.ign",
 		"rack0-cs2.ign",
-		"rack1-boot.ign",
 		"rack1-cs1.ign",
 		"rack1-cs2.ign",
 		"rack1-ss1.ign",
 		"rack1-ss2.ign",
 	}
 
-	cmd := exec.Command("go", "run", "cmd/placemat-menu/main.go", "cmd/placemat-menu/cluster.go", "-f", "example.yml", "-o", dir)
+	cmd := exec.Command("go", "run", "cmd/placemat-menu/main.go", "-f", "example.yml", "-o", dir)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

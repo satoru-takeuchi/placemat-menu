@@ -18,7 +18,6 @@ import (
 	"github.com/cybozu-go/placemat-menu"
 	_ "github.com/cybozu-go/placemat-menu/cmd/placemat-menu/statik"
 	"github.com/rakyll/statik/fs"
-	yaml "gopkg.in/yaml.v2"
 )
 
 var staticFiles = []string{
@@ -75,7 +74,12 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	err = exportYAML("cluster.yml", generateCluster(ta))
+	clusterFile, err := os.Create(filepath.Join(*flagOutDir, "cluster.yml"))
+	if err != nil {
+		return err
+	}
+	defer clusterFile.Close()
+	err = menu.ExportCluster(clusterFile, ta)
 	if err != nil {
 		return err
 	}
@@ -83,12 +87,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	err = exportJSON(
-		"ext-vm.ign",
-		menu.ExtVMIgnition(ta.Account, ta.Network.External.VM))
-	if err != nil {
-		return err
-	}
+
 	for spineIdx := range ta.Spines {
 		err = export(statikFS, "/templates/bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
@@ -97,11 +96,36 @@ func run() error {
 			return err
 		}
 	}
+
+	networkConfigFile, err := os.Create(filepath.Join(*flagOutDir, "network.yml"))
+	if err != nil {
+		return err
+	}
+	defer networkConfigFile.Close()
+	err = menu.ExportNetworkConfig(networkConfigFile)
+	if err != nil {
+		return err
+	}
+
 	for rackIdx, rack := range ta.Racks {
+		err := func() error {
+			seedFile, err := os.Create(filepath.Join(*flagOutDir, fmt.Sprintf("seed_%s-boot.yml", rack.Name)))
+			if err != nil {
+				return err
+			}
+			defer seedFile.Close()
+			return menu.ExportSeed(seedFile, &ta.Account, &rack)
+		}()
+		if err != nil {
+			return err
+		}
+
 		err = exportJSON(
-			fmt.Sprintf("rack%d-boot.ign", rackIdx),
-			menu.BootNodeIgnition(ta.Account, rack),
-		)
+			"ext-vm.ign",
+			menu.ExtVMIgnition(ta.Account, ta.Network.External.VM))
+		if err != nil {
+			return err
+		}
 
 		err = export(statikFS, "/templates/bird_rack-tor1.conf",
 			fmt.Sprintf("bird_rack%d-tor1.conf", rackIdx),
@@ -152,46 +176,6 @@ func exportJSON(output string, ignition menu.Ignition) error {
 	encoder := json.NewEncoder(f)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(ignition)
-}
-
-func exportYAML(output string, cluster *cluster) error {
-	f, err := os.Create(filepath.Join(*flagOutDir, output))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	encoder := yaml.NewEncoder(f)
-	for _, n := range cluster.networks {
-		err = encoder.Encode(n)
-		if err != nil {
-			return err
-		}
-	}
-	for _, i := range cluster.images {
-		err = encoder.Encode(i)
-		if err != nil {
-			return err
-		}
-	}
-	for _, f := range cluster.dataFolders {
-		err = encoder.Encode(f)
-		if err != nil {
-			return err
-		}
-	}
-	for _, n := range cluster.nodes {
-		err = encoder.Encode(n)
-		if err != nil {
-			return err
-		}
-	}
-	for _, p := range cluster.pods {
-		err = encoder.Encode(p)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func export(fs http.FileSystem, input string, output string, args interface{}) error {

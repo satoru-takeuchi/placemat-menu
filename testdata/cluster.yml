@@ -103,6 +103,8 @@ spec:
     file: rkt-fetch
   - name: bashrc
     file: bashrc
+  - name: rkt.deb
+    file: rkt_1.30.0-1_amd64.deb
 ---
 kind: DataFolder
 name: spine1-data
@@ -199,6 +201,11 @@ spec:
       user-data: seed_rack0-boot.yml
       network-config: network.yml
       copy-on-write: false
+  - kind: raw
+    name: data
+    spec:
+      size: 30G
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -284,6 +291,11 @@ spec:
     spec:
       user-data: seed_rack1-boot.yml
       network-config: network.yml
+      copy-on-write: false
+  - kind: raw
+    name: data
+    spec:
+      size: 30G
       copy-on-write: false
   resources:
     cpu: "2"

@@ -6,7 +6,7 @@ import (
 	"io"
 
 	placemat "github.com/cybozu-go/placemat/yaml"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (

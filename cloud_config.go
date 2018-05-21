@@ -101,11 +101,16 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 		},
 	}
 
+	seed.Mounts = append(seed.Mounts, []string{
+		"/dev/vdb1", "/mnt/containers", "auto", "defaults",
+	})
+
 	seed.WriteFiles = seedDummyNetworkUnits("node0", rack.BootNode.Node0Address)
 	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{rack.BootNode.Node1Address, rack.BootNode.Node2Address})...)
 	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", rack.BootNode.BastionAddress)...)
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
+	seed.Runcmd = append(seed.Runcmd, []string{"dpkg", "-i", "/mnt/containers/rkt.deb"})
 
 	_, err := fmt.Fprintln(w, "#cloud-config")
 	if err != nil {

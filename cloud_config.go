@@ -49,19 +49,11 @@ type Seed struct {
 func seedDummyNetworkUnits(name string, address *net.IPNet) []SeedWriteFile {
 	return []SeedWriteFile{
 		{
-			Path: fmt.Sprintf("/etc/systemd/network/10-%s.netdev", name),
-			Content: fmt.Sprintf(`[NetDev]
-Name=%s
-Kind=dummy
-`, name),
+			Path:    fmt.Sprintf("/etc/systemd/network/10-%s.netdev", name),
+			Content: dummyNetdev(name),
 		}, {
-			Path: fmt.Sprintf("/etc/systemd/network/10-%s.network", name),
-			Content: fmt.Sprintf(`[Match]
-Name=%s
-
-[Network]
-Address=%s
-`, name, address),
+			Path:    fmt.Sprintf("/etc/systemd/network/10-%s.network", name),
+			Content: namedNetwork(name, address),
 		},
 	}
 }
@@ -70,19 +62,26 @@ func seedEthNetworkUnits(addresses []*net.IPNet) []SeedWriteFile {
 	units := make([]SeedWriteFile, len(addresses))
 	for i, addr := range addresses {
 		units[i].Path = fmt.Sprintf("/etc/systemd/network/10-eth%d.network", i)
-		units[i].Content = fmt.Sprintf(`[Match]
-Name=eth%d
-
-[Network]
-LLDP=true
-EmitLLDP=nearest-bridge
-
-[Address]
-Address=%s
-Scope=link
-`, i, addr)
+		units[i].Content = ethNetwork(fmt.Sprintf("ens%d", 3+i), addr)
 	}
 	return units
+}
+
+func systemdWriteFiles() []SeedWriteFile {
+	return []SeedWriteFile{
+		{
+			Path:    "/etc/systemd/system/copy-bird-conf.service",
+			Content: copyBirdConfService(),
+		},
+		{
+			Path:    "/etc/systemd/system/rkt-fetch.service",
+			Content: rktFetchService(),
+		},
+		{
+			Path:    "/etc/systemd/system/bird.service",
+			Content: birdService(),
+		},
+	}
 }
 
 // ExportSeed exports a seed
@@ -101,13 +100,14 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 		},
 	}
 
-	seed.Mounts = append(seed.Mounts, []string{
-		"/dev/vdb1", "/mnt/containers", "auto", "defaults",
-	})
+	seed.Mounts = append(seed.Mounts,
+		[]string{"/dev/vdb1", "/mnt/containers", "auto", "defaults,ro"},
+		[]string{"/dev/vdc1", "/mnt/bird", "vfat", "defaults,ro"})
 
 	seed.WriteFiles = seedDummyNetworkUnits("node0", rack.BootNode.Node0Address)
 	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{rack.BootNode.Node1Address, rack.BootNode.Node2Address})...)
 	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", rack.BootNode.BastionAddress)...)
+	seed.WriteFiles = append(seed.WriteFiles, systemdWriteFiles()...)
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"dpkg", "-i", "/mnt/containers/rkt.deb"})

@@ -96,6 +96,17 @@ func run() error {
 			return err
 		}
 	}
+
+	networkConfigFile, err := os.Create(filepath.Join(*flagOutDir, "network.yml"))
+	if err != nil {
+		return err
+	}
+	defer networkConfigFile.Close()
+	err = menu.ExportNetworkConfig(networkConfigFile)
+	if err != nil {
+		return err
+	}
+
 	for rackIdx, rack := range ta.Racks {
 		err := func() error {
 			seedFile, err := os.Create(filepath.Join(*flagOutDir, fmt.Sprintf("seed_%s-boot.yml", rack.Name)))

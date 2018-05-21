@@ -107,6 +107,15 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 
-	fmt.Fprintln(w, "#cloud-config")
+	_, err := fmt.Fprintln(w, "#cloud-config")
+	if err != nil {
+		return err
+	}
 	return yaml.NewEncoder(w).Encode(seed)
+}
+
+// ExportNetworkConfig export network-config file used in cloud-init
+func ExportNetworkConfig(w io.Writer) error {
+	_, err := fmt.Fprintln(w, "version: 2\nethernets: {}")
+	return err
 }

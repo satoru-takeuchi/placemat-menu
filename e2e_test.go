@@ -91,6 +91,7 @@ func TestE2E(t *testing.T) {
 		"seed_rack0-boot.yml",
 		"seed_rack1-boot.yml",
 		"cluster.yml",
+		"network.yml",
 	}
 
 	targetJSONs := []string{

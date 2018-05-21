@@ -163,7 +163,7 @@ func ubuntuNode(rackName, rackShortName, nodeName string, resource *VMResource) 
 					Name: "seed",
 					Spec: placemat.NodeVolumeSpec{
 						UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
-						NetworkConfig: fmt.Sprintf("network_%s-%s.yml", rackName, nodeName),
+						NetworkConfig: "network.yml",
 					},
 				},
 			},

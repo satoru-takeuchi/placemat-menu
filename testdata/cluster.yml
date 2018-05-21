@@ -197,7 +197,7 @@ spec:
     name: seed
     spec:
       user-data: seed_rack0-boot.yml
-      network-config: network_rack0-boot.yml
+      network-config: network.yml
       copy-on-write: false
   resources:
     cpu: "2"
@@ -283,7 +283,7 @@ spec:
     name: seed
     spec:
       user-data: seed_rack1-boot.yml
-      network-config: network_rack1-boot.yml
+      network-config: network.yml
       copy-on-write: false
   resources:
     cpu: "2"

@@ -121,6 +121,8 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"dpkg", "-i", "/mnt/containers/rkt.deb"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "bird.service"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "start", "bird.service"})
 
 	_, err := fmt.Fprintln(w, "#cloud-config")
 	if err != nil {

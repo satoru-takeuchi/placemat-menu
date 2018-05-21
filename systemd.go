@@ -77,7 +77,7 @@ Requires=rkt-fetch.service
 
 [Service]
 Slice=machine.slice
-ExecStart=/bin/rkt run \
+ExecStart=/usr/bin/rkt run \
   --volume run,kind=empty,readOnly=false \
   --volume etc,kind=host,source=/etc/bird,readOnly=true \
   --net=host \

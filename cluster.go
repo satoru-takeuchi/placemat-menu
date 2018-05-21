@@ -168,6 +168,13 @@ func ubuntuNode(rackName, rackShortName, nodeName string, resource *VMResource) 
 						NetworkConfig: "network.yml",
 					},
 				},
+				{
+					Kind: "raw",
+					Name: "data",
+					Spec: placemat.NodeVolumeSpec{
+						Size: "30G",
+					},
+				},
 			},
 			Resources: placemat.NodeResourceConfig{
 				CPU:    fmt.Sprint(resource.CPU),

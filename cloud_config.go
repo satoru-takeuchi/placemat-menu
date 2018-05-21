@@ -107,12 +107,12 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed.Mounts = append(seed.Mounts,
 		[]string{"/dev/vdb1", "/mnt/containers", "auto", "defaults,ro"},
 		[]string{"/dev/vdc1", "/mnt/bird", "vfat", "defaults,ro"},
-		[]string{"/dev/vdd1", "/var/lib/rkt", "btrfs", "defaults"},
+		[]string{"/dev/vde1", "/var/lib/rkt", "btrfs", "defaults"},
 	)
 
 	seed.DiskSetup = make(map[string]SeedDiskSetup)
-	seed.DiskSetup["/dev/vdd"] = SeedDiskSetup{TableType: "gpt", Layout: true, Overwrite: false}
-	seed.FsSetup = append(seed.FsSetup, SeedFSSetup{Label: "rkt", Filesystem: "btrfs", Device: "/dev/vdd1"})
+	seed.DiskSetup["/dev/vde"] = SeedDiskSetup{TableType: "gpt", Layout: true, Overwrite: false}
+	seed.FsSetup = append(seed.FsSetup, SeedFSSetup{Label: "rkt", Filesystem: "btrfs", Device: "/dev/vde1"})
 
 	seed.WriteFiles = seedDummyNetworkUnits("node0", rack.BootNode.Node0Address)
 	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{rack.BootNode.Node1Address, rack.BootNode.Node2Address})...)

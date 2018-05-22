@@ -164,20 +164,6 @@ WantedBy=multi-user.target
 			Name:     "bird.service",
 			Enabled:  true,
 			Contents: birdService(),
-		}, {
-			Name:    "setup-iptables.service",
-			Enabled: true,
-			Contents: `[Unit]
-After=mnt-bird.mount
-ConditionPathExists=/mnt/bird/setup-iptables
-
-[Service]
-Type=oneshot
-ExecStart=/bin/sh /mnt/bird/setup-iptables
-
-[Install]
-WantedBy=multi-user.target
-`,
 		},
 	}
 }

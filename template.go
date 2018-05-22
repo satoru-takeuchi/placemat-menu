@@ -18,7 +18,7 @@ const (
 	offsetExternalExtVM      = 2
 
 	offsetBastionCoreRouter = 1
-	offsetBastionVM         = 2
+	offsetBastionOpetan     = 2
 
 	offsetNodenetToR     = 1
 	offsetNodenetBoot    = 3
@@ -88,9 +88,10 @@ func (s Spine) ToR2Address(rackIdx int) *net.IPNet {
 	return s.ToRAddresses[rackIdx*2+1]
 }
 
-type ExternalNodes struct {
-	Host *net.IPNet
-	VM   *net.IPNet
+type Endpoints struct {
+	Host   *net.IPNet
+	ExtVM  *net.IPNet
+	Opetan *net.IPNet
 }
 
 // CoreRouter contains parameters to construct core router
@@ -109,7 +110,7 @@ type TemplateArgs struct {
 			LoadBalancer *net.IPNet
 			Ingress      *net.IPNet
 		}
-		ExternalNodes ExternalNodes
+		Endpoints     Endpoints
 		ASNExtVM      int
 		ASNSpine      int
 		ASNCoreRouter int
@@ -234,6 +235,8 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 	templateArgs.Network.Exposed.Bastion = menu.Network.Bastion
 	templateArgs.Network.Exposed.LoadBalancer = menu.Network.LoadBalancer
 	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
+	templateArgs.Network.Endpoints.Host = addToIPNet(menu.Network.Internet, offsetInternetHost)
+	templateArgs.Network.Endpoints.ExtVM = addToIPNet(menu.Network.CoreExtVM, offsetExternalExtVM)
 }
 
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
@@ -260,13 +263,12 @@ func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
 }
 
 func setCoreRouter(ta *TemplateArgs, menu *Menu) {
-	ta.Network.ExternalNodes.Host = addToIPNet(menu.Network.Internet, offsetInternetHost)
-	ta.Network.ExternalNodes.VM = addToIPNet(menu.Network.CoreExtVM, offsetExternalExtVM)
 	for i := range ta.Spines {
 		ta.CoreRouter.SpineAddresses = append(ta.CoreRouter.SpineAddresses, addToIPNet(menu.Network.CoreSpine, 2*i))
 	}
-	ta.CoreRouter.BastionAddress = addToIPNet(menu.Network.Bastion, offsetBastionCoreRouter)
+	ta.CoreRouter.BastionAddress = addToIPNet(menu.Network.CoreBastion, offsetBastionCoreRouter)
 	ta.CoreRouter.InternetAddress = addToIPNet(menu.Network.Internet, offsetInternetCoreRouter)
+	ta.CoreRouter.ExtVMAddress = addToIPNet(menu.Network.CoreExtVM, offsetExternalCoreRouter)
 }
 
 func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu, bases [][]net.IP) {

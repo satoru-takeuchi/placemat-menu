@@ -353,8 +353,8 @@ func (c *cluster) appendToRPods(ta *TemplateArgs) {
 
 func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
 	interfaces := []placemat.PodInterfaceConfig{
-		{"core-spine1", []string{"10.0.2.0/31"}},
-		{"core-spine2", []string{"10.0.2.2/31"}},
+		{"core-to-s1", []string{"10.0.2.0/31"}},
+		{"core-to-s2", []string{"10.0.2.2/31"}},
 		{"core-extvm", []string{"10.0.3.0/24"}},
 		{"core-corporate", []string{"10.0.4.0/24"}},
 	}
@@ -389,9 +389,15 @@ func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
 }
 
 func (c *cluster) appendSpinePod(ta *TemplateArgs) {
-	for _, spine := range ta.Spines {
+	for i, spine := range ta.Spines {
 		var rackIfs []placemat.PodInterfaceConfig
 
+		rackIfs = append(rackIfs,
+			placemat.PodInterfaceConfig{
+				Network:   fmt.Sprintf("core-to-%s", spine.ShortName),
+				Addresses: []string{fmt.Sprintf("10.0.2.%d", i*2+1)},
+			},
+		)
 		for i, rack := range ta.Racks {
 			rackIfs = append(rackIfs,
 				placemat.PodInterfaceConfig{
@@ -497,10 +503,6 @@ func (c *cluster) appendCoreRouterDataFolder() {
 			Name: "core-router-data",
 			Spec: placemat.DataFolderSpec{
 				Files: []placemat.DataFolderFileConfig{
-					{
-						Name: "setup-iptables",
-						File: "setup-iptables",
-					},
 					{
 						Name: "bird.conf",
 						File: "bird_core-router.conf",
@@ -650,14 +652,14 @@ func (c *cluster) appendCoreRouterNetwork(ta *TemplateArgs) {
 		c.networks,
 		&placemat.NetworkConfig{
 			Kind: "Network",
-			Name: "core-spine1",
+			Name: "core-to-s1",
 			Spec: placemat.NetworkSpec{
 				Internal: true,
 			},
 		},
 		&placemat.NetworkConfig{
 			Kind: "Network",
-			Name: "core-spine2",
+			Name: "core-to-s2",
 			Spec: placemat.NetworkSpec{
 				Internal: true,
 			},

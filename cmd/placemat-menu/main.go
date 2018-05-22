@@ -88,6 +88,11 @@ func run() error {
 		return err
 	}
 
+	err = export(statikFS, "/templates/bird_core-router.conf", "bird_core-router.conf", ta)
+	if err != nil {
+		return err
+	}
+
 	for spineIdx := range ta.Spines {
 		err = export(statikFS, "/templates/bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),

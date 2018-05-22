@@ -6,7 +6,7 @@ import (
 	"io"
 
 	placemat "github.com/cybozu-go/placemat/yaml"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -102,6 +102,8 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendExternalNetwork(ta)
 
+	cluster.appendCoreRouterNetwork(ta)
+
 	cluster.appendSpineToRackNetwork(ta)
 
 	cluster.appendRackNetwork(ta)
@@ -112,11 +114,15 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendCommonDataFolder()
 
+	cluster.appendCoreRouterDataFolder()
+
 	cluster.appendSpineDataFolder(ta)
 
 	cluster.appendRackDataFolder(ta)
 
 	cluster.appendExtVMDataFolder()
+
+	cluster.appendCoreRouterPod(ta)
 
 	cluster.appendSpinePod(ta)
 
@@ -345,13 +351,47 @@ func (c *cluster) appendToRPods(ta *TemplateArgs) {
 	}
 }
 
+func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
+	interfaces := []placemat.PodInterfaceConfig{
+		{"core-spine1", []string{"10.0.2.0/31"}},
+		{"core-spine2", []string{"10.0.2.2/31"}},
+		{"core-extvm", []string{"10.0.3.0/24"}},
+		{"core-corporate", []string{"10.0.4.0/24"}},
+	}
+	interfaces = append(interfaces, placemat.PodInterfaceConfig{
+		Network:   "ext-net",
+		Addresses: []string{"10.0.0.3/24"},
+	})
+	c.pods = append(c.pods, &placemat.PodConfig{
+		Kind: "Pod",
+		Name: "core-router",
+		Spec: placemat.PodSpec{
+			InitScripts: []string{"setup-iptables"},
+			Interfaces:  interfaces,
+			Volumes: []placemat.PodVolumeConfig{
+				{
+					Name:     "config",
+					Kind:     "host",
+					Folder:   "core-router-data",
+					ReadOnly: true,
+				},
+				{
+					Name: "run",
+					Kind: "empty",
+				},
+			},
+			Apps: []placemat.PodAppConfig{
+				birdContainer,
+				debugContainer,
+			},
+		},
+	})
+}
+
 func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
 		var rackIfs []placemat.PodInterfaceConfig
-		rackIfs = append(rackIfs, placemat.PodInterfaceConfig{
-			Network:   "ext-net",
-			Addresses: []string{spine.ExtnetAddress.String()},
-		})
+
 		for i, rack := range ta.Racks {
 			rackIfs = append(rackIfs,
 				placemat.PodInterfaceConfig{
@@ -369,8 +409,7 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 			Kind: "Pod",
 			Name: spine.Name,
 			Spec: placemat.PodSpec{
-				InitScripts: []string{"setup-iptables"},
-				Interfaces:  rackIfs,
+				Interfaces: rackIfs,
 				Volumes: []placemat.PodVolumeConfig{
 					{
 						Name:     "config",
@@ -451,6 +490,26 @@ func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 	}
 }
 
+func (c *cluster) appendCoreRouterDataFolder() {
+	c.dataFolders = append(c.dataFolders,
+		&placemat.DataFolderConfig{
+			Kind: "DataFolder",
+			Name: "core-router-data",
+			Spec: placemat.DataFolderSpec{
+				Files: []placemat.DataFolderFileConfig{
+					{
+						Name: "setup-iptables",
+						File: "setup-iptables",
+					},
+					{
+						Name: "bird.conf",
+						File: "bird_core-router.conf",
+					},
+				},
+			},
+		})
+}
+
 func (c *cluster) appendSpineDataFolder(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
 		c.dataFolders = append(c.dataFolders,
@@ -459,10 +518,6 @@ func (c *cluster) appendSpineDataFolder(ta *TemplateArgs) {
 				Name: fmt.Sprintf("%s-data", spine.Name),
 				Spec: placemat.DataFolderSpec{
 					Files: []placemat.DataFolderFileConfig{
-						{
-							Name: "setup-iptables",
-							File: "setup-iptables",
-						},
 						{
 							Name: "bird.conf",
 							File: fmt.Sprintf("bird_%s.conf", spine.Name),
@@ -585,6 +640,40 @@ func (c *cluster) appendExternalNetwork(ta *TemplateArgs) {
 				Internal:  false,
 				UseNAT:    true,
 				Addresses: []string{ta.Network.External.Host.String()},
+			},
+		},
+	)
+}
+
+func (c *cluster) appendCoreRouterNetwork(ta *TemplateArgs) {
+	c.networks = append(
+		c.networks,
+		&placemat.NetworkConfig{
+			Kind: "Network",
+			Name: "core-spine1",
+			Spec: placemat.NetworkSpec{
+				Internal: true,
+			},
+		},
+		&placemat.NetworkConfig{
+			Kind: "Network",
+			Name: "core-spine2",
+			Spec: placemat.NetworkSpec{
+				Internal: true,
+			},
+		},
+		&placemat.NetworkConfig{
+			Kind: "Network",
+			Name: "core-extvm",
+			Spec: placemat.NetworkSpec{
+				Internal: true,
+			},
+		},
+		&placemat.NetworkConfig{
+			Kind: "Network",
+			Name: "core-corporate",
+			Spec: placemat.NetworkSpec{
+				Internal: true,
 			},
 		},
 	)

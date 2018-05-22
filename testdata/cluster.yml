@@ -4,7 +4,6 @@ spec:
   internal: false
   use-nat: true
   addresses:
-  - 10.0.0.1/24
 ---
 kind: Network
 name: s1-to-r0-1

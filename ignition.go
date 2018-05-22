@@ -182,31 +182,8 @@ WantedBy=multi-user.target
 	}
 }
 
-func setupRouteUnit(src, tor1addr, tor2addr net.IP) IgnitionSystemdUnit {
-	content := fmt.Sprintf(`[Unit]
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
-
-[Install]
-WantedBy=multi-user.target
-`, src, tor1addr, tor2addr)
-
-	return IgnitionSystemdUnit{
-		Name:     "setup-route.service",
-		Enabled:  true,
-		Contents: content,
-	}
-}
-
 func nodeSystemd() IgnitionSystemd {
 	return IgnitionSystemd{Units: defaultSystemdUnits()}
-}
-
-func bootSystemd(src, ip1, ip2 net.IP) IgnitionSystemd {
-	return IgnitionSystemd{Units: append(defaultSystemdUnits(), setupRouteUnit(src, ip1, ip2))}
 }
 
 // NodeIgnition returns an Ignition by passwd and node
@@ -247,36 +224,6 @@ func NodeIgnition(account Account, node IgnitionNode) Ignition {
 	ign.Systemd = node.Systemd()
 	ign.Networkd = node.Networkd()
 	return ign
-}
-
-// BootNodeInfo contains boot server in a rack
-type BootNodeInfo struct {
-	name        string
-	bastionAddr *net.IPNet
-	node0Addr   *net.IPNet
-	node1Addr   *net.IPNet
-	node2Addr   *net.IPNet
-	ToR1Addr    net.IP
-	ToR2Addr    net.IP
-}
-
-// Hostname returns hostname
-func (b *BootNodeInfo) Hostname() string {
-	return b.name
-}
-
-// Networkd returns networkd definitions
-func (b *BootNodeInfo) Networkd() IgnitionNetworkd {
-	units := make([]IgnitionNetworkdUnit, 0)
-	units = append(units, ignDummyNetworkUnits("node0", b.node0Addr)...)
-	units = append(units, ignEthNetworkUnits([]*net.IPNet{b.node1Addr, b.node2Addr})...)
-	units = append(units, ignDummyNetworkUnits("bastion", b.bastionAddr)...)
-	return IgnitionNetworkd{Units: units}
-}
-
-// Systemd returns systemd definitions
-func (b *BootNodeInfo) Systemd() IgnitionSystemd {
-	return bootSystemd(b.bastionAddr.IP, b.ToR1Addr, b.ToR2Addr)
 }
 
 // CSNodeInfo contains cs/ss server in a rack
@@ -353,20 +300,6 @@ func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
 // Systemd returns systemd definitions
 func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
 	return nodeSystemd()
-}
-
-// BootNodeIgnition returns an Ignition for boot node
-func BootNodeIgnition(account Account, rack Rack) Ignition {
-	node := &BootNodeInfo{
-		name:        rack.Name + "-boot",
-		node0Addr:   rack.BootNode.Node0Address,
-		node1Addr:   rack.BootNode.Node1Address,
-		node2Addr:   rack.BootNode.Node2Address,
-		bastionAddr: rack.BootNode.BastionAddress,
-		ToR1Addr:    rack.BootNode.ToR1Address.IP,
-		ToR2Addr:    rack.BootNode.ToR2Address.IP,
-	}
-	return NodeIgnition(account, node)
 }
 
 // CSNodeIgnition returns an Ignition for cs/ss servers

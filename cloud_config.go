@@ -88,6 +88,13 @@ func systemdWriteFiles() []SeedWriteFile {
 	}
 }
 
+func setupRouteWrites(node BootNodeEntity) SeedWriteFile {
+	return SeedWriteFile{
+		Path:    "/etc/systemd/system/setup-route.service",
+		Content: setupRouteService(node.BastionAddress.IP, node.ToR1Address.IP, node.ToR2Address.IP),
+	}
+}
+
 // ExportSeed exports a seed
 func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed := Seed{
@@ -114,15 +121,19 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed.DiskSetup["/dev/vde"] = SeedDiskSetup{TableType: "gpt", Layout: true, Overwrite: false}
 	seed.FsSetup = append(seed.FsSetup, SeedFSSetup{Label: "rkt", Filesystem: "btrfs", Device: "/dev/vde1"})
 
-	seed.WriteFiles = seedDummyNetworkUnits("node0", rack.BootNode.Node0Address)
-	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{rack.BootNode.Node1Address, rack.BootNode.Node2Address})...)
-	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", rack.BootNode.BastionAddress)...)
+	node := rack.BootNode
+	seed.WriteFiles = seedDummyNetworkUnits("node0", node.Node0Address)
+	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{node.Node1Address, node.Node2Address})...)
+	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", node.BastionAddress)...)
 	seed.WriteFiles = append(seed.WriteFiles, systemdWriteFiles()...)
+	seed.WriteFiles = append(seed.WriteFiles, setupRouteWrites(node))
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"dpkg", "-i", "/mnt/containers/rkt.deb"})
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "bird.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "start", "bird.service"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "setup-route.service"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "start", "setup-route.service"})
 
 	_, err := fmt.Fprintln(w, "#cloud-config")
 	if err != nil {

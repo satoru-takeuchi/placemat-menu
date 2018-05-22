@@ -127,6 +127,17 @@ write_files:
 
     [Install]
     WantedBy=multi-user.target
+- path: /etc/systemd/system/setup-route.service
+  content: |
+    [Unit]
+    After=network.target
+
+    [Service]
+    Type=oneshot
+    ExecStart=/bin/ip route add 0.0.0.0/0 src 10.72.48.0 nexthop via 10.69.0.65 nexthop via 10.69.0.129
+
+    [Install]
+    WantedBy=multi-user.target
 runcmd:
 - - systemctl
   - restart
@@ -140,3 +151,9 @@ runcmd:
 - - systemctl
   - start
   - bird.service
+- - systemctl
+  - enable
+  - setup-route.service
+- - systemctl
+  - start
+  - setup-route.service

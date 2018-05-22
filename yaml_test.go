@@ -9,7 +9,10 @@ import (
 func testUnmarshalNetwork(t *testing.T) {
 	t.Parallel()
 
-	_, external, _ := net.ParseCIDR("10.0.0.0/24")
+	_, internet, _ := net.ParseCIDR("10.0.0.0/24")
+	_, coreSpine, _ := net.ParseCIDR("10.0.2.0/24")
+	_, coreExtVM, _ := net.ParseCIDR("10.0.3.0/24")
+	_, coreBastion, _ := net.ParseCIDR("10.0.4.0/24")
 	_, node, _ := net.ParseCIDR("10.69.0.0/26")
 	_, bastion, _ := net.ParseCIDR("10.72.48.0/26")
 	_, loadbalancer, _ := net.ParseCIDR("10.72.32.0/20")
@@ -24,7 +27,10 @@ func testUnmarshalNetwork(t *testing.T) {
 kind: Network
 spec:
   asn-base: 64600
-  external: 10.0.0.0/24
+  internet: 10.0.0.0/24
+  core-spine: 10.0.2.0/24
+  core-extvm: 10.0.3.0/24
+  core-bastion: 10.0.4.0/24
   spine-tor: 10.0.1.0
   node: 10.69.0.0/26
   exposed:
@@ -34,7 +40,10 @@ spec:
 `,
 			expected: NetworkMenu{
 				ASNBase:      64600,
-				External:     external,
+				Internet:     internet,
+				CoreSpine:    coreSpine,
+				CoreExtVM:    coreExtVM,
+				CoreBastion:  coreBastion,
 				SpineTor:     net.ParseIP("10.0.1.0"),
 				Node:         node,
 				Bastion:      bastion,
@@ -55,11 +64,11 @@ spec:
 
 	errorSources := []string{
 		`
-# Invalid CIDR @ external
+# Invalid CIDR @ internet
 kind: Network
 spec:
   asn-base: 64600
-  external: 10.0.0.0
+  internet: 10.0.0.0
   spine-tor: 10.0.1.0
   node: 10.69.0.0/26
   exposed:
@@ -72,7 +81,7 @@ spec:
 kind: Network
 spec:
   asn-base: 64600
-  external: 10.0.0.0/24
+  internet: 10.0.0.0/24
   spine-tor: 10.0.1.0
   node: 10.69.0.1/26
   exposed:
@@ -85,7 +94,7 @@ spec:
 kind: Network
 spec:
   asn-base: 64600
-  external: 10.0.0.0/24
+  internet: 10.0.0.0/24
   spine-tor: 10.0.1.0/31
   node: 10.69.0.0/26
   exposed:

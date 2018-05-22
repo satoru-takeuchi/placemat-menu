@@ -395,7 +395,7 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 		rackIfs = append(rackIfs,
 			placemat.PodInterfaceConfig{
 				Network:   fmt.Sprintf("core-to-%s", spine.ShortName),
-				Addresses: []string{fmt.Sprintf("10.0.2.%d", i*2+1)},
+				Addresses: []string{fmt.Sprintf("10.0.2.%d/31", i*2+1)},
 			},
 		)
 		for i, rack := range ta.Racks {
@@ -641,7 +641,7 @@ func (c *cluster) appendExternalNetwork(ta *TemplateArgs) {
 			Spec: placemat.NetworkSpec{
 				Internal:  false,
 				UseNAT:    true,
-				Addresses: []string{ta.Network.External.Host.String()},
+				Addresses: []string{ta.CoreRouter.InternetAddress.IP.String()},
 			},
 		},
 	)

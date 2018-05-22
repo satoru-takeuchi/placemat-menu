@@ -280,7 +280,7 @@ func (b *SSNodeInfo) Systemd() IgnitionSystemd {
 	return nodeSystemd()
 }
 
-// ExtVMNodeInfo contains external network as VM
+// ExtVMNodeInfo contains internet as VM
 type ExtVMNodeInfo struct {
 	vmAddr *net.IPNet
 }

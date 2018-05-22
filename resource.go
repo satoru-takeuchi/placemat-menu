@@ -17,7 +17,10 @@ const (
 // NetworkMenu represents network settings to be written to the configuration file
 type NetworkMenu struct {
 	ASNBase      int
-	External     *net.IPNet
+	Internet     *net.IPNet
+	CoreSpine    *net.IPNet
+	CoreExtVM    *net.IPNet
+	CoreBastion  *net.IPNet
 	SpineTor     net.IP
 	Node         *net.IPNet
 	Bastion      *net.IPNet

@@ -127,7 +127,7 @@ func run() error {
 
 		err = exportJSON(
 			"ext-vm.ign",
-			menu.ExtVMIgnition(ta.Account, ta.Network.External.VM))
+			menu.ExtVMIgnition(ta.Account, ta.Network.ExternalNodes.VM))
 		if err != nil {
 			return err
 		}

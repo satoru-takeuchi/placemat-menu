@@ -16,11 +16,14 @@ type baseConfig struct {
 
 type networkConfig struct {
 	Spec struct {
-		ASNBase  int    `yaml:"asn-base"`
-		External string `yaml:"external"`
-		SpineTor string `yaml:"spine-tor"`
-		Node     string `yaml:"node"`
-		Exposed  struct {
+		ASNBase     int    `yaml:"asn-base"`
+		Internet    string `yaml:"internet"`
+		SpineTor    string `yaml:"spine-tor"`
+		CoreSpine   string `yaml:"core-spine"`
+		CoreExtVM   string `yaml:"core-extvm"`
+		CoreBastion string `yaml:"core-bastion"`
+		Node        string `yaml:"node"`
+		Exposed     struct {
 			Bastion      string `yaml:"bastion"`
 			LoadBalancer string `yaml:"loadbalancer"`
 			Ingress      string `yaml:"ingress"`
@@ -81,11 +84,23 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 
 	network.ASNBase = n.Spec.ASNBase
 
-	_, network.External, err = parseNetworkCIDR(n.Spec.External)
+	_, network.Internet, err = parseNetworkCIDR(n.Spec.Internet)
 	if err != nil {
 		return nil, err
 	}
 
+	_, network.CoreBastion, err = parseNetworkCIDR(n.Spec.CoreBastion)
+	if err != nil {
+		return nil, err
+	}
+	_, network.CoreSpine, err = parseNetworkCIDR(n.Spec.CoreSpine)
+	if err != nil {
+		return nil, err
+	}
+	_, network.CoreExtVM, err = parseNetworkCIDR(n.Spec.CoreExtVM)
+	if err != nil {
+		return nil, err
+	}
 	network.SpineTor = net.ParseIP(n.Spec.SpineTor)
 	if network.SpineTor == nil {
 		return nil, errors.New("Invalid IP address: " + n.Spec.SpineTor)

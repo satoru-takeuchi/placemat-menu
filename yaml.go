@@ -16,14 +16,14 @@ type baseConfig struct {
 
 type networkConfig struct {
 	Spec struct {
-		ASNBase     int    `yaml:"asn-base"`
-		Internet    string `yaml:"internet"`
-		SpineTor    string `yaml:"spine-tor"`
-		CoreSpine   string `yaml:"core-spine"`
-		CoreExtVM   string `yaml:"core-external"`
-		CoreBastion string `yaml:"core-bastion"`
-		Node        string `yaml:"node"`
-		Exposed     struct {
+		ASNBase      int    `yaml:"asn-base"`
+		Internet     string `yaml:"internet"`
+		SpineTor     string `yaml:"spine-tor"`
+		CoreSpine    string `yaml:"core-spine"`
+		CoreExternal string `yaml:"core-external"`
+		CoreBastion  string `yaml:"core-bastion"`
+		Node         string `yaml:"node"`
+		Exposed      struct {
 			Bastion      string `yaml:"bastion"`
 			LoadBalancer string `yaml:"loadbalancer"`
 			Ingress      string `yaml:"ingress"`
@@ -97,7 +97,7 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, network.CoreExtVM, err = parseNetworkCIDR(n.Spec.CoreExtVM)
+	_, network.CoreExtVM, err = parseNetworkCIDR(n.Spec.CoreExternal)
 	if err != nil {
 		return nil, err
 	}

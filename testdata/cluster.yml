@@ -131,11 +131,11 @@ spec:
     file: rkt_1.30.0-1_amd64.deb
 ---
 kind: DataFolder
-name: core-router-data
+name: core-data
 spec:
   files:
   - name: bird.conf
-    file: bird_core-router.conf
+    file: bird_core.conf
 ---
 kind: DataFolder
 name: spine1-data
@@ -463,7 +463,7 @@ spec:
     memory: 1G
 ---
 kind: Pod
-name: core-router
+name: core
 spec:
   init-scripts:
   - setup-iptables
@@ -486,7 +486,7 @@ spec:
   volumes:
   - name: config
     kind: host
-    folder: core-router-data
+    folder: core-data
     readonly: true
   - name: run
     kind: empty

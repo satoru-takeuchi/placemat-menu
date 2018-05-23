@@ -379,7 +379,7 @@ func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
 	})
 	c.pods = append(c.pods, &placemat.PodConfig{
 		Kind: "Pod",
-		Name: "core-router",
+		Name: "core",
 		Spec: placemat.PodSpec{
 			InitScripts: []string{"setup-iptables"},
 			Interfaces:  interfaces,
@@ -387,7 +387,7 @@ func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
 				{
 					Name:     "config",
 					Kind:     "host",
-					Folder:   "core-router-data",
+					Folder:   "core-data",
 					ReadOnly: true,
 				},
 				{
@@ -515,12 +515,12 @@ func (c *cluster) appendCoreRouterDataFolder() {
 	c.dataFolders = append(c.dataFolders,
 		&placemat.DataFolderConfig{
 			Kind: "DataFolder",
-			Name: "core-router-data",
+			Name: "core-data",
 			Spec: placemat.DataFolderSpec{
 				Files: []placemat.DataFolderFileConfig{
 					{
 						Name: "bird.conf",
-						File: "bird_core-router.conf",
+						File: "bird_core.conf",
 					},
 				},
 			},

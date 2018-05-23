@@ -88,7 +88,7 @@ func run() error {
 		return err
 	}
 
-	err = export(statikFS, "/templates/bird_core-router.conf", "bird_core-router.conf", ta)
+	err = export(statikFS, "/templates/bird_core.conf", "bird_core.conf", ta)
 	if err != nil {
 		return err
 	}

@@ -71,11 +71,11 @@ func seedEthNetworkUnits(addresses []*net.IPNet) []SeedWriteFile {
 	return units
 }
 
-func seedOperationEthNetworkUnits(addresses []*net.IPNet) []SeedWriteFile {
+func seedOperationEthNetworkUnits(addresses []*net.IPNet, dns, gateway net.IP) []SeedWriteFile {
 	units := make([]SeedWriteFile, len(addresses))
 	for i, addr := range addresses {
 		units[i].Path = fmt.Sprintf("/etc/systemd/network/10-eth%d.network", i)
-		units[i].Content = ethGlobalScopedNetwork(fmt.Sprintf("ens%d", 3+i), addr)
+		units[i].Content = ethGlobalScopedNetwork(fmt.Sprintf("ens%d", 3+i), addr, dns, gateway)
 	}
 	return units
 }
@@ -101,13 +101,6 @@ func setupBootRouteWrites(node BootNodeEntity) SeedWriteFile {
 	return SeedWriteFile{
 		Path:    "/etc/systemd/system/setup-route.service",
 		Content: setupBootRouteService(node.BastionAddress.IP, node.ToR1Address.IP, node.ToR2Address.IP),
-	}
-}
-
-func setupOperationRouteWrites(core net.IP) SeedWriteFile {
-	return SeedWriteFile{
-		Path:    "/etc/systemd/system/setup-route.service",
-		Content: setupOperationRouteService(core),
 	}
 }
 
@@ -181,12 +174,11 @@ func ExportOperationSeed(w io.Writer, ta *TemplateArgs) error {
 		},
 	}
 
-	seed.WriteFiles = append(seed.WriteFiles, seedOperationEthNetworkUnits([]*net.IPNet{ta.Network.Endpoints.Operation})...)
-	seed.WriteFiles = append(seed.WriteFiles, setupOperationRouteWrites(ta.CoreRouter.BastionAddress.IP))
+	seed.WriteFiles = append(seed.WriteFiles, seedOperationEthNetworkUnits(
+		[]*net.IPNet{ta.Network.Endpoints.Operation}, net.ParseIP("8.8.8.8"), ta.CoreRouter.BastionAddress.IP,
+	)...)
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
-	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "setup-route.service"})
-	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "start", "setup-route.service"})
 
 	_, err := fmt.Fprintln(w, "#cloud-config")
 	if err != nil {

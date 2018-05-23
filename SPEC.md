@@ -19,7 +19,7 @@ spec:
   spine-tor: 10.0.1.0
   core-spine: 10.0.2.0/31
   core-external: 10.0.3.0/24
-  core-bastion: 10.0.4.0/24
+  core-operation: 10.0.4.0/24
   node: 10.69.0.0/26
   exposed:
     bastion: 10.72.48.0/26
@@ -67,7 +67,7 @@ example is assigned addresses when `10.0.1.0` is specified:
 
 - `core-external`: The network address between the core and the external network.
 
-- `core-bastion`: The network address between the core switch and the operation network.
+- `core-operation`: The network address between the core switch and the operation network.
 
 - `node`: The network address in the racks.  The node address and ToR address
 are assigned based on this value.  The following example is assigned addresses

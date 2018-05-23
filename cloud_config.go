@@ -88,15 +88,22 @@ func systemdWriteFiles() []SeedWriteFile {
 	}
 }
 
-func setupRouteWrites(node BootNodeEntity) SeedWriteFile {
+func setupBootRouteWrites(node BootNodeEntity) SeedWriteFile {
 	return SeedWriteFile{
 		Path:    "/etc/systemd/system/setup-route.service",
-		Content: setupRouteService(node.BastionAddress.IP, node.ToR1Address.IP, node.ToR2Address.IP),
+		Content: setupBootRouteService(node.BastionAddress.IP, node.ToR1Address.IP, node.ToR2Address.IP),
 	}
 }
 
-// ExportSeed exports a seed
-func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
+func setupOperationRouteWrites(core net.IP) SeedWriteFile {
+	return SeedWriteFile{
+		Path:    "/etc/systemd/system/setup-route.service",
+		Content: setupOperationRouteService(core),
+	}
+}
+
+// ExportBootSeed exports a boot server's seed
+func ExportBootSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed := Seed{
 		Hostname: rack.Name + "-boot",
 		Users: []SeedUser{
@@ -126,7 +133,7 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{node.Node1Address, node.Node2Address})...)
 	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", node.BastionAddress)...)
 	seed.WriteFiles = append(seed.WriteFiles, systemdWriteFiles()...)
-	seed.WriteFiles = append(seed.WriteFiles, setupRouteWrites(node))
+	seed.WriteFiles = append(seed.WriteFiles, setupBootRouteWrites(node))
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"dpkg", "-i", "/mnt/containers/rkt.deb"})
@@ -146,4 +153,35 @@ func ExportSeed(w io.Writer, account *Account, rack *Rack) error {
 func ExportNetworkConfig(w io.Writer) error {
 	_, err := fmt.Fprintln(w, "version: 2\nethernets: {}")
 	return err
+}
+
+// ExportOperationSeed exports a seed for operation VM
+func ExportOperationSeed(w io.Writer, ta *TemplateArgs) error {
+	account := ta.Account
+	seed := Seed{
+		Hostname: "operation",
+		Users: []SeedUser{
+			{
+				Name:       account.Name,
+				Sudo:       "ALL=(ALL) NOPASSWD:ALL",
+				Groups:     "users, admin, systemd-journal, rkt",
+				LockPasswd: false,
+				Passwd:     account.PasswordHash,
+				Shell:      "/bin/bash",
+			},
+		},
+	}
+
+	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{ta.Network.Endpoints.Operation})...)
+	seed.WriteFiles = append(seed.WriteFiles, setupOperationRouteWrites(ta.CoreRouter.BastionAddress.IP))
+
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "setup-route.service"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "start", "setup-route.service"})
+
+	_, err := fmt.Fprintln(w, "#cloud-config")
+	if err != nil {
+		return err
+	}
+	return yaml.NewEncoder(w).Encode(seed)
 }

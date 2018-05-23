@@ -91,7 +91,7 @@ WantedBy=multi-user.target
 `
 }
 
-func setupRouteService(src, gw1, gw2 net.IP) string {
+func setupBootRouteService(src, gw1, gw2 net.IP) string {
 	return fmt.Sprintf(`[Unit]
 After=network.target
 
@@ -102,4 +102,17 @@ ExecStart=/bin/ip route add 0.0.0.0/0 src %s nexthop via %s nexthop via %s
 [Install]
 WantedBy=multi-user.target
 `, src, gw1, gw2)
+}
+
+func setupOperationRouteService(core net.IP) string {
+	return fmt.Sprintf(`[Unit]
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/ip route add 0.0.0.0/0 nexthop via %s
+
+[Install]
+WantedBy=multi-user.target
+`, core)
 }

@@ -18,7 +18,7 @@ const (
 	offsetExternalExtVM      = 2
 
 	offsetBastionCoreRouter = 1
-	offsetBastionOpetan     = 2
+	offsetBastionOperation  = 2
 
 	offsetNodenetToR     = 1
 	offsetNodenetBoot    = 3
@@ -90,8 +90,9 @@ func (s Spine) ToR2Address(rackIdx int) *net.IPNet {
 
 // Endpoints contains endpoints for external hosts
 type Endpoints struct {
-	Host  *net.IPNet
-	ExtVM *net.IPNet
+	Host      *net.IPNet
+	ExtVM     *net.IPNet
+	Operation *net.IPNet
 }
 
 // CoreRouter contains parameters to construct core router
@@ -237,6 +238,7 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
 	templateArgs.Network.Endpoints.Host = addToIPNet(menu.Network.Internet, offsetInternetHost)
 	templateArgs.Network.Endpoints.ExtVM = addToIPNet(menu.Network.CoreExtVM, offsetExternalExtVM)
+	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.Bastion, offsetBastionOperation)
 }
 
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {

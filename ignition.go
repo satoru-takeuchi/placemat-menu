@@ -91,7 +91,7 @@ func ignEthNetworkUnits(addresses []*net.IPNet) []IgnitionNetworkdUnit {
 	units := make([]IgnitionNetworkdUnit, len(addresses))
 	for i, addr := range addresses {
 		units[i].Name = fmt.Sprintf("10-eth%d.network", i)
-		units[i].Contents = ethNetwork(fmt.Sprintf("eth%d", i), addr)
+		units[i].Contents = ethLinkScopedNetwork(fmt.Sprintf("eth%d", i), addr)
 	}
 	return units
 }

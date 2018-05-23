@@ -112,6 +112,18 @@ func run() error {
 		return err
 	}
 
+	err = func() error {
+		seedFile, err := os.Create(filepath.Join(*flagOutDir, "seed_operation.yml"))
+		if err != nil {
+			return err
+		}
+		defer seedFile.Close()
+		return menu.ExportOperationSeed(seedFile, ta)
+	}()
+	if err != nil {
+		return err
+	}
+
 	for rackIdx, rack := range ta.Racks {
 		err := func() error {
 			seedFile, err := os.Create(filepath.Join(*flagOutDir, fmt.Sprintf("seed_%s-boot.yml", rack.Name)))
@@ -119,7 +131,7 @@ func run() error {
 				return err
 			}
 			defer seedFile.Close()
-			return menu.ExportSeed(seedFile, &ta.Account, &rack)
+			return menu.ExportBootSeed(seedFile, &ta.Account, &rack)
 		}()
 		if err != nil {
 			return err

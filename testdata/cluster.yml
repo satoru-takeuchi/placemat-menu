@@ -25,7 +25,7 @@ spec:
   use-nat: false
 ---
 kind: Network
-name: core-to-bastion
+name: core-to-op
 spec:
   internal: true
   use-nat: false
@@ -199,6 +199,11 @@ spec:
   files:
   - name: bird.conf
     file: bird_vm.conf
+---
+kind: DataFolder
+name: operation-data
+spec:
+  dir: operation
 ---
 kind: Node
 name: rack0-boot
@@ -437,6 +442,32 @@ spec:
     memory: 1G
 ---
 kind: Node
+name: operation
+spec:
+  interfaces:
+  - core-to-op
+  volumes:
+  - kind: image
+    name: root
+    spec:
+      image: ubuntu-image
+      copy-on-write: true
+  - kind: localds
+    name: seed
+    spec:
+      user-data: seed_operation.yml
+      network-config: network.yml
+      copy-on-write: false
+  - kind: vvfat
+    name: operation
+    spec:
+      folder: operation-data
+      copy-on-write: false
+  resources:
+    cpu: "2"
+    memory: 1G
+---
+kind: Node
 name: ext-vm
 spec:
   interfaces:
@@ -480,7 +511,7 @@ spec:
   - network: core-to-ext
     addresses:
     - 10.0.3.1/24
-  - network: core-to-bastion
+  - network: core-to-op
     addresses:
     - 10.0.4.1/24
   volumes:

@@ -122,6 +122,8 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendExtVMDataFolder()
 
+	cluster.appendOperationDataFolder()
+
 	cluster.appendCoreRouterPod(ta)
 
 	cluster.appendSpinePod(ta)
@@ -133,7 +135,48 @@ func generateCluster(ta *TemplateArgs) *cluster {
 	return cluster
 }
 
-func ubuntuNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
+func operationNode() *placemat.NodeConfig {
+	return &placemat.NodeConfig{
+		Kind: "Node",
+		Name: ("operation"),
+		Spec: placemat.NodeSpec{
+			Interfaces: []string{
+				"core-to-op",
+			},
+			Volumes: []placemat.NodeVolumeConfig{
+				{
+					Kind: "image",
+					Name: "root",
+					Spec: placemat.NodeVolumeSpec{
+						Image:       "ubuntu-image",
+						CopyOnWrite: true,
+					},
+				},
+				{
+					Kind: "localds",
+					Name: "seed",
+					Spec: placemat.NodeVolumeSpec{
+						UserData:      "seed_operation.yml",
+						NetworkConfig: "network.yml",
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "operation",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: "operation-data",
+					},
+				},
+			},
+			Resources: placemat.NodeResourceConfig{
+				CPU:    "2",
+				Memory: "1G",
+			},
+		},
+	}
+}
+
+func bootNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
 
 	return &placemat.NodeConfig{
 		Kind: "Node",
@@ -235,7 +278,7 @@ func coreOSNode(rackName, rackShortName, nodeName string, resource *VMResource) 
 
 func (c *cluster) appendNodes(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
-		c.nodes = append(c.nodes, ubuntuNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
+		c.nodes = append(c.nodes, bootNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
 
 		for _, cs := range rack.CSList {
 			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, cs.Name, &ta.CS))
@@ -244,6 +287,7 @@ func (c *cluster) appendNodes(ta *TemplateArgs) {
 			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, ss.Name, &ta.SS))
 		}
 	}
+	c.nodes = append(c.nodes, operationNode())
 	c.nodes = append(c.nodes, &placemat.NodeConfig{
 		Kind: "Node",
 		Name: "ext-vm",
@@ -372,7 +416,7 @@ func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
 		},
 	})
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
-		Network: "core-to-bastion",
+		Network: "core-to-op",
 		Addresses: []string{
 			ta.CoreRouter.BastionAddress.String(),
 		},
@@ -464,6 +508,17 @@ func (c *cluster) appendExtVMDataFolder() {
 						File: "bird_vm.conf",
 					},
 				},
+			},
+		})
+}
+
+func (c *cluster) appendOperationDataFolder() {
+	c.dataFolders = append(c.dataFolders,
+		&placemat.DataFolderConfig{
+			Kind: "DataFolder",
+			Name: "operation-data",
+			Spec: placemat.DataFolderSpec{
+				Dir: "operation",
 			},
 		})
 }
@@ -683,7 +738,7 @@ func (c *cluster) appendCoreRouterNetwork(ta *TemplateArgs) {
 		},
 		&placemat.NetworkConfig{
 			Kind: "Network",
-			Name: "core-to-bastion",
+			Name: "core-to-op",
 			Spec: placemat.NetworkSpec{
 				Internal: true,
 			},

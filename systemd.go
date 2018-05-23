@@ -21,7 +21,7 @@ Address=%s
 `, name, address)
 }
 
-func ethNetwork(name string, address *net.IPNet) string {
+func ethLinkScopedNetwork(name string, address *net.IPNet) string {
 	return fmt.Sprintf(`[Match]
 Name=%s
 
@@ -33,6 +33,19 @@ EmitLLDP=nearest-bridge
 Address=%s
 Scope=link
 `, name, address)
+}
+
+func ethGlobalScopedNetwork(name string, address *net.IPNet, dns, gateway net.IP) string {
+	return fmt.Sprintf(`[Match]
+Name=%s
+
+[Network]
+LLDP=true
+EmitLLDP=nearest-bridge
+Address=%s
+DNS=%s
+Gateway=%s
+`, name, address, dns, gateway)
 }
 
 func copyBirdConfService() string {
@@ -91,7 +104,7 @@ WantedBy=multi-user.target
 `
 }
 
-func setupRouteService(src, gw1, gw2 net.IP) string {
+func setupBootRouteService(src, gw1, gw2 net.IP) string {
 	return fmt.Sprintf(`[Unit]
 After=network.target
 

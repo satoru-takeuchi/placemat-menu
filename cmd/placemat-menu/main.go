@@ -88,6 +88,11 @@ func run() error {
 		return err
 	}
 
+	err = export(statikFS, "/templates/bird_core.conf", "bird_core.conf", ta)
+	if err != nil {
+		return err
+	}
+
 	for spineIdx := range ta.Spines {
 		err = export(statikFS, "/templates/bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
@@ -122,7 +127,7 @@ func run() error {
 
 		err = exportJSON(
 			"ext-vm.ign",
-			menu.ExtVMIgnition(ta.Account, ta.Network.External.VM))
+			menu.ExtVMIgnition(ta.Account, ta.Network.Endpoints.ExtVM))
 		if err != nil {
 			return err
 		}

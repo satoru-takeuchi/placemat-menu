@@ -200,6 +200,11 @@ spec:
   - name: bird.conf
     file: bird_vm.conf
 ---
+kind: DataFolder
+name: operation-data
+spec:
+  dir: operation
+---
 kind: Node
 name: rack0-boot
 spec:
@@ -452,6 +457,11 @@ spec:
     spec:
       user-data: seed_operation.yml
       network-config: network.yml
+      copy-on-write: false
+  - kind: vvfat
+    name: operation
+    spec:
+      folder: operation-data
       copy-on-write: false
   resources:
     cpu: "2"

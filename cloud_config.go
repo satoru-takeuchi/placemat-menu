@@ -174,6 +174,10 @@ func ExportOperationSeed(w io.Writer, ta *TemplateArgs) error {
 		},
 	}
 
+	seed.Mounts = append(seed.Mounts,
+		[]string{"/dev/vdc1", "/mnt/operation", "auto", "defaults,ro"},
+	)
+
 	seed.WriteFiles = append(seed.WriteFiles, seedOperationEthNetworkUnits(
 		[]*net.IPNet{ta.Network.Endpoints.Operation}, net.ParseIP("8.8.8.8"), ta.CoreRouter.BastionAddress.IP,
 	)...)

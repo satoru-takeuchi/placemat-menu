@@ -122,6 +122,8 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendExtVMDataFolder()
 
+	cluster.appendOperationDataFolder()
+
 	cluster.appendCoreRouterPod(ta)
 
 	cluster.appendSpinePod(ta)
@@ -156,6 +158,13 @@ func operationNode() *placemat.NodeConfig {
 					Spec: placemat.NodeVolumeSpec{
 						UserData:      "seed_operation.yml",
 						NetworkConfig: "network.yml",
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "operation",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: "operation-data",
 					},
 				},
 			},
@@ -499,6 +508,17 @@ func (c *cluster) appendExtVMDataFolder() {
 						File: "bird_vm.conf",
 					},
 				},
+			},
+		})
+}
+
+func (c *cluster) appendOperationDataFolder() {
+	c.dataFolders = append(c.dataFolders,
+		&placemat.DataFolderConfig{
+			Kind: "DataFolder",
+			Name: "operation-data",
+			Spec: placemat.DataFolderSpec{
+				Dir: "operation",
 			},
 		})
 }

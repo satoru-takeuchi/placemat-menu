@@ -21,7 +21,7 @@ Address=%s
 `, name, address)
 }
 
-func ethNetwork(name string, address *net.IPNet) string {
+func ethLinkScopedNetwork(name string, address *net.IPNet) string {
 	return fmt.Sprintf(`[Match]
 Name=%s
 
@@ -32,6 +32,17 @@ EmitLLDP=nearest-bridge
 [Address]
 Address=%s
 Scope=link
+`, name, address)
+}
+
+func ethGlobalScopedNetwork(name string, address *net.IPNet) string {
+	return fmt.Sprintf(`[Match]
+Name=%s
+
+[Network]
+LLDP=true
+EmitLLDP=nearest-bridge
+Address=%s
 `, name, address)
 }
 
@@ -110,7 +121,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/ip route add 0.0.0.0/0 nexthop via %s
+ExecStart=/bin/ip route add 0.0.0.0/0 via %s
 
 [Install]
 WantedBy=multi-user.target

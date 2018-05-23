@@ -66,7 +66,16 @@ func seedEthNetworkUnits(addresses []*net.IPNet) []SeedWriteFile {
 	units := make([]SeedWriteFile, len(addresses))
 	for i, addr := range addresses {
 		units[i].Path = fmt.Sprintf("/etc/systemd/network/10-eth%d.network", i)
-		units[i].Content = ethNetwork(fmt.Sprintf("ens%d", 3+i), addr)
+		units[i].Content = ethLinkScopedNetwork(fmt.Sprintf("ens%d", 3+i), addr)
+	}
+	return units
+}
+
+func seedOperationEthNetworkUnits(addresses []*net.IPNet) []SeedWriteFile {
+	units := make([]SeedWriteFile, len(addresses))
+	for i, addr := range addresses {
+		units[i].Path = fmt.Sprintf("/etc/systemd/network/10-eth%d.network", i)
+		units[i].Content = ethGlobalScopedNetwork(fmt.Sprintf("ens%d", 3+i), addr)
 	}
 	return units
 }
@@ -172,7 +181,7 @@ func ExportOperationSeed(w io.Writer, ta *TemplateArgs) error {
 		},
 	}
 
-	seed.WriteFiles = append(seed.WriteFiles, seedEthNetworkUnits([]*net.IPNet{ta.Network.Endpoints.Operation})...)
+	seed.WriteFiles = append(seed.WriteFiles, seedOperationEthNetworkUnits([]*net.IPNet{ta.Network.Endpoints.Operation})...)
 	seed.WriteFiles = append(seed.WriteFiles, setupOperationRouteWrites(ta.CoreRouter.BastionAddress.IP))
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})

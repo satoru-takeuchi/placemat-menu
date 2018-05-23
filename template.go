@@ -238,7 +238,7 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
 	templateArgs.Network.Endpoints.Host = addToIPNet(menu.Network.Internet, offsetInternetHost)
 	templateArgs.Network.Endpoints.ExtVM = addToIPNet(menu.Network.CoreExtVM, offsetExternalExtVM)
-	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.Bastion, offsetBastionOperation)
+	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.CoreBastion, offsetBastionOperation)
 }
 
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {

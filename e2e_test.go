@@ -79,6 +79,7 @@ func TestE2E(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	targets := []string{
+		"bird_core.conf",
 		"bird_rack0-node.conf",
 		"bird_rack0-tor2.conf",
 		"bird_rack1-tor1.conf",

@@ -418,7 +418,7 @@ func (c *cluster) appendCorePod(ta *TemplateArgs) {
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
 		Network: "core-to-op",
 		Addresses: []string{
-			ta.Core.BastionAddress.String(),
+			ta.Core.OperationAddress.String(),
 		},
 	})
 	c.pods = append(c.pods, &placemat.PodConfig{

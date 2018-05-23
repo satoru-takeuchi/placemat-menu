@@ -17,8 +17,8 @@ const (
 	offsetExternalCore     = 1
 	offsetExternalExternal = 2
 
-	offsetBastionCore      = 1
-	offsetBastionOperation = 2
+	offsetOperationCore      = 1
+	offsetOperationOperation = 2
 
 	offsetNodenetToR     = 1
 	offsetNodenetBoot    = 3
@@ -97,10 +97,10 @@ type Endpoints struct {
 
 // Core contains parameters to construct core router
 type Core struct {
-	InternetAddress *net.IPNet
-	SpineAddresses  []*net.IPNet
-	BastionAddress  *net.IPNet
-	ExternalAddress *net.IPNet
+	InternetAddress  *net.IPNet
+	SpineAddresses   []*net.IPNet
+	OperationAddress *net.IPNet
+	ExternalAddress  *net.IPNet
 }
 
 // TemplateArgs is args for cluster.yml
@@ -238,7 +238,7 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
 	templateArgs.Network.Endpoints.Host = addToIPNet(menu.Network.Internet, offsetInternetHost)
 	templateArgs.Network.Endpoints.External = addToIPNet(menu.Network.CoreExternal, offsetExternalExternal)
-	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.CoreBastion, offsetBastionOperation)
+	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.CoreOperation, offsetOperationOperation)
 }
 
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
@@ -268,7 +268,7 @@ func setCore(ta *TemplateArgs, menu *Menu) {
 	for i := range ta.Spines {
 		ta.Core.SpineAddresses = append(ta.Core.SpineAddresses, addToIPNet(menu.Network.CoreSpine, 2*i))
 	}
-	ta.Core.BastionAddress = addToIPNet(menu.Network.CoreBastion, offsetBastionCore)
+	ta.Core.OperationAddress = addToIPNet(menu.Network.CoreOperation, offsetOperationCore)
 	ta.Core.InternetAddress = addToIPNet(menu.Network.Internet, offsetInternetCore)
 	ta.Core.ExternalAddress = addToIPNet(menu.Network.CoreExternal, offsetExternalCore)
 }

@@ -663,22 +663,17 @@ func (c *cluster) appendExternalNetwork(ta *TemplateArgs) {
 }
 
 func (c *cluster) appendCoreRouterNetwork(ta *TemplateArgs) {
+	for _, spine := range ta.Spines {
+		c.networks = append(c.networks, &placemat.NetworkConfig{
+			Kind: "Network",
+			Name: fmt.Sprintf("core-to-%s", spine.ShortName),
+			Spec: placemat.NetworkSpec{
+				Internal: true,
+			},
+		})
+	}
 	c.networks = append(
 		c.networks,
-		&placemat.NetworkConfig{
-			Kind: "Network",
-			Name: "core-to-s1",
-			Spec: placemat.NetworkSpec{
-				Internal: true,
-			},
-		},
-		&placemat.NetworkConfig{
-			Kind: "Network",
-			Name: "core-to-s2",
-			Spec: placemat.NetworkSpec{
-				Internal: true,
-			},
-		},
 		&placemat.NetworkConfig{
 			Kind: "Network",
 			Name: "core-to-ext",

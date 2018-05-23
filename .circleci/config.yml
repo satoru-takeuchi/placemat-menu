@@ -2,15 +2,11 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1-stretch
+      - image: quay.io/cybozu/golang:1.10-bionic
     working_directory: /go/src/github.com/cybozu-go/placemat-menu
     steps:
       - checkout
-      - run: go get -u github.com/coreos/ignition/validate
-      - run: go get -u github.com/google/go-jsonnet/jsonnet
-      - run: go get github.com/golang/lint/golint
-      - run: go get golang.org/x/tools/cmd/goimports
-      - run: (! $GOPATH/bin/goimports -d . 2>&1 | read _)
-      - run: test $($GOPATH/bin/golint ./... | grep -v "returns unexported type" | wc -l) -eq 0
+      - run: (! goimports -d . 2>&1 | read _)
+      - run: golint -set_exit_status ./...
       - run: go get -v -t -d ./...
       - run: go test -race -v ./...

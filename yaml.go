@@ -97,7 +97,7 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, network.CoreExtVM, err = parseNetworkCIDR(n.Spec.CoreExternal)
+	_, network.CoreExternal, err = parseNetworkCIDR(n.Spec.CoreExternal)
 	if err != nil {
 		return nil, err
 	}

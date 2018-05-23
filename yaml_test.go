@@ -11,7 +11,7 @@ func testUnmarshalNetwork(t *testing.T) {
 
 	_, internet, _ := net.ParseCIDR("10.0.0.0/24")
 	_, coreSpine, _ := net.ParseCIDR("10.0.2.0/24")
-	_, coreExtVM, _ := net.ParseCIDR("10.0.3.0/24")
+	_, coreExternal, _ := net.ParseCIDR("10.0.3.0/24")
 	_, coreBastion, _ := net.ParseCIDR("10.0.4.0/24")
 	_, node, _ := net.ParseCIDR("10.69.0.0/26")
 	_, bastion, _ := net.ParseCIDR("10.72.48.0/26")
@@ -42,7 +42,7 @@ spec:
 				ASNBase:      64600,
 				Internet:     internet,
 				CoreSpine:    coreSpine,
-				CoreExtVM:    coreExtVM,
+				CoreExternal: coreExternal,
 				CoreBastion:  coreBastion,
 				SpineTor:     net.ParseIP("10.0.1.0"),
 				Node:         node,

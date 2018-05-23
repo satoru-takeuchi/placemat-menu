@@ -266,25 +266,25 @@ func (b *SSNodeInfo) Systemd() IgnitionSystemd {
 	return nodeSystemd()
 }
 
-// ExtVMNodeInfo contains internet as VM
-type ExtVMNodeInfo struct {
+// ExternalNodeInfo contains internet as VM
+type ExternalNodeInfo struct {
 	vmAddr *net.IPNet
 }
 
 // Hostname returns hostname
-func (b *ExtVMNodeInfo) Hostname() string {
+func (b *ExternalNodeInfo) Hostname() string {
 	return "ext-vm"
 }
 
 // Networkd returns networkd definitions
-func (b *ExtVMNodeInfo) Networkd() IgnitionNetworkd {
+func (b *ExternalNodeInfo) Networkd() IgnitionNetworkd {
 	units := extVMEthNetwork([]*net.IPNet{b.vmAddr})
 	return IgnitionNetworkd{Units: units}
 
 }
 
 // Systemd returns systemd definitions
-func (b *ExtVMNodeInfo) Systemd() IgnitionSystemd {
+func (b *ExternalNodeInfo) Systemd() IgnitionSystemd {
 	return nodeSystemd()
 }
 
@@ -310,9 +310,9 @@ func SSNodeIgnition(account Account, rack Rack, node Node) Ignition {
 	return NodeIgnition(account, info)
 }
 
-// ExtVMIgnition returns an Ignition for ext-vm
-func ExtVMIgnition(account Account, extVMAddr *net.IPNet) Ignition {
-	node := &ExtVMNodeInfo{
+// ExternalNodeIgnition returns an Ignition for ext-vm
+func ExternalNodeIgnition(account Account, extVMAddr *net.IPNet) Ignition {
+	node := &ExternalNodeInfo{
 		vmAddr: extVMAddr,
 	}
 	return NodeIgnition(account, node)

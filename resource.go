@@ -19,7 +19,7 @@ type NetworkMenu struct {
 	ASNBase      int
 	Internet     *net.IPNet
 	CoreSpine    *net.IPNet
-	CoreExtVM    *net.IPNet
+	CoreExternal *net.IPNet
 	CoreBastion  *net.IPNet
 	SpineTor     net.IP
 	Node         *net.IPNet

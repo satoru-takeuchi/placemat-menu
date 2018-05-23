@@ -120,7 +120,7 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendRackDataFolder(ta)
 
-	cluster.appendExtVMDataFolder()
+	cluster.appendExternalNodeDataFolder()
 
 	cluster.appendOperationDataFolder()
 
@@ -412,7 +412,7 @@ func (c *cluster) appendCorePod(ta *TemplateArgs) {
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
 		Network: "core-to-ext",
 		Addresses: []string{
-			ta.Core.ExtVMAddress.String(),
+			ta.Core.ExternalAddress.String(),
 		},
 	})
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
@@ -496,7 +496,7 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendExtVMDataFolder() {
+func (c *cluster) appendExternalNodeDataFolder() {
 	c.dataFolders = append(c.dataFolders,
 		&placemat.DataFolderConfig{
 			Kind: "DataFolder",

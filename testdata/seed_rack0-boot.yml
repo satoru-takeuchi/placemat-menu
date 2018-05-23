@@ -138,6 +138,8 @@ write_files:
 
     [Install]
     WantedBy=multi-user.target
+- path: /etc/ssh/sshd_config
+  content: ""
 runcmd:
 - - systemctl
   - restart

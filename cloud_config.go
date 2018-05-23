@@ -8,6 +8,12 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+const (
+	docker2aciURL       = "https://github.com/appc/docker2aci/releases/download/v0.17.2/docker2aci-v0.17.2.tar.gz"
+	docker2aciArchive   = "docker2aci-v0.17.2.tar.gz"
+	docker2aciDirectory = "docker2aci-v0.17.2"
+)
+
 // SeedUser presents a user data in seed file
 type SeedUser struct {
 	Name string `yaml:"name"`
@@ -104,6 +110,14 @@ func setupBootRouteWrites(node BootNodeEntity) SeedWriteFile {
 	}
 }
 
+func emptySshdConfigWrite() SeedWriteFile {
+	// disable public key authorization
+	return SeedWriteFile{
+		Path:    "/etc/ssh/sshd_config",
+		Content: "",
+	}
+}
+
 // ExportBootSeed exports a boot server's seed
 func ExportBootSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed := Seed{
@@ -136,6 +150,7 @@ func ExportBootSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed.WriteFiles = append(seed.WriteFiles, seedDummyNetworkUnits("bastion", node.BastionAddress)...)
 	seed.WriteFiles = append(seed.WriteFiles, systemdWriteFiles()...)
 	seed.WriteFiles = append(seed.WriteFiles, setupBootRouteWrites(node))
+	seed.WriteFiles = append(seed.WriteFiles, emptySshdConfigWrite())
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"dpkg", "-i", "/mnt/containers/rkt.deb"})
@@ -181,8 +196,16 @@ func ExportOperationSeed(w io.Writer, ta *TemplateArgs) error {
 	seed.WriteFiles = append(seed.WriteFiles, seedOperationEthNetworkUnits(
 		[]*net.IPNet{ta.Network.Endpoints.Operation}, net.ParseIP("8.8.8.8"), ta.CoreRouter.BastionAddress.IP,
 	)...)
+	seed.WriteFiles = append(seed.WriteFiles, emptySshdConfigWrite())
 
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
+	seed.Runcmd = append(seed.Runcmd, []string{"apt", "update"})
+	seed.Runcmd = append(seed.Runcmd, []string{"apt", "install", "-y", "ansible", "sshpass"})
+
+	seed.Runcmd = append(seed.Runcmd, []string{"curl", "-sSL", "-o/tmp/" + docker2aciArchive, docker2aciURL})
+	seed.Runcmd = append(seed.Runcmd, []string{"tar", "xvf", "/tmp/" + docker2aciArchive, "-C", "/tmp"})
+	seed.Runcmd = append(seed.Runcmd, []string{"cp", "/tmp/" + docker2aciDirectory + "/docker2aci", "/usr/local/bin/docker2aci"})
+	seed.Runcmd = append(seed.Runcmd, []string{"rm", "-rf", "/tmp/" + docker2aciDirectory, "/tmp/" + docker2aciArchive})
 
 	_, err := fmt.Fprintln(w, "#cloud-config")
 	if err != nil {

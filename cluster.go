@@ -366,7 +366,7 @@ func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
 		})
 	}
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
-		Network: "core-to-extvm",
+		Network: "core-to-ext",
 		Addresses: []string{
 			ta.CoreRouter.ExtVMAddress.String(),
 		},
@@ -681,7 +681,7 @@ func (c *cluster) appendCoreRouterNetwork(ta *TemplateArgs) {
 		},
 		&placemat.NetworkConfig{
 			Kind: "Network",
-			Name: "core-to-extvm",
+			Name: "core-to-ext",
 			Spec: placemat.NetworkSpec{
 				Internal: true,
 			},

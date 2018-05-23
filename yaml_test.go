@@ -29,7 +29,7 @@ spec:
   asn-base: 64600
   internet: 10.0.0.0/24
   core-spine: 10.0.2.0/24
-  core-extvm: 10.0.3.0/24
+  core-external: 10.0.3.0/24
   core-bastion: 10.0.4.0/24
   spine-tor: 10.0.1.0
   node: 10.69.0.0/26

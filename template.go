@@ -88,10 +88,10 @@ func (s Spine) ToR2Address(rackIdx int) *net.IPNet {
 	return s.ToRAddresses[rackIdx*2+1]
 }
 
+// Endpoints contains endpoints for external hosts
 type Endpoints struct {
-	Host   *net.IPNet
-	ExtVM  *net.IPNet
-	Opetan *net.IPNet
+	Host  *net.IPNet
+	ExtVM *net.IPNet
 }
 
 // CoreRouter contains parameters to construct core router

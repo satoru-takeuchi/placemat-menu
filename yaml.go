@@ -20,7 +20,7 @@ type networkConfig struct {
 		Internet    string `yaml:"internet"`
 		SpineTor    string `yaml:"spine-tor"`
 		CoreSpine   string `yaml:"core-spine"`
-		CoreExtVM   string `yaml:"core-extvm"`
+		CoreExtVM   string `yaml:"core-external"`
 		CoreBastion string `yaml:"core-bastion"`
 		Node        string `yaml:"node"`
 		Exposed     struct {

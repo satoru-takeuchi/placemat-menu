@@ -4,7 +4,7 @@ spec:
   internal: false
   use-nat: true
   addresses:
-  - 10.0.0.2/24
+  - 10.0.0.1/24
 ---
 kind: Network
 name: core-to-s1
@@ -19,7 +19,7 @@ spec:
   use-nat: false
 ---
 kind: Network
-name: core-extvm
+name: core-to-ext
 spec:
   internal: true
   use-nat: false
@@ -470,19 +470,19 @@ spec:
   interfaces:
   - network: internet
     addresses:
-    - 10.0.0.4/24
+    - 10.0.0.2/24
   - network: core-to-s1
     addresses:
-    - 10.0.2.0/24
+    - 10.0.2.0/31
   - network: core-to-s2
     addresses:
-    - 10.0.2.2/24
-  - network: core-to-extvm
+    - 10.0.2.2/31
+  - network: core-to-ext
     addresses:
     - 10.0.3.1/24
   - network: core-to-bastion
     addresses:
-    - 10.0.3.1/24
+    - 10.0.4.1/24
   volumes:
   - name: config
     kind: host
@@ -514,7 +514,7 @@ spec:
   interfaces:
   - network: core-to-s1
     addresses:
-    - 10.0.2.1/24
+    - 10.0.2.1/31
   - network: s1-to-r0-1
     addresses:
     - 10.0.1.0/31
@@ -558,7 +558,7 @@ spec:
   interfaces:
   - network: core-to-s2
     addresses:
-    - 10.0.2.3/24
+    - 10.0.2.3/31
   - network: s2-to-r0-1
     addresses:
     - 10.0.1.8/31

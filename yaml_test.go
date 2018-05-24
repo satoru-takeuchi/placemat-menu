@@ -6,17 +6,16 @@ import (
 	"testing"
 )
 
+func mustParseCIDR(s string) *net.IPNet {
+	_, net, err := net.ParseCIDR(s)
+	if err != nil {
+		panic(err)
+	}
+	return net
+}
+
 func testUnmarshalNetwork(t *testing.T) {
 	t.Parallel()
-
-	_, internet, _ := net.ParseCIDR("10.0.0.0/24")
-	_, coreSpine, _ := net.ParseCIDR("10.0.2.0/24")
-	_, coreExtVM, _ := net.ParseCIDR("10.0.3.0/24")
-	_, coreBastion, _ := net.ParseCIDR("10.0.4.0/24")
-	_, node, _ := net.ParseCIDR("10.69.0.0/26")
-	_, bastion, _ := net.ParseCIDR("10.72.48.0/26")
-	_, loadbalancer, _ := net.ParseCIDR("10.72.32.0/20")
-	_, ingress, _ := net.ParseCIDR("10.72.48.64/26")
 
 	cases := []struct {
 		source   string
@@ -30,7 +29,7 @@ spec:
   internet: 10.0.0.0/24
   core-spine: 10.0.2.0/24
   core-external: 10.0.3.0/24
-  core-bastion: 10.0.4.0/24
+  core-operation: 10.0.4.0/24
   spine-tor: 10.0.1.0
   node: 10.69.0.0/26
   exposed:
@@ -39,16 +38,16 @@ spec:
     ingress: 10.72.48.64/26
 `,
 			expected: NetworkMenu{
-				ASNBase:      64600,
-				Internet:     internet,
-				CoreSpine:    coreSpine,
-				CoreExtVM:    coreExtVM,
-				CoreBastion:  coreBastion,
-				SpineTor:     net.ParseIP("10.0.1.0"),
-				Node:         node,
-				Bastion:      bastion,
-				LoadBalancer: loadbalancer,
-				Ingress:      ingress,
+				ASNBase:       64600,
+				Internet:      mustParseCIDR("10.0.0.0/24"),
+				CoreSpine:     mustParseCIDR("10.0.2.0/24"),
+				CoreExternal:  mustParseCIDR("10.0.3.0/24"),
+				CoreOperation: mustParseCIDR("10.0.4.0/24"),
+				SpineTor:      net.ParseIP("10.0.1.0"),
+				Node:          mustParseCIDR("10.69.0.0/26"),
+				Bastion:       mustParseCIDR("10.72.48.0/26"),
+				LoadBalancer:  mustParseCIDR("10.72.32.0/20"),
+				Ingress:       mustParseCIDR("10.72.48.64/26"),
 			},
 		},
 	}

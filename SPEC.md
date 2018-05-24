@@ -15,8 +15,11 @@ Network resource defines IP offsets and ranges to assign each nodes and switches
 kind: Network
 spec:
   asn-base: 64600
-  external: 10.0.0.0/24
+  internet: 10.0.0.0/24
   spine-tor: 10.0.1.0
+  core-spine: 10.0.2.0/31
+  core-external: 10.0.3.0/24
+  core-operation: 10.0.4.0/24
   node: 10.69.0.0/26
   exposed:
     bastion: 10.72.48.0/26
@@ -35,7 +38,7 @@ for each switches when `64000` is specified:
     - rack1: 64601
     - rack2: 64602
 
-- `external`: The network address assigned for the external network.  The
+- `internet`: The network address assigned for the internet network.  The
 addresses in this network are assigned for each links between ext-vm and
 spine switches.  The following example is IP addresses assigned for each
 switches when `10.0.0.0/24` is specified:
@@ -59,6 +62,12 @@ example is assigned addresses when `10.0.1.0` is specified:
     - rack1-tor1-to-spine0: 10.0.1.5/31<br><br>
     - spine0-to-rack1-tor2: 10.0.1.6/31
     - rack1-tor2-to-spine0: 10.0.1.7/31
+
+- `core-spine` The network address between the core switch and spines switches.
+
+- `core-external`: The network address between the core and the external network.
+
+- `core-operation`: The network address between the core switch and the operation network.
 
 - `node`: The network address in the racks.  The node address and ToR address
 are assigned based on this value.  The following example is assigned addresses
@@ -95,7 +104,7 @@ when when `10.69.0.0/26` is specified.
 - `exposed`: The network addresses advertise to outside of the cluster
     - `bastion`: The bastion network addresses, whey are also advertised to the
         external of the cluster.  They are assigned for the boot servers, and they able
-        to be accessed from the external network.  The following example is the
+        to be accessed from the internet network.  The following example is the
         assigned addresses when `10.72.48.0/26` is set:
         - rack0-boot: 10.72.48.0/32
         - rack1-boot: 10.72.48.1/32

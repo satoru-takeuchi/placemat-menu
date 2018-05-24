@@ -16,16 +16,16 @@ const (
 
 // NetworkMenu represents network settings to be written to the configuration file
 type NetworkMenu struct {
-	ASNBase      int
-	Internet     *net.IPNet
-	CoreSpine    *net.IPNet
-	CoreExtVM    *net.IPNet
-	CoreBastion  *net.IPNet
-	SpineTor     net.IP
-	Node         *net.IPNet
-	Bastion      *net.IPNet
-	LoadBalancer *net.IPNet
-	Ingress      *net.IPNet
+	ASNBase       int
+	Internet      *net.IPNet
+	CoreSpine     *net.IPNet
+	CoreExternal  *net.IPNet
+	CoreOperation *net.IPNet
+	SpineTor      net.IP
+	Node          *net.IPNet
+	Bastion       *net.IPNet
+	LoadBalancer  *net.IPNet
+	Ingress       *net.IPNet
 }
 
 // InventoryMenu represents inventory settings to be written to the configuration file

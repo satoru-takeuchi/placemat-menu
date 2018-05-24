@@ -11,22 +11,22 @@ import (
 const (
 	torPerRack = 2
 
-	offsetInternetHost       = 1
-	offsetInternetCoreRouter = 2
+	offsetInternetHost = 1
+	offsetInternetCore = 2
 
-	offsetExternalCoreRouter = 1
-	offsetExternalExtVM      = 2
+	offsetExternalCore     = 1
+	offsetExternalExternal = 2
 
-	offsetBastionCoreRouter = 1
-	offsetBastionOperation  = 2
+	offsetOperationCore      = 1
+	offsetOperationOperation = 2
 
 	offsetNodenetToR     = 1
 	offsetNodenetBoot    = 3
 	offsetNodenetServers = 4
 
-	offsetASNCoreRouter = -3
-	offsetASNExtVM      = -2
-	offsetASNSpine      = -1
+	offsetASNCore     = -3
+	offsetASNExternal = -2
+	offsetASNSpine    = -1
 )
 
 // Rack is template args for rack
@@ -72,10 +72,10 @@ type BootNodeEntity struct {
 
 // Spine is a template args for Spine
 type Spine struct {
-	Name              string
-	ShortName         string
-	CoreRouterAddress *net.IPNet
-	ToRAddresses      []*net.IPNet
+	Name         string
+	ShortName    string
+	CoreAddress  *net.IPNet
+	ToRAddresses []*net.IPNet
 }
 
 // ToR1Address returns spine's IP address connected from ToR-1 in the specified rack
@@ -91,16 +91,16 @@ func (s Spine) ToR2Address(rackIdx int) *net.IPNet {
 // Endpoints contains endpoints for external hosts
 type Endpoints struct {
 	Host      *net.IPNet
-	ExtVM     *net.IPNet
+	External  *net.IPNet
 	Operation *net.IPNet
 }
 
-// CoreRouter contains parameters to construct core router
-type CoreRouter struct {
-	InternetAddress *net.IPNet
-	SpineAddresses  []*net.IPNet
-	BastionAddress  *net.IPNet
-	ExtVMAddress    *net.IPNet
+// Core contains parameters to construct core router
+type Core struct {
+	InternetAddress  *net.IPNet
+	SpineAddresses   []*net.IPNet
+	OperationAddress *net.IPNet
+	ExternalAddress  *net.IPNet
 }
 
 // TemplateArgs is args for cluster.yml
@@ -111,18 +111,18 @@ type TemplateArgs struct {
 			LoadBalancer *net.IPNet
 			Ingress      *net.IPNet
 		}
-		Endpoints     Endpoints
-		ASNExtVM      int
-		ASNSpine      int
-		ASNCoreRouter int
+		Endpoints   Endpoints
+		ASNExternal int
+		ASNSpine    int
+		ASNCore     int
 	}
-	Racks      []Rack
-	Spines     []Spine
-	CoreRouter CoreRouter
-	CS         VMResource
-	SS         VMResource
-	Boot       VMResource
-	Account    Account
+	Racks   []Rack
+	Spines  []Spine
+	Core    Core
+	CS      VMResource
+	SS      VMResource
+	Boot    VMResource
+	Account Account
 }
 
 // Account is setting data to create linux user account
@@ -216,7 +216,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		spine.Name = fmt.Sprintf("spine%d", spineIdx+1)
 		spine.ShortName = fmt.Sprintf("s%d", spineIdx+1)
 
-		spine.CoreRouterAddress = addToIPNet(menu.Network.CoreSpine, (2*spineIdx)+1)
+		spine.CoreAddress = addToIPNet(menu.Network.CoreSpine, (2*spineIdx)+1)
 		// {internet} + {tor per rack} * {rack}
 		spine.ToRAddresses = make([]*net.IPNet, torPerRack*numRack)
 		for rackIdx := range menu.Inventory.Rack {
@@ -225,20 +225,20 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		}
 	}
 
-	setCoreRouter(&templateArgs, menu)
+	setCore(&templateArgs, menu)
 	return &templateArgs, nil
 }
 
 func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
-	templateArgs.Network.ASNCoreRouter = menu.Network.ASNBase + offsetASNCoreRouter
-	templateArgs.Network.ASNExtVM = menu.Network.ASNBase + offsetASNExtVM
+	templateArgs.Network.ASNCore = menu.Network.ASNBase + offsetASNCore
+	templateArgs.Network.ASNExternal = menu.Network.ASNBase + offsetASNExternal
 	templateArgs.Network.ASNSpine = menu.Network.ASNBase + offsetASNSpine
 	templateArgs.Network.Exposed.Bastion = menu.Network.Bastion
 	templateArgs.Network.Exposed.LoadBalancer = menu.Network.LoadBalancer
 	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
 	templateArgs.Network.Endpoints.Host = addToIPNet(menu.Network.Internet, offsetInternetHost)
-	templateArgs.Network.Endpoints.ExtVM = addToIPNet(menu.Network.CoreExtVM, offsetExternalExtVM)
-	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.CoreBastion, offsetBastionOperation)
+	templateArgs.Network.Endpoints.External = addToIPNet(menu.Network.CoreExternal, offsetExternalExternal)
+	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.CoreOperation, offsetOperationOperation)
 }
 
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
@@ -264,13 +264,13 @@ func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
 	rack.BootNode.ToR2Address = addToIPNet(rack.node2Network, offsetNodenetToR)
 }
 
-func setCoreRouter(ta *TemplateArgs, menu *Menu) {
+func setCore(ta *TemplateArgs, menu *Menu) {
 	for i := range ta.Spines {
-		ta.CoreRouter.SpineAddresses = append(ta.CoreRouter.SpineAddresses, addToIPNet(menu.Network.CoreSpine, 2*i))
+		ta.Core.SpineAddresses = append(ta.Core.SpineAddresses, addToIPNet(menu.Network.CoreSpine, 2*i))
 	}
-	ta.CoreRouter.BastionAddress = addToIPNet(menu.Network.CoreBastion, offsetBastionCoreRouter)
-	ta.CoreRouter.InternetAddress = addToIPNet(menu.Network.Internet, offsetInternetCoreRouter)
-	ta.CoreRouter.ExtVMAddress = addToIPNet(menu.Network.CoreExtVM, offsetExternalCoreRouter)
+	ta.Core.OperationAddress = addToIPNet(menu.Network.CoreOperation, offsetOperationCore)
+	ta.Core.InternetAddress = addToIPNet(menu.Network.Internet, offsetInternetCore)
+	ta.Core.ExternalAddress = addToIPNet(menu.Network.CoreExternal, offsetExternalCore)
 }
 
 func constructToRAddresses(rack *Rack, rackIdx int, menu *Menu, bases [][]net.IP) {

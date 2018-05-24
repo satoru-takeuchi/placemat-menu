@@ -16,7 +16,7 @@ Internet, and other networks.
 
 The *operation network* is a network for management of the cluster, it is
 normally used for administrators or SRE of the cluster.  Users can reach only
-boot servers from the operation network.  The *external network* is other
+boot servers from the operation network.  The *internet network* is other
 cluster or service.  It can reach to the cluster via exposed IP addressed
 provided by the cluster.  They are Ingress
 

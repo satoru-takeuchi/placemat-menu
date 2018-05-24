@@ -102,7 +102,7 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendExternalNetwork(ta)
 
-	cluster.appendCoreRouterNetwork(ta)
+	cluster.appendCoreNetwork(ta)
 
 	cluster.appendSpineToRackNetwork(ta)
 
@@ -114,17 +114,17 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendCommonDataFolder()
 
-	cluster.appendCoreRouterDataFolder()
+	cluster.appendCoreDataFolder()
 
 	cluster.appendSpineDataFolder(ta)
 
 	cluster.appendRackDataFolder(ta)
 
-	cluster.appendExtVMDataFolder()
+	cluster.appendExternalNodeDataFolder()
 
 	cluster.appendOperationDataFolder()
 
-	cluster.appendCoreRouterPod(ta)
+	cluster.appendCorePod(ta)
 
 	cluster.appendSpinePod(ta)
 
@@ -395,30 +395,30 @@ func (c *cluster) appendToRPods(ta *TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendCoreRouterPod(ta *TemplateArgs) {
+func (c *cluster) appendCorePod(ta *TemplateArgs) {
 	var interfaces []placemat.PodInterfaceConfig
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
 		Network:   "internet",
-		Addresses: []string{ta.CoreRouter.InternetAddress.String()},
+		Addresses: []string{ta.Core.InternetAddress.String()},
 	})
 	for i, spine := range ta.Spines {
 		interfaces = append(interfaces, placemat.PodInterfaceConfig{
 			Network: fmt.Sprintf("core-to-%s", spine.ShortName),
 			Addresses: []string{
-				ta.CoreRouter.SpineAddresses[i].String(),
+				ta.Core.SpineAddresses[i].String(),
 			},
 		})
 	}
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
 		Network: "core-to-ext",
 		Addresses: []string{
-			ta.CoreRouter.ExtVMAddress.String(),
+			ta.Core.ExternalAddress.String(),
 		},
 	})
 	interfaces = append(interfaces, placemat.PodInterfaceConfig{
 		Network: "core-to-op",
 		Addresses: []string{
-			ta.CoreRouter.BastionAddress.String(),
+			ta.Core.OperationAddress.String(),
 		},
 	})
 	c.pods = append(c.pods, &placemat.PodConfig{
@@ -454,7 +454,7 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 		rackIfs = append(rackIfs,
 			placemat.PodInterfaceConfig{
 				Network:   fmt.Sprintf("core-to-%s", spine.ShortName),
-				Addresses: []string{spine.CoreRouterAddress.String()},
+				Addresses: []string{spine.CoreAddress.String()},
 			},
 		)
 		for i, rack := range ta.Racks {
@@ -496,7 +496,7 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendExtVMDataFolder() {
+func (c *cluster) appendExternalNodeDataFolder() {
 	c.dataFolders = append(c.dataFolders,
 		&placemat.DataFolderConfig{
 			Kind: "DataFolder",
@@ -566,7 +566,7 @@ func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendCoreRouterDataFolder() {
+func (c *cluster) appendCoreDataFolder() {
 	c.dataFolders = append(c.dataFolders,
 		&placemat.DataFolderConfig{
 			Kind: "DataFolder",
@@ -717,7 +717,7 @@ func (c *cluster) appendExternalNetwork(ta *TemplateArgs) {
 	)
 }
 
-func (c *cluster) appendCoreRouterNetwork(ta *TemplateArgs) {
+func (c *cluster) appendCoreNetwork(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
 		c.networks = append(c.networks, &placemat.NetworkConfig{
 			Kind: "Network",

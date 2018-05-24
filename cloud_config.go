@@ -194,7 +194,7 @@ func ExportOperationSeed(w io.Writer, ta *TemplateArgs) error {
 	)
 
 	seed.WriteFiles = append(seed.WriteFiles, seedOperationEthNetworkUnits(
-		[]*net.IPNet{ta.Network.Endpoints.Operation}, net.ParseIP("8.8.8.8"), ta.CoreRouter.BastionAddress.IP,
+		[]*net.IPNet{ta.Network.Endpoints.Operation}, net.ParseIP("8.8.8.8"), ta.Core.OperationAddress.IP,
 	)...)
 	seed.WriteFiles = append(seed.WriteFiles, emptySshdConfigWrite())
 

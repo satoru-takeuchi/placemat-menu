@@ -83,6 +83,14 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	err = export(statikFS, "/templates/setup-default-gateway", "setup-default-gateway-operation", ta.Core.OperationAddress)
+	if err != nil {
+		return err
+	}
+	err = export(statikFS, "/templates/setup-default-gateway", "setup-default-gateway-external", ta.Core.ExternalAddress)
+	if err != nil {
+		return err
+	}
 	err = export(statikFS, "/templates/bird_vm.conf", "bird_vm.conf", ta)
 	if err != nil {
 		return err
@@ -112,18 +120,6 @@ func run() error {
 		return err
 	}
 
-	err = func() error {
-		seedFile, err := os.Create(filepath.Join(*flagOutDir, "seed_operation.yml"))
-		if err != nil {
-			return err
-		}
-		defer seedFile.Close()
-		return menu.ExportOperationSeed(seedFile, ta)
-	}()
-	if err != nil {
-		return err
-	}
-
 	for rackIdx, rack := range ta.Racks {
 		err := func() error {
 			seedFile, err := os.Create(filepath.Join(*flagOutDir, fmt.Sprintf("seed_%s-boot.yml", rack.Name)))
@@ -133,13 +129,6 @@ func run() error {
 			defer seedFile.Close()
 			return menu.ExportBootSeed(seedFile, &ta.Account, &rack)
 		}()
-		if err != nil {
-			return err
-		}
-
-		err = exportJSON(
-			"ext-vm.ign",
-			menu.ExternalNodeIgnition(ta.Account, ta.Network.Endpoints.External))
 		if err != nil {
 			return err
 		}
@@ -206,6 +195,10 @@ func export(fs http.FileSystem, input string, output string, args interface{}) e
 	if err != nil {
 		return err
 	}
+	fi, err := templateFile.Stat()
+	if err != nil {
+		return err
+	}
 	content, err := ioutil.ReadAll(templateFile)
 	if err != nil {
 		return err
@@ -215,7 +208,12 @@ func export(fs http.FileSystem, input string, output string, args interface{}) e
 	if err != nil {
 		panic(err)
 	}
-	return tmpl.Execute(f, args)
+	err = tmpl.Execute(f, args)
+	if err != nil {
+		return err
+	}
+
+	return f.Chmod(fi.Mode())
 }
 
 func copyStatics(fs http.FileSystem, inputs []string, outputDirName string) error {

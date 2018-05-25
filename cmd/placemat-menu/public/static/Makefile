@@ -1,5 +1,4 @@
 images = cybozu-bird-2.0.aci cybozu-ubuntu-debug-18.04.aci cybozu-dnsmasq-2.79.aci
-packages = rkt_1.30.0-1_amd64.deb
 operation_dir = operation
 
 default: start
@@ -13,13 +12,10 @@ cybozu-ubuntu-debug-18.04.aci:
 cybozu-dnsmasq-2.79.aci:
 	docker2aci docker://quay.io/cybozu/dnsmasq:2.79
 
-rkt_1.30.0-1_amd64.deb:
-	curl -SL -o rkt_1.30.0-1_amd64.deb "https://github.com/rkt/rkt/releases/download/v1.30.0/rkt_1.30.0-1_amd64.deb"
-
 $(operation_dir):
 	mkdir -p $(operation_dir)
 
-start: $(images) $(packages) $(operation_dir)
+start: $(images) $(operation_dir)
 	@echo "Please run: $(GOPATH)/bin/placemat cluster.yml"
 
 clean:

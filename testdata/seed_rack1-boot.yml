@@ -103,6 +103,8 @@ write_files:
     Description=bird
     After=copy-bird-conf.service
     Wants=copy-bird-conf.service
+    Wants=network-online.target
+    After=network.target network-online.target
     After=rkt-fetch.service
     Requires=rkt-fetch.service
 
@@ -130,7 +132,8 @@ write_files:
 - path: /etc/systemd/system/setup-route.service
   content: |
     [Unit]
-    After=network.target
+    Wants=network-online.target
+    After=network-online.target
 
     [Service]
     Type=oneshot
@@ -141,6 +144,16 @@ write_files:
 - path: /etc/ssh/sshd_config
   content: ""
 runcmd:
+- - apt-get
+  - -y
+  - purge
+  - netplan.io
+- - rm
+  - -rf
+  - /etc/netplan
+- - systemctl
+  - enable
+  - systemd-networkd.service
 - - systemctl
   - restart
   - systemd-networkd.service

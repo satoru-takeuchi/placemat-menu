@@ -62,7 +62,7 @@
         "enabled": true
       },
       {
-        "contents": "[Unit]\nDescription=bird\nAfter=copy-bird-conf.service\nWants=copy-bird-conf.service\nAfter=rkt-fetch.service\nRequires=rkt-fetch.service\n\n[Service]\nSlice=machine.slice\nExecStart=/usr/bin/rkt run \\\n  --volume run,kind=empty,readOnly=false \\\n  --volume etc,kind=host,source=/etc/bird,readOnly=true \\\n  --net=host \\\n  quay.io/cybozu/bird:2.0 \\\n    --readonly-rootfs=true \\\n    --caps-retain=CAP_NET_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW \\\n    --name bird \\\n    --mount volume=run,target=/run/bird \\\n    --mount volume=etc,target=/etc/bird \\\n  quay.io/cybozu/ubuntu-debug:18.04 \\\n    --readonly-rootfs=true \\\n    --name ubuntu-debug\nKillMode=mixed\nRestart=on-failure\nRestartForceExitStatus=SIGPIPE\n\n[Install]\nWantedBy=multi-user.target\n",
+        "contents": "[Unit]\nDescription=bird\nAfter=copy-bird-conf.service\nWants=copy-bird-conf.service\nWants=network-online.target\nAfter=network.target network-online.target\nAfter=rkt-fetch.service\nRequires=rkt-fetch.service\n\n[Service]\nSlice=machine.slice\nExecStart=/usr/bin/rkt run \\\n  --volume run,kind=empty,readOnly=false \\\n  --volume etc,kind=host,source=/etc/bird,readOnly=true \\\n  --net=host \\\n  quay.io/cybozu/bird:2.0 \\\n    --readonly-rootfs=true \\\n    --caps-retain=CAP_NET_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW \\\n    --name bird \\\n    --mount volume=run,target=/run/bird \\\n    --mount volume=etc,target=/etc/bird \\\n  quay.io/cybozu/ubuntu-debug:18.04 \\\n    --readonly-rootfs=true \\\n    --name ubuntu-debug\nKillMode=mixed\nRestart=on-failure\nRestartForceExitStatus=SIGPIPE\n\n[Install]\nWantedBy=multi-user.target\n",
         "name": "bird.service",
         "enabled": true
       }

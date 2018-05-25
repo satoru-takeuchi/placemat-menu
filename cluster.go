@@ -18,7 +18,7 @@ const (
 	aciDebug   = "cybozu-ubuntu-debug-18.04.aci"
 	aciDnsmasq = "cybozu-dnsmasq-2.79.aci"
 
-	debRkt = "rkt_1.30.0-1_amd64.deb"
+	debRktURL = "https://github.com/rkt/rkt/releases/download/v1.30.0/rkt_1.30.0-1_amd64.deb"
 
 	qemuImageCoreOS = "https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2"
 	qemuImageubuntu = "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
@@ -621,7 +621,7 @@ func (c *cluster) appendCommonDataFolder() {
 				},
 				{
 					Name: "rkt.deb",
-					File: debRkt,
+					URL:  debRktURL,
 				},
 			},
 		},

@@ -12,11 +12,11 @@ import (
 const (
 	dockerImageBird    = "docker://quay.io/cybozu/bird:2.0"
 	dockerImageDebug   = "docker://quay.io/cybozu/ubuntu-debug:18.04"
+	dockerImageDev     = "docker://quay.io/cybozu/ubuntu-dev:18.04"
 	dockerImageDnsmasq = "docker://quay.io/cybozu/dnsmasq:2.79"
 
-	aciBird    = "cybozu-bird-2.0.aci"
-	aciDebug   = "cybozu-ubuntu-debug-18.04.aci"
-	aciDnsmasq = "cybozu-dnsmasq-2.79.aci"
+	aciBird  = "cybozu-bird-2.0.aci"
+	aciDebug = "cybozu-ubuntu-debug-18.04.aci"
 
 	debRktURL = "https://github.com/rkt/rkt/releases/download/v1.30.0/rkt_1.30.0-1_amd64.deb"
 
@@ -161,7 +161,7 @@ func (c *cluster) appendOperationPod(ta *TemplateArgs) {
 			Apps: []placemat.PodAppConfig{
 				{
 					Name:  "ubuntu",
-					Image: dockerImageDebug,
+					Image: dockerImageDev,
 					Exec:  "/bin/sleep",
 					Args:  []string{"infinity"},
 					Mount: []placemat.PodAppMountConfig{
@@ -606,10 +606,6 @@ func (c *cluster) appendCommonDataFolder() {
 				{
 					Name: "ubuntu-debug.aci",
 					File: aciDebug,
-				},
-				{
-					Name: "dnsmasq.aci",
-					File: aciDnsmasq,
 				},
 				{
 					Name: "rkt-fetch",

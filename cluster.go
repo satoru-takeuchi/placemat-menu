@@ -130,50 +130,78 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendToRPods(ta)
 
+	cluster.appendExtPod(ta)
+
+	cluster.appendOperationPod(ta)
+
 	cluster.appendNodes(ta)
 
 	return cluster
 }
 
-func operationNode() *placemat.NodeConfig {
-	return &placemat.NodeConfig{
-		Kind: "Node",
-		Name: ("operation"),
-		Spec: placemat.NodeSpec{
-			Interfaces: []string{
-				"core-to-op",
-			},
-			Volumes: []placemat.NodeVolumeConfig{
+func (c *cluster) appendOperationPod(ta *TemplateArgs) {
+	pod := &placemat.PodConfig{
+		Kind: "Pod",
+		Name: "operation",
+		Spec: placemat.PodSpec{
+			InitScripts: []string{"setup-default-gateway-operation"},
+			Interfaces: []placemat.PodInterfaceConfig{
 				{
-					Kind: "image",
-					Name: "root",
-					Spec: placemat.NodeVolumeSpec{
-						Image:       "ubuntu-image",
-						CopyOnWrite: true,
-					},
-				},
-				{
-					Kind: "localds",
-					Name: "seed",
-					Spec: placemat.NodeVolumeSpec{
-						UserData:      "seed_operation.yml",
-						NetworkConfig: "network.yml",
-					},
-				},
-				{
-					Kind: "vvfat",
-					Name: "operation",
-					Spec: placemat.NodeVolumeSpec{
-						Folder: "operation-data",
-					},
+					Network:   "core-to-op",
+					Addresses: []string{ta.Network.Endpoints.Operation.String()},
 				},
 			},
-			Resources: placemat.NodeResourceConfig{
-				CPU:    "2",
-				Memory: "1G",
+			Volumes: []placemat.PodVolumeConfig{
+				{
+					Name:   "operation",
+					Kind:   "host",
+					Folder: "operation-data",
+				},
+			},
+			Apps: []placemat.PodAppConfig{
+				{
+					Name:  "ubuntu",
+					Image: dockerImageDebug,
+					Exec:  "/bin/sleep",
+					Args:  []string{"infinity"},
+					Mount: []placemat.PodAppMountConfig{
+						{
+							Volume: "operation",
+							Target: "/mnt",
+						},
+					},
+				},
 			},
 		},
 	}
+
+	c.pods = append(c.pods, pod)
+}
+
+func (c *cluster) appendExtPod(ta *TemplateArgs) {
+	pod := &placemat.PodConfig{
+		Kind: "Pod",
+		Name: "external",
+		Spec: placemat.PodSpec{
+			InitScripts: []string{"setup-default-gateway-external"},
+			Interfaces: []placemat.PodInterfaceConfig{
+				{
+					Network:   "core-to-ext",
+					Addresses: []string{ta.Network.Endpoints.External.String()},
+				},
+			},
+			Apps: []placemat.PodAppConfig{
+				{
+					Name:  "ubuntu",
+					Image: dockerImageDebug,
+					Exec:  "/bin/sleep",
+					Args:  []string{"infinity"},
+				},
+			},
+		},
+	}
+
+	c.pods = append(c.pods, pod)
 }
 
 func bootNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
@@ -287,41 +315,6 @@ func (c *cluster) appendNodes(ta *TemplateArgs) {
 			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, ss.Name, &ta.SS))
 		}
 	}
-	c.nodes = append(c.nodes, operationNode())
-	c.nodes = append(c.nodes, &placemat.NodeConfig{
-		Kind: "Node",
-		Name: "ext-vm",
-		Spec: placemat.NodeSpec{
-			Interfaces: []string{"internet"},
-			Volumes: []placemat.NodeVolumeConfig{
-				{
-					Kind: "image",
-					Name: "root",
-					Spec: placemat.NodeVolumeSpec{
-						Image:       "coreos-image",
-						CopyOnWrite: true,
-					},
-				},
-				{
-					Kind: "vvfat",
-					Name: "common",
-					Spec: placemat.NodeVolumeSpec{
-						Folder: "common-data",
-					},
-				},
-				{
-					Kind: "vvfat",
-					Name: "local",
-					Spec: placemat.NodeVolumeSpec{Folder: "ext-vm-data"},
-				},
-			},
-			IgnitionFile: "ext-vm.ign",
-			Resources: placemat.NodeResourceConfig{
-				CPU:    "2",
-				Memory: "1G",
-			},
-		},
-	})
 }
 
 func torPod(rackName, rackShortName string, tor ToR, torNumber int, ta *TemplateArgs) *placemat.PodConfig {

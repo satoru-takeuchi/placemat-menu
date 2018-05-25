@@ -441,58 +441,6 @@ spec:
     cpu: "1"
     memory: 1G
 ---
-kind: Node
-name: operation
-spec:
-  interfaces:
-  - core-to-op
-  volumes:
-  - kind: image
-    name: root
-    spec:
-      image: ubuntu-image
-      copy-on-write: true
-  - kind: localds
-    name: seed
-    spec:
-      user-data: seed_operation.yml
-      network-config: network.yml
-      copy-on-write: false
-  - kind: vvfat
-    name: operation
-    spec:
-      folder: operation-data
-      copy-on-write: false
-  resources:
-    cpu: "2"
-    memory: 1G
----
-kind: Node
-name: ext-vm
-spec:
-  interfaces:
-  - internet
-  volumes:
-  - kind: image
-    name: root
-    spec:
-      image: coreos-image
-      copy-on-write: true
-  - kind: vvfat
-    name: common
-    spec:
-      folder: common-data
-      copy-on-write: false
-  - kind: vvfat
-    name: local
-    spec:
-      folder: ext-vm-data
-      copy-on-write: false
-  ignition: ext-vm.ign
-  resources:
-    cpu: "2"
-    memory: 1G
----
 kind: Pod
 name: core
 spec:
@@ -838,3 +786,45 @@ spec:
     - CAP_NET_BIND_SERVICE
     - CAP_NET_RAW
     - CAP_NET_BROADCAST
+---
+kind: Pod
+name: external
+spec:
+  init-scripts:
+  - setup-default-gateway-external
+  interfaces:
+  - network: core-to-ext
+    addresses:
+    - 10.0.3.2/24
+  apps:
+  - name: ubuntu
+    image: docker://quay.io/cybozu/ubuntu-debug:18.04
+    readonly-rootfs: false
+    exec: /bin/sleep
+    args:
+    - infinity
+---
+kind: Pod
+name: operation
+spec:
+  init-scripts:
+  - setup-default-gateway-operation
+  interfaces:
+  - network: core-to-op
+    addresses:
+    - 10.0.4.2/24
+  volumes:
+  - name: operation
+    kind: host
+    folder: operation-data
+    readonly: false
+  apps:
+  - name: ubuntu
+    image: docker://quay.io/cybozu/ubuntu-debug:18.04
+    readonly-rootfs: false
+    exec: /bin/sleep
+    args:
+    - infinity
+    mount:
+    - volume: operation
+      target: /mnt

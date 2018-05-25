@@ -96,7 +96,6 @@ func TestE2E(t *testing.T) {
 	}
 
 	targetJSONs := []string{
-		"ext-vm.ign",
 		"rack0-cs1.ign",
 		"rack0-cs2.ign",
 		"rack1-cs1.ign",

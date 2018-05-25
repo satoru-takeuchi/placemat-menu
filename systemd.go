@@ -77,6 +77,8 @@ func birdService() string {
 Description=bird
 After=copy-bird-conf.service
 Wants=copy-bird-conf.service
+Wants=network-online.target
+After=network.target network-online.target
 After=rkt-fetch.service
 Requires=rkt-fetch.service
 
@@ -106,7 +108,8 @@ WantedBy=multi-user.target
 
 func setupBootRouteService(src, gw1, gw2 net.IP) string {
 	return fmt.Sprintf(`[Unit]
-After=network.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=oneshot

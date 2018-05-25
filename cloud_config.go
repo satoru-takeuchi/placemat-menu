@@ -152,6 +152,9 @@ func ExportBootSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed.WriteFiles = append(seed.WriteFiles, setupBootRouteWrites(node))
 	seed.WriteFiles = append(seed.WriteFiles, emptySshdConfigWrite())
 
+	seed.Runcmd = append(seed.Runcmd, []string{"apt-get", "-y", "purge", "netplan.io"})
+	seed.Runcmd = append(seed.Runcmd, []string{"rm", "-rf", "/etc/netplan"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"dpkg", "-i", "/mnt/containers/rkt.deb"})
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "bird.service"})
@@ -198,6 +201,9 @@ func ExportOperationSeed(w io.Writer, ta *TemplateArgs) error {
 	)...)
 	seed.WriteFiles = append(seed.WriteFiles, emptySshdConfigWrite())
 
+	seed.Runcmd = append(seed.Runcmd, []string{"apt-get", "-y", "purge", "netplan.io"})
+	seed.Runcmd = append(seed.Runcmd, []string{"rm", "-rf", "/etc/netplan"})
+	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "enable", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"systemctl", "restart", "systemd-networkd.service"})
 	seed.Runcmd = append(seed.Runcmd, []string{"apt", "update"})
 	seed.Runcmd = append(seed.Runcmd, []string{"apt", "install", "-y", "ansible", "sshpass"})

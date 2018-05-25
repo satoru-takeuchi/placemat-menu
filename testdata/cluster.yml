@@ -820,7 +820,7 @@ spec:
     readonly: false
   apps:
   - name: ubuntu
-    image: docker://quay.io/cybozu/ubuntu-debug:18.04
+    image: docker://quay.io/cybozu/ubuntu-dev:18.04
     readonly-rootfs: false
     exec: /bin/sleep
     args:

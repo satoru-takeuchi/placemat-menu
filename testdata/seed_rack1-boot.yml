@@ -143,6 +143,12 @@ write_files:
     WantedBy=multi-user.target
 - path: /etc/ssh/sshd_config
   content: ""
+- path: /etc/neco/rack
+  content: |
+    1
+- path: /etc/neco/cluster
+  content: |
+    dev0
 runcmd:
 - - apt-get
   - -y

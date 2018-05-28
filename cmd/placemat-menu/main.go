@@ -127,7 +127,7 @@ func run() error {
 				return err
 			}
 			defer seedFile.Close()
-			return menu.ExportBootSeed(seedFile, &ta.Account, &rack)
+			return menu.ExportBootSeed(seedFile, &ta.Account, ta.ClusterID, &rack)
 		}()
 		if err != nil {
 			return err

@@ -33,8 +33,9 @@ type networkConfig struct {
 
 type inventoryConfig struct {
 	Spec struct {
-		Spine int `yaml:"spine"`
-		Rack  []struct {
+		ClusterID string `yaml:"cluster-id"`
+		Spine     int    `yaml:"spine"`
+		Rack      []struct {
 			CS int `yaml:"cs"`
 			SS int `yaml:"ss"`
 		} `yaml:"rack"`
@@ -135,6 +136,11 @@ func unmarshalInventory(data []byte) (*InventoryMenu, error) {
 	}
 
 	var inventory InventoryMenu
+
+	if i.Spec.ClusterID == "" {
+		return nil, errors.New("cluster-id is empty")
+	}
+	inventory.ClusterID = i.Spec.ClusterID
 
 	if !(i.Spec.Spine > 0) {
 		return nil, errors.New("spine in Inventory must be more than 0")

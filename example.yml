@@ -14,6 +14,7 @@ spec:
 ---
 kind: Inventory
 spec:
+  cluster-id: dev0
   spine: 2
   rack:
     - cs: 2

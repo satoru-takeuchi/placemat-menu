@@ -122,6 +122,7 @@ func testUnmarshalInventory(t *testing.T) {
 			source: `
 kind: Inventory
 spec:
+  cluster-id: dev0
   spine: 3
   rack:
     - cs: 3
@@ -132,7 +133,8 @@ spec:
       ss: 3
 `,
 			expected: InventoryMenu{
-				Spine: 3,
+				ClusterID: "dev0",
+				Spine:     3,
 				Rack: []RackMenu{
 					{CS: 3, SS: 0},
 					{CS: 2, SS: 2},

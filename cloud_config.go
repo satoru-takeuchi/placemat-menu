@@ -118,8 +118,22 @@ func emptySshdConfigWrite() SeedWriteFile {
 	}
 }
 
+func rackConfigWrite(rack int) SeedWriteFile {
+	return SeedWriteFile{
+		Path:    "/etc/neco/rack",
+		Content: fmt.Sprintf("%d\n", rack),
+	}
+}
+
+func clusterConfigWrite(clusterID string) SeedWriteFile {
+	return SeedWriteFile{
+		Path:    "/etc/neco/cluster",
+		Content: fmt.Sprintf("%s\n", clusterID),
+	}
+}
+
 // ExportBootSeed exports a boot server's seed
-func ExportBootSeed(w io.Writer, account *Account, rack *Rack) error {
+func ExportBootSeed(w io.Writer, account *Account, clusterID string, rack *Rack) error {
 	seed := Seed{
 		Hostname: rack.Name + "-boot",
 		Users: []SeedUser{
@@ -151,6 +165,8 @@ func ExportBootSeed(w io.Writer, account *Account, rack *Rack) error {
 	seed.WriteFiles = append(seed.WriteFiles, systemdWriteFiles()...)
 	seed.WriteFiles = append(seed.WriteFiles, setupBootRouteWrites(node))
 	seed.WriteFiles = append(seed.WriteFiles, emptySshdConfigWrite())
+	seed.WriteFiles = append(seed.WriteFiles, rackConfigWrite(rack.Index))
+	seed.WriteFiles = append(seed.WriteFiles, clusterConfigWrite(clusterID))
 
 	seed.Runcmd = append(seed.Runcmd, []string{"apt-get", "-y", "purge", "netplan.io"})
 	seed.Runcmd = append(seed.Runcmd, []string{"rm", "-rf", "/etc/netplan"})

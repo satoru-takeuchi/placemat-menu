@@ -33,6 +33,7 @@ const (
 type Rack struct {
 	Name                  string
 	ShortName             string
+	Index                 int
 	ASN                   int
 	NodeNetworkPrefixSize int
 	ToR1                  ToR
@@ -116,13 +117,14 @@ type TemplateArgs struct {
 		ASNSpine    int
 		ASNCore     int
 	}
-	Racks   []Rack
-	Spines  []Spine
-	Core    Core
-	CS      VMResource
-	SS      VMResource
-	Boot    VMResource
-	Account Account
+	ClusterID string
+	Racks     []Rack
+	Spines    []Spine
+	Core      Core
+	CS        VMResource
+	SS        VMResource
+	Boot      VMResource
+	Account   Account
 }
 
 // Account is setting data to create linux user account
@@ -173,6 +175,8 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 		}
 	}
 
+	templateArgs.ClusterID = menu.Inventory.ClusterID
+
 	numRack := len(menu.Inventory.Rack)
 
 	spineToRackBases := make([][]net.IP, menu.Inventory.Spine)
@@ -189,6 +193,7 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	for rackIdx, rackMenu := range menu.Inventory.Rack {
 		rack := &templateArgs.Racks[rackIdx]
 		rack.Name = fmt.Sprintf("rack%d", rackIdx)
+		rack.Index = rackIdx
 		rack.ShortName = fmt.Sprintf("r%d", rackIdx)
 		rack.ASN = menu.Network.ASNBase + rackIdx
 		rack.node0Network = makeNodeNetwork(menu.Network.Node, rackIdx*3+0)

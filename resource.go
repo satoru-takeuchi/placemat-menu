@@ -30,8 +30,9 @@ type NetworkMenu struct {
 
 // InventoryMenu represents inventory settings to be written to the configuration file
 type InventoryMenu struct {
-	Spine int
-	Rack  []RackMenu
+	ClusterID string
+	Spine     int
+	Rack      []RackMenu
 }
 
 // RackMenu represents how many nodes each rack contains

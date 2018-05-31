@@ -247,25 +247,15 @@ spec:
   - r0-node1
   - r0-node2
   volumes:
-  - kind: image
+  - kind: raw
     name: root
     spec:
-      image: coreos-image
-      copy-on-write: true
-  - kind: vvfat
-    name: common
-    spec:
-      folder: common-data
+      size: 30G
       copy-on-write: false
-  - kind: vvfat
-    name: local
-    spec:
-      folder: rack0-bird-data
-      copy-on-write: false
-  ignition: rack0-cs1.ign
   resources:
     cpu: "2"
     memory: 2G
+  bios: uefi
 ---
 kind: Node
 name: rack0-cs2
@@ -274,25 +264,15 @@ spec:
   - r0-node1
   - r0-node2
   volumes:
-  - kind: image
+  - kind: raw
     name: root
     spec:
-      image: coreos-image
-      copy-on-write: true
-  - kind: vvfat
-    name: common
-    spec:
-      folder: common-data
+      size: 30G
       copy-on-write: false
-  - kind: vvfat
-    name: local
-    spec:
-      folder: rack0-bird-data
-      copy-on-write: false
-  ignition: rack0-cs2.ign
   resources:
     cpu: "2"
     memory: 2G
+  bios: uefi
 ---
 kind: Node
 name: rack1-boot
@@ -338,25 +318,15 @@ spec:
   - r1-node1
   - r1-node2
   volumes:
-  - kind: image
+  - kind: raw
     name: root
     spec:
-      image: coreos-image
-      copy-on-write: true
-  - kind: vvfat
-    name: common
-    spec:
-      folder: common-data
+      size: 30G
       copy-on-write: false
-  - kind: vvfat
-    name: local
-    spec:
-      folder: rack1-bird-data
-      copy-on-write: false
-  ignition: rack1-cs1.ign
   resources:
     cpu: "2"
     memory: 2G
+  bios: uefi
 ---
 kind: Node
 name: rack1-cs2
@@ -365,25 +335,15 @@ spec:
   - r1-node1
   - r1-node2
   volumes:
-  - kind: image
+  - kind: raw
     name: root
     spec:
-      image: coreos-image
-      copy-on-write: true
-  - kind: vvfat
-    name: common
-    spec:
-      folder: common-data
+      size: 30G
       copy-on-write: false
-  - kind: vvfat
-    name: local
-    spec:
-      folder: rack1-bird-data
-      copy-on-write: false
-  ignition: rack1-cs2.ign
   resources:
     cpu: "2"
     memory: 2G
+  bios: uefi
 ---
 kind: Node
 name: rack1-ss1
@@ -392,25 +352,15 @@ spec:
   - r1-node1
   - r1-node2
   volumes:
-  - kind: image
+  - kind: raw
     name: root
     spec:
-      image: coreos-image
-      copy-on-write: true
-  - kind: vvfat
-    name: common
-    spec:
-      folder: common-data
+      size: 30G
       copy-on-write: false
-  - kind: vvfat
-    name: local
-    spec:
-      folder: rack1-bird-data
-      copy-on-write: false
-  ignition: rack1-ss1.ign
   resources:
     cpu: "1"
     memory: 1G
+  bios: uefi
 ---
 kind: Node
 name: rack1-ss2
@@ -419,25 +369,15 @@ spec:
   - r1-node1
   - r1-node2
   volumes:
-  - kind: image
+  - kind: raw
     name: root
     spec:
-      image: coreos-image
-      copy-on-write: true
-  - kind: vvfat
-    name: common
-    spec:
-      folder: common-data
+      size: 30G
       copy-on-write: false
-  - kind: vvfat
-    name: local
-    spec:
-      folder: rack1-bird-data
-      copy-on-write: false
-  ignition: rack1-ss2.ign
   resources:
     cpu: "1"
     memory: 1G
+  bios: uefi
 ---
 kind: Pod
 name: core

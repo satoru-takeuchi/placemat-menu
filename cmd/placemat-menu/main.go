@@ -153,22 +153,6 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		for csIdx, cs := range rack.CSList {
-			err = exportJSON(
-				fmt.Sprintf("rack%d-cs%d.ign", rackIdx, csIdx+1),
-				menu.CSNodeIgnition(ta.Account, rack, cs))
-			if err != nil {
-				return err
-			}
-		}
-		for ssIdx, ss := range rack.SSList {
-			err = exportJSON(
-				fmt.Sprintf("rack%d-ss%d.ign", rackIdx, ssIdx+1),
-				menu.SSNodeIgnition(ta.Account, rack, ss))
-			if err != nil {
-				return err
-			}
-		}
 	}
 	return copyStatics(statikFS, staticFiles, *flagOutDir)
 }

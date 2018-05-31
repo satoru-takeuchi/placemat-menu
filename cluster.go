@@ -304,15 +304,43 @@ func coreOSNode(rackName, rackShortName, nodeName string, resource *VMResource) 
 	}
 }
 
+func emptyNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
+
+	return &placemat.NodeConfig{
+		Kind: "Node",
+		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
+		Spec: placemat.NodeSpec{
+			Interfaces: []string{
+				fmt.Sprintf("%s-node1", rackShortName),
+				fmt.Sprintf("%s-node2", rackShortName),
+			},
+			Volumes: []placemat.NodeVolumeConfig{
+				{
+					Kind: "raw",
+					Name: "root",
+					Spec: placemat.NodeVolumeSpec{
+						Size: "30G",
+					},
+				},
+			},
+			Resources: placemat.NodeResourceConfig{
+				CPU:    fmt.Sprint(resource.CPU),
+				Memory: resource.Memory,
+			},
+			BIOS: "uefi",
+		},
+	}
+}
+
 func (c *cluster) appendNodes(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
 		c.nodes = append(c.nodes, bootNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
 
 		for _, cs := range rack.CSList {
-			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, cs.Name, &ta.CS))
+			c.nodes = append(c.nodes, emptyNode(rack.Name, rack.ShortName, cs.Name, &ta.CS))
 		}
 		for _, ss := range rack.SSList {
-			c.nodes = append(c.nodes, coreOSNode(rack.Name, rack.ShortName, ss.Name, &ta.SS))
+			c.nodes = append(c.nodes, emptyNode(rack.Name, rack.ShortName, ss.Name, &ta.SS))
 		}
 	}
 }

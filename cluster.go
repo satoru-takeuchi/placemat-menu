@@ -367,6 +367,9 @@ func torPod(rackName, rackShortName string, tor ToR, torNumber int, ta *Template
 		"--no-daemon",
 	}
 	for _, r := range ta.Racks {
+		if r.Name == rackName {
+			continue
+		}
 		dhcpRelayArgs = append(dhcpRelayArgs, "--dhcp-relay")
 		dhcpRelayArgs = append(dhcpRelayArgs, tor.NodeAddress.IP.String()+","+r.BootNode.Node0Address.IP.String())
 	}

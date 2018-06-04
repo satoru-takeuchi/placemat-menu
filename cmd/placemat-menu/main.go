@@ -103,16 +103,6 @@ func run() error {
 		}
 	}
 
-	networkConfigFile, err := os.Create(filepath.Join(*flagOutDir, "network.yml"))
-	if err != nil {
-		return err
-	}
-	defer networkConfigFile.Close()
-	err = menu.ExportNetworkConfig(networkConfigFile)
-	if err != nil {
-		return err
-	}
-
 	for rackIdx, rack := range ta.Racks {
 
 		if ta.Boot.CloudInitTemplate != "" {

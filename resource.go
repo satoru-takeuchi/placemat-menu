@@ -43,10 +43,11 @@ type RackMenu struct {
 
 // NodeMenu represents computing resources used by each type nodes
 type NodeMenu struct {
-	Type   NodeType
-	CPU    int
-	Memory string
-	Image  string
+	Type              NodeType
+	CPU               int
+	Memory            string
+	Image             string
+	CloudInitTemplate string
 }
 
 // AccountMenu contains user account settings

@@ -191,8 +191,6 @@ spec:
     name: seed
     spec:
       user-data: seed_rack0-boot.yml
-      network-config: network.yml
-      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -208,7 +206,6 @@ spec:
     name: root
     spec:
       size: 30G
-      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -225,7 +222,6 @@ spec:
     name: root
     spec:
       size: 30G
-      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -247,8 +243,6 @@ spec:
     name: seed
     spec:
       user-data: seed_rack1-boot.yml
-      network-config: network.yml
-      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -264,7 +258,6 @@ spec:
     name: root
     spec:
       size: 30G
-      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -281,7 +274,6 @@ spec:
     name: root
     spec:
       size: 30G
-      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -298,7 +290,6 @@ spec:
     name: root
     spec:
       size: 30G
-      copy-on-write: false
   resources:
     cpu: "1"
     memory: 1G
@@ -315,7 +306,6 @@ spec:
     name: root
     spec:
       size: 30G
-      copy-on-write: false
   resources:
     cpu: "1"
     memory: 1G

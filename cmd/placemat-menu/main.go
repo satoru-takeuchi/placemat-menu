@@ -4,7 +4,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -115,16 +114,51 @@ func run() error {
 	}
 
 	for rackIdx, rack := range ta.Racks {
-		err := func() error {
-			seedFile, err := os.Create(filepath.Join(*flagOutDir, fmt.Sprintf("seed_%s-boot.yml", rack.Name)))
+
+		if ta.Boot.CloudInitTemplate != "" {
+			arg := struct {
+				Name string
+				Rack menu.Rack
+			}{
+				fmt.Sprintf("%s-boot", rack.Name),
+				rack,
+			}
+			err := exportFile(ta.Boot.CloudInitTemplate, fmt.Sprintf("seed_%s-boot.yml", rack.Name), arg)
 			if err != nil {
 				return err
 			}
-			defer seedFile.Close()
-			return menu.ExportBootSeed(seedFile, &ta.Account, ta.ClusterID, &rack)
-		}()
-		if err != nil {
-			return err
+		}
+
+		if ta.CS.CloudInitTemplate != "" {
+			for _, cs := range rack.CSList {
+				arg := struct {
+					Name string
+					Rack menu.Rack
+				}{
+					fmt.Sprintf("%s-%s", rack.Name, cs.Name),
+					rack,
+				}
+				err := exportFile(ta.CS.CloudInitTemplate, fmt.Sprintf("seed_%s-%s.yml", rack.Name, cs.Name), arg)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		if ta.SS.CloudInitTemplate != "" {
+			for _, ss := range rack.SSList {
+				arg := struct {
+					Name string
+					Rack menu.Rack
+				}{
+					fmt.Sprintf("%s-%s", rack.Name, ss.Name),
+					rack,
+				}
+				err := exportFile(ta.SS.CloudInitTemplate, fmt.Sprintf("seed_%s-%s.yml", rack.Name, ss.Name), arg)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		err = export(statikFS, "/templates/bird_rack-tor1.conf",
@@ -144,15 +178,27 @@ func run() error {
 	return copyStatics(statikFS, staticFiles, *flagOutDir)
 }
 
-func exportJSON(output string, ignition menu.Ignition) error {
+func exportFile(input string, output string, args interface{}) error {
 	f, err := os.Create(filepath.Join(*flagOutDir, output))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	encoder := json.NewEncoder(f)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(ignition)
+
+	templateFile, err := os.Open(input)
+	if err != nil {
+		return err
+	}
+	content, err := ioutil.ReadAll(templateFile)
+	if err != nil {
+		return err
+	}
+
+	tmpl, err := template.New(input).Parse(string(content))
+	if err != nil {
+		panic(err)
+	}
+	return tmpl.Execute(f, args)
 }
 
 func export(fs http.FileSystem, input string, output string, args interface{}) error {

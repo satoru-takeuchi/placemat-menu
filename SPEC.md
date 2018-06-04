@@ -158,6 +158,7 @@ spec:
   cpu: 2
   memory: 2G
   image: ubuntu-cloud-image
+  cloud-init-template: boot-seed.yml.template
 ```
 
 The available properties are as following:
@@ -169,6 +170,20 @@ The available properties are as following:
 - `cpu`: The number of the virtual CPU cores
 - `memory`: The size of the memory.
 - `image`: The name of an image resource for boot (optional)
+- `cloud-init-template`: The path of cloud-init template file.
+
+In a cloud-init template file, following attributes can be referenced.
+
+- .Name: The node name
+- .Rack: The rack information
+    - Index: The logical number of rack
+
+```yaml
+#cloud-config
+hostname: {{.Name}}
+runcmd:
+- ["/extras/setup/setup-neco-network", "{{.Rack.Index}}"]
+```
 
 ## Account resource
 

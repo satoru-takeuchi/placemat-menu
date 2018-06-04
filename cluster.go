@@ -107,6 +107,8 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendOperationDataFolder()
 
+	cluster.appendSabakanDataFolder()
+
 	cluster.appendCorePod(ta)
 
 	cluster.appendSpinePod(ta)
@@ -187,7 +189,7 @@ func (c *cluster) appendExtPod(ta *TemplateArgs) {
 	c.pods = append(c.pods, pod)
 }
 
-func bootNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
+func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeConfig {
 	var volumes []placemat.NodeVolumeConfig
 	if resource.Image != "" {
 		volumes = []placemat.NodeVolumeConfig{
@@ -210,6 +212,14 @@ func bootNode(rackName, rackShortName, nodeName string, resource *VMResource) *p
 					},
 				})
 		}
+		volumes = append(volumes,
+			placemat.NodeVolumeConfig{
+				Kind: "vvfat",
+				Name: "sabakan",
+				Spec: placemat.NodeVolumeSpec{
+					Folder: "sabakan-data",
+				},
+			})
 	} else {
 		volumes = []placemat.NodeVolumeConfig{
 			{
@@ -235,11 +245,14 @@ func bootNode(rackName, rackShortName, nodeName string, resource *VMResource) *p
 				CPU:    fmt.Sprint(resource.CPU),
 				Memory: resource.Memory,
 			},
+			SMBIOS: placemat.SMBIOSConfig{
+				SerialNumber: serial,
+			},
 		},
 	}
 }
 
-func emptyNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
+func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeConfig {
 
 	return &placemat.NodeConfig{
 		Kind: "Node",
@@ -263,19 +276,22 @@ func emptyNode(rackName, rackShortName, nodeName string, resource *VMResource) *
 				Memory: resource.Memory,
 			},
 			BIOS: "uefi",
+			SMBIOS: placemat.SMBIOSConfig{
+				SerialNumber: serial,
+			},
 		},
 	}
 }
 
 func (c *cluster) appendNodes(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
-		c.nodes = append(c.nodes, bootNode(rack.Name, rack.ShortName, "boot", &ta.Boot))
+		c.nodes = append(c.nodes, bootNode(rack.Name, rack.ShortName, rack.BootNode.Name, rack.BootNode.Serial, &ta.Boot))
 
 		for _, cs := range rack.CSList {
-			c.nodes = append(c.nodes, emptyNode(rack.Name, rack.ShortName, cs.Name, &ta.CS))
+			c.nodes = append(c.nodes, emptyNode(rack.Name, rack.ShortName, cs.Name, cs.Serial, &ta.CS))
 		}
 		for _, ss := range rack.SSList {
-			c.nodes = append(c.nodes, emptyNode(rack.Name, rack.ShortName, ss.Name, &ta.SS))
+			c.nodes = append(c.nodes, emptyNode(rack.Name, rack.ShortName, ss.Name, ss.Serial, &ta.SS))
 		}
 	}
 }
@@ -462,6 +478,17 @@ func (c *cluster) appendOperationDataFolder() {
 			Name: "operation-data",
 			Spec: placemat.DataFolderSpec{
 				Dir: "operation",
+			},
+		})
+}
+
+func (c *cluster) appendSabakanDataFolder() {
+	c.dataFolders = append(c.dataFolders,
+		&placemat.DataFolderConfig{
+			Kind: "DataFolder",
+			Name: "sabakan-data",
+			Spec: placemat.DataFolderSpec{
+				Dir: "sabakan",
 			},
 		})
 }

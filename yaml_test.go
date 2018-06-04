@@ -25,29 +25,32 @@ func testUnmarshalNetwork(t *testing.T) {
 			source: `
 kind: Network
 spec:
+  ipam-config: example_ipam.json
   asn-base: 64600
   internet: 10.0.0.0/24
   core-spine: 10.0.2.0/24
   core-external: 10.0.3.0/24
   core-operation: 10.0.4.0/24
   spine-tor: 10.0.1.0
-  node: 10.69.0.0/26
   exposed:
     loadbalancer: 10.72.32.0/20
     bastion: 10.72.48.0/26
     ingress: 10.72.48.64/26
 `,
 			expected: NetworkMenu{
-				ASNBase:       64600,
-				Internet:      mustParseCIDR("10.0.0.0/24"),
-				CoreSpine:     mustParseCIDR("10.0.2.0/24"),
-				CoreExternal:  mustParseCIDR("10.0.3.0/24"),
-				CoreOperation: mustParseCIDR("10.0.4.0/24"),
-				SpineTor:      net.ParseIP("10.0.1.0"),
-				Node:          mustParseCIDR("10.69.0.0/26"),
-				Bastion:       mustParseCIDR("10.72.48.0/26"),
-				LoadBalancer:  mustParseCIDR("10.72.32.0/20"),
-				Ingress:       mustParseCIDR("10.72.48.64/26"),
+				IPAMConfigFile: "example_ipam.json",
+				NodeBase:       net.ParseIP("10.69.0.0"),
+				NodeRangeSize:  6,
+				NodeRangeMask:  26,
+				ASNBase:        64600,
+				Internet:       mustParseCIDR("10.0.0.0/24"),
+				CoreSpine:      mustParseCIDR("10.0.2.0/24"),
+				CoreExternal:   mustParseCIDR("10.0.3.0/24"),
+				CoreOperation:  mustParseCIDR("10.0.4.0/24"),
+				SpineTor:       net.ParseIP("10.0.1.0"),
+				Bastion:        mustParseCIDR("10.72.48.0/26"),
+				LoadBalancer:   mustParseCIDR("10.72.32.0/20"),
+				Ingress:        mustParseCIDR("10.72.48.64/26"),
 			},
 		},
 	}
@@ -66,23 +69,10 @@ spec:
 # Invalid CIDR @ internet
 kind: Network
 spec:
+  ipam-config: example_ipam.json
   asn-base: 64600
   internet: 10.0.0.0
   spine-tor: 10.0.1.0
-  node: 10.69.0.0/26
-  exposed:
-    loadbalancer: 10.72.32.0/20
-    bastion: 10.72.48.0/26
-    ingress: 10.72.48.64/26
-`,
-		`
-# Invalid network address @ node
-kind: Network
-spec:
-  asn-base: 64600
-  internet: 10.0.0.0/24
-  spine-tor: 10.0.1.0
-  node: 10.69.0.1/26
   exposed:
     loadbalancer: 10.72.32.0/20
     bastion: 10.72.48.0/26
@@ -92,10 +82,10 @@ spec:
 # Invalid IP address @ spine-tor
 kind: Network
 spec:
+  ipam-config: example_ipam.json
   asn-base: 64600
   internet: 10.0.0.0/24
   spine-tor: 10.0.1.0/31
-  node: 10.69.0.0/26
   exposed:
     loadbalancer: 10.72.32.0/20
     bastion: 10.72.48.0/26

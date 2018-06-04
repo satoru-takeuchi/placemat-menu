@@ -1,6 +1,8 @@
 package menu
 
-import "net"
+import (
+	"net"
+)
 
 // NodeType represent node type(i.g. boot, CS, SS)
 type NodeType int
@@ -16,16 +18,19 @@ const (
 
 // NetworkMenu represents network settings to be written to the configuration file
 type NetworkMenu struct {
-	ASNBase       int
-	Internet      *net.IPNet
-	CoreSpine     *net.IPNet
-	CoreExternal  *net.IPNet
-	CoreOperation *net.IPNet
-	SpineTor      net.IP
-	Node          *net.IPNet
-	Bastion       *net.IPNet
-	LoadBalancer  *net.IPNet
-	Ingress       *net.IPNet
+	IPAMConfigFile string
+	NodeBase       net.IP
+	NodeRangeSize  int
+	NodeRangeMask  int
+	ASNBase        int
+	Internet       *net.IPNet
+	CoreSpine      *net.IPNet
+	CoreExternal   *net.IPNet
+	CoreOperation  *net.IPNet
+	SpineTor       net.IP
+	Bastion        *net.IPNet
+	LoadBalancer   *net.IPNet
+	Ingress        *net.IPNet
 }
 
 // InventoryMenu represents inventory settings to be written to the configuration file

@@ -175,6 +175,11 @@ name: operation-data
 spec:
   dir: operation
 ---
+kind: DataFolder
+name: sabakan-data
+spec:
+  dir: sabakan
+---
 kind: Node
 name: rack0-boot
 spec:
@@ -191,9 +196,15 @@ spec:
     name: seed
     spec:
       user-data: seed_rack0-boot.yml
+  - kind: vvfat
+    name: sabakan
+    spec:
+      folder: sabakan-data
   resources:
     cpu: "2"
     memory: 2G
+  smbios:
+    serial: d77bd2bf046bf5c6acde124136dba4e2b393d36a
 ---
 kind: Node
 name: rack0-cs1
@@ -210,6 +221,8 @@ spec:
     cpu: "2"
     memory: 2G
   bios: uefi
+  smbios:
+    serial: ba49d9a971c5a0344edfda5c8116745ea16fa4dd
 ---
 kind: Node
 name: rack0-cs2
@@ -226,6 +239,8 @@ spec:
     cpu: "2"
     memory: 2G
   bios: uefi
+  smbios:
+    serial: e6abb04b4645a765faf91f97536ec64f9cecfb61
 ---
 kind: Node
 name: rack1-boot
@@ -243,9 +258,15 @@ spec:
     name: seed
     spec:
       user-data: seed_rack1-boot.yml
+  - kind: vvfat
+    name: sabakan
+    spec:
+      folder: sabakan-data
   resources:
     cpu: "2"
     memory: 2G
+  smbios:
+    serial: e6c5c72f081d987a5e75041aebbbe82d4c89e999
 ---
 kind: Node
 name: rack1-cs1
@@ -262,6 +283,8 @@ spec:
     cpu: "2"
     memory: 2G
   bios: uefi
+  smbios:
+    serial: 4ae0771764376e0184274e24e0b18abd8fa5f285
 ---
 kind: Node
 name: rack1-cs2
@@ -278,6 +301,8 @@ spec:
     cpu: "2"
     memory: 2G
   bios: uefi
+  smbios:
+    serial: aec899fb87747909c95a2decaa4f25899f07516e
 ---
 kind: Node
 name: rack1-ss1
@@ -294,6 +319,8 @@ spec:
     cpu: "1"
     memory: 1G
   bios: uefi
+  smbios:
+    serial: 1145129a085ecf521ab524028302a6b4a4e49a00
 ---
 kind: Node
 name: rack1-ss2
@@ -310,6 +337,8 @@ spec:
     cpu: "1"
     memory: 1G
   bios: uefi
+  smbios:
+    serial: 628c8c360d0113de66db14a225affcb85fb2a27f
 ---
 kind: Pod
 name: core

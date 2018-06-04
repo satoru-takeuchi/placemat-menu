@@ -4,7 +4,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -44,20 +43,16 @@ func run() error {
 	}
 
 	opdir := filepath.Join(*flagOutDir, "operation")
-	fi, err := os.Stat(opdir)
-	switch {
-	case err == nil:
-		if !fi.IsDir() {
-			return errors.New(opdir + "is not a directory")
-		}
-	case os.IsNotExist(err):
-		err = os.MkdirAll(opdir, 0755)
-		if err != nil {
-			return err
-		}
-	default:
+	err = os.MkdirAll(opdir, 0755)
+	if err != nil {
 		return err
 	}
+	sabakanDir := filepath.Join(*flagOutDir, "sabakan")
+	err = os.MkdirAll(sabakanDir, 0755)
+	if err != nil {
+		return err
+	}
+
 	f, err := os.Open(*flagConfig)
 	if err != nil {
 		return err
@@ -71,6 +66,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
 	clusterFile, err := os.Create(filepath.Join(*flagOutDir, "cluster.yml"))
 	if err != nil {
 		return err
@@ -80,6 +76,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
 	err = export(statikFS, "/templates/setup-default-gateway", "setup-default-gateway-operation", ta.Core.OperationAddress)
 	if err != nil {
 		return err
@@ -93,7 +90,6 @@ func run() error {
 	if err != nil {
 		return err
 	}
-
 	for spineIdx := range ta.Spines {
 		err = export(statikFS, "/templates/bird_spine.conf",
 			fmt.Sprintf("bird_spine%d.conf", spineIdx+1),
@@ -104,7 +100,6 @@ func run() error {
 	}
 
 	for rackIdx, rack := range ta.Racks {
-
 		if ta.Boot.CloudInitTemplate != "" {
 			arg := struct {
 				Name string
@@ -165,6 +160,12 @@ func run() error {
 			return err
 		}
 	}
+
+	err = menu.ExportSabakanData(sabakanDir, m, ta)
+	if err != nil {
+		return err
+	}
+
 	return copyStatics(statikFS, staticFiles, *flagOutDir)
 }
 

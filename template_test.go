@@ -26,8 +26,8 @@ func TestAddToIP(t *testing.T) {
 
 func TestMakeNodeNetwork(t *testing.T) {
 	_, expected, _ := net.ParseCIDR("10.69.1.64/26")
-	_, base, _ := net.ParseCIDR("10.69.0.0/26")
-	actual := makeNodeNetwork(base, 5)
+	base := net.ParseIP("10.69.0.0")
+	actual := makeNodeNetwork(base, 6, 26, 5)
 	if !reflect.DeepEqual(*expected, *actual) {
 		t.Errorf("expected %v, actual %v", *expected, *actual)
 	}

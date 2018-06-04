@@ -40,6 +40,9 @@ func TestE2E(t *testing.T) {
 		"bird_rack1-tor2.conf",
 		"seed_rack0-boot.yml",
 		"seed_rack1-boot.yml",
+		"sabakan/ipam.json",
+		"sabakan/dhcp.json",
+		"sabakan/machines.json",
 	}
 
 	cmd := exec.Command("go", "run", "cmd/placemat-menu/main.go", "-f", "example.yml", "-o", dir)

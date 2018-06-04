@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"crypto/sha1"
 	"errors"
 	"fmt"
 	"net"
@@ -49,6 +50,8 @@ type Rack struct {
 // Node is a template args for a node
 type Node struct {
 	Name         string
+	Fullname     string // some func compose full name by itself...
+	Serial       string
 	Node0Address *net.IPNet
 	Node1Address *net.IPNet
 	Node2Address *net.IPNet
@@ -208,14 +211,13 @@ OUTER:
 		rack.Index = rackIdx
 		rack.ShortName = fmt.Sprintf("r%d", rackIdx)
 		rack.ASN = menu.Network.ASNBase + rackIdx
-		rack.node0Network = makeNodeNetwork(menu.Network.Node, rackIdx*3+0)
-		rack.node1Network = makeNodeNetwork(menu.Network.Node, rackIdx*3+1)
-		rack.node2Network = makeNodeNetwork(menu.Network.Node, rackIdx*3+2)
+		rack.node0Network = makeNodeNetwork(menu.Network.NodeBase, menu.Network.NodeRangeSize, menu.Network.NodeRangeMask, rackIdx*3+0)
+		rack.node1Network = makeNodeNetwork(menu.Network.NodeBase, menu.Network.NodeRangeSize, menu.Network.NodeRangeMask, rackIdx*3+1)
+		rack.node2Network = makeNodeNetwork(menu.Network.NodeBase, menu.Network.NodeRangeSize, menu.Network.NodeRangeMask, rackIdx*3+2)
 
 		constructToRAddresses(rack, rackIdx, menu, spineToRackBases)
-		constructBootAddresses(rack, rackIdx, menu)
-		prefixSize, _ := menu.Network.Node.Mask.Size()
-		rack.NodeNetworkPrefixSize = prefixSize
+		buildBootNode(rack, menu)
+		rack.NodeNetworkPrefixSize = menu.Network.NodeRangeMask
 
 		for csIdx := 0; csIdx < rackMenu.CS; csIdx++ {
 			node := buildNode("cs", csIdx, offsetNodenetServers, rack)
@@ -261,6 +263,8 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	node := Node{}
 	node.Name = fmt.Sprintf("%v%d", basename, idx+1)
+	node.Fullname = fmt.Sprintf("%s-%s", rack.Name, node.Name)
+	node.Serial = fmt.Sprintf("%x", sha1.Sum([]byte(node.Fullname)))
 	offset := offsetStart + idx
 
 	node.Node0Address = addToIP(rack.node0Network.IP, offset, 32)
@@ -271,11 +275,15 @@ func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	return node
 }
 
-func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
+func buildBootNode(rack *Rack, menu *Menu) {
+	rack.BootNode.Name = "boot"
+	rack.BootNode.Fullname = fmt.Sprintf("%s-%s", rack.Name, rack.BootNode.Name)
+	rack.BootNode.Serial = fmt.Sprintf("%x", sha1.Sum([]byte(rack.BootNode.Fullname)))
+
 	rack.BootNode.Node0Address = addToIP(rack.node0Network.IP, offsetNodenetBoot, 32)
 	rack.BootNode.Node1Address = addToIPNet(rack.node1Network, offsetNodenetBoot)
 	rack.BootNode.Node2Address = addToIPNet(rack.node2Network, offsetNodenetBoot)
-	rack.BootNode.BastionAddress = addToIP(menu.Network.Bastion.IP, rackIdx, 32)
+	rack.BootNode.BastionAddress = addToIP(menu.Network.Bastion.IP, rack.Index, 32)
 
 	rack.BootNode.ToR1Address = addToIPNet(rack.node1Network, offsetNodenetToR)
 	rack.BootNode.ToR2Address = addToIPNet(rack.node2Network, offsetNodenetToR)
@@ -320,11 +328,9 @@ func addToIP(netIP net.IP, offset int, prefixSize int) *net.IPNet {
 	return &net.IPNet{IP: ip4, Mask: mask}
 }
 
-func makeNodeNetwork(base *net.IPNet, nodeIdx int) *net.IPNet {
-	mask := base.Mask
-	prefixSize, _ := mask.Size()
-	offset := 1 << uint(32-prefixSize) * nodeIdx
-	ipInt := netutil.IP4ToInt(base.IP) + uint32(offset)
+func makeNodeNetwork(base net.IP, rangeSize, prefixSize int, nodeIdx int) *net.IPNet {
+	offset := 1 << uint(rangeSize) * nodeIdx
+	ipInt := netutil.IP4ToInt(base) + uint32(offset)
 	ip4 := netutil.IntToIP4(ipInt)
-	return &net.IPNet{IP: ip4, Mask: mask}
+	return &net.IPNet{IP: ip4, Mask: net.CIDRMask(prefixSize, 32)}
 }

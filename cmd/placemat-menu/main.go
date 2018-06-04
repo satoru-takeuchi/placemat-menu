@@ -44,15 +44,15 @@ func run() error {
 		return err
 	}
 
-	fi, err := os.Stat(*flagOutDir)
+	opdir := filepath.Join(*flagOutDir, "operation")
+	fi, err := os.Stat(opdir)
 	switch {
 	case err == nil:
 		if !fi.IsDir() {
-			return errors.New(*flagOutDir + "is not a directory")
+			return errors.New(opdir + "is not a directory")
 		}
 	case os.IsNotExist(err):
-		p := filepath.Join(*flagOutDir, "operation")
-		err = os.MkdirAll(p, 0755)
+		err = os.MkdirAll(opdir, 0755)
 		if err != nil {
 			return err
 		}

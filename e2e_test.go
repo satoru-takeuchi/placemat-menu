@@ -30,19 +30,16 @@ func TestE2E(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	targets := []string{
+		"cluster.yml",
 		"bird_core.conf",
-		"bird_rack0-node.conf",
+		"bird_spine1.conf",
+		"bird_spine2.conf",
+		"bird_rack0-tor1.conf",
 		"bird_rack0-tor2.conf",
 		"bird_rack1-tor1.conf",
-		"bird_spine1.conf",
-		"bird_vm.conf",
-		"bird_rack0-tor1.conf",
-		"bird_rack1-node.conf",
 		"bird_rack1-tor2.conf",
-		"bird_spine2.conf",
 		"seed_rack0-boot.yml",
 		"seed_rack1-boot.yml",
-		"cluster.yml",
 		"network.yml",
 	}
 

@@ -21,9 +21,6 @@ import (
 )
 
 var staticFiles = []string{
-	"/static/Makefile",
-	"/static/bashrc",
-	"/static/rkt-fetch",
 	"/static/setup-iptables",
 }
 
@@ -47,14 +44,15 @@ func run() error {
 		return err
 	}
 
-	fi, err := os.Stat(*flagOutDir)
+	opdir := filepath.Join(*flagOutDir, "operation")
+	fi, err := os.Stat(opdir)
 	switch {
 	case err == nil:
 		if !fi.IsDir() {
-			return errors.New(*flagOutDir + "is not a directory")
+			return errors.New(opdir + "is not a directory")
 		}
 	case os.IsNotExist(err):
-		err = os.MkdirAll(*flagOutDir, 0755)
+		err = os.MkdirAll(opdir, 0755)
 		if err != nil {
 			return err
 		}
@@ -88,10 +86,6 @@ func run() error {
 		return err
 	}
 	err = export(statikFS, "/templates/setup-default-gateway", "setup-default-gateway-external", ta.Core.ExternalAddress)
-	if err != nil {
-		return err
-	}
-	err = export(statikFS, "/templates/bird_vm.conf", "bird_vm.conf", ta)
 	if err != nil {
 		return err
 	}
@@ -142,13 +136,6 @@ func run() error {
 
 		err = export(statikFS, "/templates/bird_rack-tor2.conf",
 			fmt.Sprintf("bird_rack%d-tor2.conf", rackIdx),
-			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
-		if err != nil {
-			return err
-		}
-
-		err = export(statikFS, "/templates/bird_rack-node.conf",
-			fmt.Sprintf("bird_rack%d-node.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			return err

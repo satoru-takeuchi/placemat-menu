@@ -14,14 +14,6 @@ const (
 	dockerImageDebug   = "docker://quay.io/cybozu/ubuntu-debug:18.04"
 	dockerImageDev     = "docker://quay.io/cybozu/ubuntu-dev:18.04"
 	dockerImageDnsmasq = "docker://quay.io/cybozu/dnsmasq:2.79"
-
-	aciBird  = "cybozu-bird-2.0.aci"
-	aciDebug = "cybozu-ubuntu-debug-18.04.aci"
-
-	debRktURL = "https://github.com/rkt/rkt/releases/download/v1.30.0/rkt_1.30.0-1_amd64.deb"
-
-	qemuImageCoreOS = "https://stable.release.core-os.net/amd64-usr/current/coreos_production_qemu_image.img.bz2"
-	qemuImageubuntu = "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
 )
 
 var birdContainer = placemat.PodAppConfig{
@@ -107,15 +99,11 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendRackNetwork(ta)
 
-	cluster.appendCommonDataFolder()
-
 	cluster.appendCoreDataFolder()
 
 	cluster.appendSpineDataFolder(ta)
 
 	cluster.appendRackDataFolder(ta)
-
-	cluster.appendExternalNodeDataFolder()
 
 	cluster.appendOperationDataFolder()
 
@@ -465,22 +453,6 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 	}
 }
 
-func (c *cluster) appendExternalNodeDataFolder() {
-	c.dataFolders = append(c.dataFolders,
-		&placemat.DataFolderConfig{
-			Kind: "DataFolder",
-			Name: "ext-vm-data",
-			Spec: placemat.DataFolderSpec{
-				Files: []placemat.DataFolderFileConfig{
-					{
-						Name: "bird.conf",
-						File: "bird_vm.conf",
-					},
-				},
-			},
-		})
-}
-
 func (c *cluster) appendOperationDataFolder() {
 	c.dataFolders = append(c.dataFolders,
 		&placemat.DataFolderConfig{
@@ -567,37 +539,6 @@ func (c *cluster) appendSpineDataFolder(ta *TemplateArgs) {
 				},
 			})
 	}
-}
-
-func (c *cluster) appendCommonDataFolder() {
-	c.dataFolders = append(c.dataFolders, &placemat.DataFolderConfig{
-		Kind: "DataFolder",
-		Name: "common-data",
-		Spec: placemat.DataFolderSpec{
-			Files: []placemat.DataFolderFileConfig{
-				{
-					Name: "bird.aci",
-					File: aciBird,
-				},
-				{
-					Name: "ubuntu-debug.aci",
-					File: aciDebug,
-				},
-				{
-					Name: "rkt-fetch",
-					File: "rkt-fetch",
-				},
-				{
-					Name: "bashrc",
-					File: "bashrc",
-				},
-				{
-					Name: "rkt.deb",
-					URL:  debRktURL,
-				},
-			},
-		},
-	})
 }
 
 func (c *cluster) appendRackNetwork(ta *TemplateArgs) {

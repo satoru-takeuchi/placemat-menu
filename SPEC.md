@@ -6,7 +6,6 @@ The source YAML of the `placemat-menu` consists of the set of the following reso
 * Inventory
 * Image
 * Node
-* Account
 
 ## Network resource
 
@@ -158,6 +157,7 @@ spec:
   cpu: 2
   memory: 2G
   image: ubuntu-cloud-image
+  cloud-init-template: boot-seed.yml.template
 ```
 
 The available properties are as following:
@@ -169,20 +169,17 @@ The available properties are as following:
 - `cpu`: The number of the virtual CPU cores
 - `memory`: The size of the memory.
 - `image`: The name of an image resource for boot (optional)
+- `cloud-init-template`: The path of cloud-init template file.
 
-## Account resource
+In a cloud-init template file, following attributes can be referenced.
 
-Account resource represents an authorization information used in the each nodes.
+- .Name: The node name
+- .Rack: The rack information
+    - Index: The logical number of rack
 
 ```yaml
-kind: Account
-spec:
-  username: cybozu
-  password-hash: $6$rounds=4096$m3AVOWeB$EPystoHozf.eJNCm4tWyRHpJzgTDymYuGOONWxRN8uk4amLvxwB4Pc7.tEkZdeXewoVEBEX5ujUon9wSpEf1N.
+#cloud-config
+hostname: {{.Name}}
+runcmd:
+- ["/extras/setup/setup-neco-network", "{{.Rack.Index}}"]
 ```
-
-The available properties are as following:
-
-- `username`: user name
-- `password-hash` hashed password
-

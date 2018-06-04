@@ -125,13 +125,6 @@ type TemplateArgs struct {
 	SS        VMResource
 	Boot      VMResource
 	Images    []*imageConfig
-	Account   Account
-}
-
-// Account is setting data to create linux user account
-type Account struct {
-	Name         string
-	PasswordHash string
 }
 
 // BIRDRackTemplateArgs is args to generate bird config for each rack
@@ -148,16 +141,15 @@ type BIRDSpineTemplateArgs struct {
 
 // VMResource is args to specify vm resource
 type VMResource struct {
-	CPU    int
-	Memory string
-	Image  string
+	CPU               int
+	Memory            string
+	Image             string
+	CloudInitTemplate string
 }
 
 // ToTemplateArgs is converter Menu to TemplateArgs
 func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	var templateArgs TemplateArgs
-	templateArgs.Account.Name = menu.Account.UserName
-	templateArgs.Account.PasswordHash = menu.Account.PasswordHash
 
 	setNetworkArgs(&templateArgs, menu)
 
@@ -170,14 +162,17 @@ OUTER:
 			templateArgs.CS.Memory = node.Memory
 			templateArgs.CS.CPU = node.CPU
 			templateArgs.CS.Image = node.Image
+			templateArgs.CS.CloudInitTemplate = node.CloudInitTemplate
 		case SSNode:
 			templateArgs.SS.Memory = node.Memory
 			templateArgs.SS.CPU = node.CPU
 			templateArgs.SS.Image = node.Image
+			templateArgs.SS.CloudInitTemplate = node.CloudInitTemplate
 		case BootNode:
 			templateArgs.Boot.Memory = node.Memory
 			templateArgs.Boot.CPU = node.CPU
 			templateArgs.Boot.Image = node.Image
+			templateArgs.Boot.CloudInitTemplate = node.CloudInitTemplate
 		default:
 			return nil, errors.New("invalid node type")
 		}

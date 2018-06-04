@@ -43,16 +43,11 @@ type RackMenu struct {
 
 // NodeMenu represents computing resources used by each type nodes
 type NodeMenu struct {
-	Type   NodeType
-	CPU    int
-	Memory string
-	Image  string
-}
-
-// AccountMenu contains user account settings
-type AccountMenu struct {
-	UserName     string
-	PasswordHash string
+	Type              NodeType
+	CPU               int
+	Memory            string
+	Image             string
+	CloudInitTemplate string
 }
 
 // Menu is a top-level structure that summarizes the settings of each menus
@@ -61,5 +56,4 @@ type Menu struct {
 	Inventory *InventoryMenu
 	Images    []*imageConfig
 	Nodes     []*NodeMenu
-	Account   *AccountMenu
 }

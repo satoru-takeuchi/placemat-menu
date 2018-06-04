@@ -199,14 +199,16 @@ func bootNode(rackName, rackShortName, nodeName string, resource *VMResource) *p
 					CopyOnWrite: true,
 				},
 			},
-			{
-				Kind: "localds",
-				Name: "seed",
-				Spec: placemat.NodeVolumeSpec{
-					UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
-					NetworkConfig: "network.yml",
-				},
-			},
+		}
+		if resource.CloudInitTemplate != "" {
+			volumes = append(volumes,
+				placemat.NodeVolumeConfig{
+					Kind: "localds",
+					Name: "seed",
+					Spec: placemat.NodeVolumeSpec{
+						UserData: fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+					},
+				})
 		}
 	} else {
 		volumes = []placemat.NodeVolumeConfig{

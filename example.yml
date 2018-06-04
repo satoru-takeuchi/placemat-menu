@@ -33,6 +33,7 @@ spec:
   cpu: 2
   memory: 2G
   image: ubuntu-cloud-image
+  cloud-init-template: boot-seed.yml.template
 ---
 kind: Node
 type: cs
@@ -45,8 +46,3 @@ type: ss
 spec:
   cpu: 1
   memory: 1G
----
-kind: Account
-spec:
-  username: cybozu
-  password-hash: $6$rounds=4096$m3AVOWeB$EPystoHozf.eJNCm4tWyRHpJzgTDymYuGOONWxRN8uk4amLvxwB4Pc7.tEkZdeXewoVEBEX5ujUon9wSpEf1N.

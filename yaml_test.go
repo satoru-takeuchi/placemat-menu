@@ -40,6 +40,7 @@ spec:
 			expected: NetworkMenu{
 				IPAMConfigFile: "example_ipam.json",
 				NodeBase:       net.ParseIP("10.69.0.0"),
+				NodeRangeSize:  6,
 				NodeRangeMask:  26,
 				ASNBase:        64600,
 				Internet:       mustParseCIDR("10.0.0.0/24"),

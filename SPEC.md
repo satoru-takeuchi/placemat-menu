@@ -69,11 +69,12 @@ example is assigned addresses when `10.0.1.0` is specified:
 
 - `core-operation`: The network address between the core switch and the operation network.
 
-- `ipam-config`: The set of configuration for IP address assignment.
-https://github.com/cybozu-go/sabakan/blob/master/docs/ipam.md#ipamconfig
-`node`: The network address in the racks.  The node address and ToR address
-are assigned based on this value.  The following example is assigned addresses
-when when `10.69.0.0/26` is specified.
+- `ipam-config`: The path of configuration file of IP address assignment.
+The details of this file are described in the [Sabakan spec](https://github.com/cybozu-go/sabakan/blob/master/docs/ipam.md#ipamconfig).
+For `placemat-menu`, `node-ip-per-node` must be 3 and `node-index-offset` must be 3.
+The node address and ToR address are assigned based on this file's content.
+The following example is assigned addresses when `"node-ipv4-pool": "10.69.0.0/20"`,
+`"node-ipv4-range-size": 6`, and `"node-ipv4-range-mask": 26` are specified.
     - rack0 node0 network: 10.69.0.0/26      # node + 64 * 0
     - rack0 node1 network: 10.69.0.64/26     # node + 64 * 1
     - rack0 node2 network: 10.69.0.128/26    # node + 64 * 2<br><br>

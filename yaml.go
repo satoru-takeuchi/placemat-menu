@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -95,10 +96,17 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 	if err != nil {
 		return nil, err
 	}
+	if ic.NodeIPPerNode != torPerRack+1 {
+		return nil, fmt.Errorf("node-ip-per-node in IPAM config must be %d", torPerRack+1)
+	}
+	if ic.NodeIndexOffset != offsetNodenetBoot {
+		return nil, fmt.Errorf("node-index-offset in IPAM config must be %d", offsetNodenetBoot)
+	}
 	network.NodeBase, _, err = parseNetworkCIDR(ic.NodeIPv4Pool)
 	if err != nil {
 		return nil, err
 	}
+	network.NodeRangeSize = int(ic.NodeRangeSize)
 	network.NodeRangeMask = int(ic.NodeRangeMask)
 
 	network.ASNBase = n.Spec.ASNBase

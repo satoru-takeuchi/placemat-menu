@@ -20,6 +20,7 @@ const (
 type NetworkMenu struct {
 	IPAMConfigFile string
 	NodeBase       net.IP
+	NodeRangeSize  int
 	NodeRangeMask  int
 	ASNBase        int
 	Internet       *net.IPNet

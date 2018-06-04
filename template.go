@@ -208,14 +208,13 @@ OUTER:
 		rack.Index = rackIdx
 		rack.ShortName = fmt.Sprintf("r%d", rackIdx)
 		rack.ASN = menu.Network.ASNBase + rackIdx
-		rack.node0Network = makeNodeNetwork(menu.Network.Node, rackIdx*3+0)
-		rack.node1Network = makeNodeNetwork(menu.Network.Node, rackIdx*3+1)
-		rack.node2Network = makeNodeNetwork(menu.Network.Node, rackIdx*3+2)
+		rack.node0Network = makeNodeNetwork(menu.Network.NodeBase, menu.Network.NodeRangeMask, rackIdx*3+0)
+		rack.node1Network = makeNodeNetwork(menu.Network.NodeBase, menu.Network.NodeRangeMask, rackIdx*3+1)
+		rack.node2Network = makeNodeNetwork(menu.Network.NodeBase, menu.Network.NodeRangeMask, rackIdx*3+2)
 
 		constructToRAddresses(rack, rackIdx, menu, spineToRackBases)
 		constructBootAddresses(rack, rackIdx, menu)
-		prefixSize, _ := menu.Network.Node.Mask.Size()
-		rack.NodeNetworkPrefixSize = prefixSize
+		rack.NodeNetworkPrefixSize = menu.Network.NodeRangeMask
 
 		for csIdx := 0; csIdx < rackMenu.CS; csIdx++ {
 			node := buildNode("cs", csIdx, offsetNodenetServers, rack)
@@ -320,11 +319,9 @@ func addToIP(netIP net.IP, offset int, prefixSize int) *net.IPNet {
 	return &net.IPNet{IP: ip4, Mask: mask}
 }
 
-func makeNodeNetwork(base *net.IPNet, nodeIdx int) *net.IPNet {
-	mask := base.Mask
-	prefixSize, _ := mask.Size()
+func makeNodeNetwork(base net.IP, prefixSize int, nodeIdx int) *net.IPNet {
 	offset := 1 << uint(32-prefixSize) * nodeIdx
-	ipInt := netutil.IP4ToInt(base.IP) + uint32(offset)
+	ipInt := netutil.IP4ToInt(base) + uint32(offset)
 	ip4 := netutil.IntToIP4(ipInt)
-	return &net.IPNet{IP: ip4, Mask: mask}
+	return &net.IPNet{IP: ip4, Mask: net.CIDRMask(prefixSize, 32)}
 }

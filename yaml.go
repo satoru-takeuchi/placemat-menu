@@ -2,11 +2,14 @@ package menu
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"io"
 	"net"
+	"os"
 
 	placemat "github.com/cybozu-go/placemat/yaml"
+	"github.com/cybozu-go/sabakan"
 	k8sYaml "github.com/kubernetes/apimachinery/pkg/util/yaml"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -17,13 +20,13 @@ type baseConfig struct {
 
 type networkConfig struct {
 	Spec struct {
+		IPAMConfig    string `yaml:"ipam-config"`
 		ASNBase       int    `yaml:"asn-base"`
 		Internet      string `yaml:"internet"`
 		SpineTor      string `yaml:"spine-tor"`
 		CoreSpine     string `yaml:"core-spine"`
 		CoreExternal  string `yaml:"core-external"`
 		CoreOperation string `yaml:"core-operation"`
-		Node          string `yaml:"node"`
 		Exposed       struct {
 			Bastion      string `yaml:"bastion"`
 			LoadBalancer string `yaml:"loadbalancer"`
@@ -81,6 +84,23 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 
 	var network NetworkMenu
 
+	network.IPAMConfigFile = n.Spec.IPAMConfig
+	f, err := os.Open(network.IPAMConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var ic sabakan.IPAMConfig
+	err = json.NewDecoder(f).Decode(&ic)
+	if err != nil {
+		return nil, err
+	}
+	network.NodeBase, _, err = parseNetworkCIDR(ic.NodeIPv4Pool)
+	if err != nil {
+		return nil, err
+	}
+	network.NodeRangeMask = int(ic.NodeRangeMask)
+
 	network.ASNBase = n.Spec.ASNBase
 
 	_, network.Internet, err = parseNetworkCIDR(n.Spec.Internet)
@@ -103,11 +123,6 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 	network.SpineTor = net.ParseIP(n.Spec.SpineTor)
 	if network.SpineTor == nil {
 		return nil, errors.New("Invalid IP address: " + n.Spec.SpineTor)
-	}
-
-	_, network.Node, err = parseNetworkCIDR(n.Spec.Node)
-	if err != nil {
-		return nil, err
 	}
 
 	_, network.Bastion, err = parseNetworkCIDR(n.Spec.Exposed.Bastion)

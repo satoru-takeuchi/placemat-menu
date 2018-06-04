@@ -63,7 +63,7 @@ See [SPEC.md](SPEC.md)
 
 ## Development
 
-placemat-menu utilize [static][static] to embed files to the built binary (they
+placemat-menu utilize [statik][statik] to embed files to the built binary (they
 are places in `cmd/placemat-menu/public`).  `statik` is a command to generate
 embedded data from static files.  Run the following command to install it:
 

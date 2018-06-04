@@ -53,7 +53,6 @@ var debugContainer = placemat.PodAppConfig{
 
 type cluster struct {
 	networks    []*placemat.NetworkConfig
-	images      []*placemat.ImageConfig
 	dataFolders []*placemat.DataFolderConfig
 	pods        []*placemat.PodConfig
 	nodes       []*placemat.NodeConfig
@@ -70,7 +69,7 @@ func ExportCluster(w io.Writer, ta *TemplateArgs) error {
 			return err
 		}
 	}
-	for _, i := range cluster.images {
+	for _, i := range ta.Images {
 		err := encoder.Encode(i)
 		if err != nil {
 			return err
@@ -107,10 +106,6 @@ func generateCluster(ta *TemplateArgs) *cluster {
 	cluster.appendSpineToRackNetwork(ta)
 
 	cluster.appendRackNetwork(ta)
-
-	cluster.appendCoreOSImage()
-
-	cluster.appendUbuntuImage()
 
 	cluster.appendCommonDataFolder()
 
@@ -205,63 +200,37 @@ func (c *cluster) appendExtPod(ta *TemplateArgs) {
 }
 
 func bootNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
-
-	return &placemat.NodeConfig{
-		Kind: "Node",
-		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
-		Spec: placemat.NodeSpec{
-			Interfaces: []string{
-				fmt.Sprintf("%s-node1", rackShortName),
-				fmt.Sprintf("%s-node2", rackShortName),
-			},
-			Volumes: []placemat.NodeVolumeConfig{
-				{
-					Kind: "image",
-					Name: "root",
-					Spec: placemat.NodeVolumeSpec{
-						Image:       "ubuntu-image",
-						CopyOnWrite: true,
-					},
-				},
-				{
-					Kind: "vvfat",
-					Name: "common",
-					Spec: placemat.NodeVolumeSpec{
-						Folder: "common-data",
-					},
-				},
-				{
-					Kind: "vvfat",
-					Name: "local",
-					Spec: placemat.NodeVolumeSpec{
-						Folder: fmt.Sprintf("%s-bird-data", rackName),
-					},
-				},
-				{
-					Kind: "localds",
-					Name: "seed",
-					Spec: placemat.NodeVolumeSpec{
-						UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
-						NetworkConfig: "network.yml",
-					},
-				},
-				{
-					Kind: "raw",
-					Name: "data",
-					Spec: placemat.NodeVolumeSpec{
-						Size: "30G",
-					},
+	var volumes []placemat.NodeVolumeConfig
+	if resource.Image != "" {
+		volumes = []placemat.NodeVolumeConfig{
+			{
+				Kind: "image",
+				Name: "root",
+				Spec: placemat.NodeVolumeSpec{
+					Image:       resource.Image,
+					CopyOnWrite: true,
 				},
 			},
-			Resources: placemat.NodeResourceConfig{
-				CPU:    fmt.Sprint(resource.CPU),
-				Memory: resource.Memory,
+			{
+				Kind: "localds",
+				Name: "seed",
+				Spec: placemat.NodeVolumeSpec{
+					UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+					NetworkConfig: "network.yml",
+				},
 			},
-		},
+		}
+	} else {
+		volumes = []placemat.NodeVolumeConfig{
+			{
+				Kind: "raw",
+				Name: "root",
+				Spec: placemat.NodeVolumeSpec{
+					Size: "30G",
+				},
+			},
+		}
 	}
-}
-
-func coreOSNode(rackName, rackShortName, nodeName string, resource *VMResource) *placemat.NodeConfig {
 
 	return &placemat.NodeConfig{
 		Kind: "Node",
@@ -271,31 +240,7 @@ func coreOSNode(rackName, rackShortName, nodeName string, resource *VMResource) 
 				fmt.Sprintf("%s-node1", rackShortName),
 				fmt.Sprintf("%s-node2", rackShortName),
 			},
-			Volumes: []placemat.NodeVolumeConfig{
-				{
-					Kind: "image",
-					Name: "root",
-					Spec: placemat.NodeVolumeSpec{
-						Image:       "coreos-image",
-						CopyOnWrite: true,
-					},
-				},
-				{
-					Kind: "vvfat",
-					Name: "common",
-					Spec: placemat.NodeVolumeSpec{
-						Folder: "common-data",
-					},
-				},
-				{
-					Kind: "vvfat",
-					Name: "local",
-					Spec: placemat.NodeVolumeSpec{
-						Folder: fmt.Sprintf("%s-bird-data", rackName),
-					},
-				},
-			},
-			IgnitionFile: fmt.Sprintf("%s-%s.ign", rackName, nodeName),
+			Volumes: volumes,
 			Resources: placemat.NodeResourceConfig{
 				CPU:    fmt.Sprint(resource.CPU),
 				Memory: resource.Memory,
@@ -651,27 +596,6 @@ func (c *cluster) appendCommonDataFolder() {
 					URL:  debRktURL,
 				},
 			},
-		},
-	})
-}
-
-func (c *cluster) appendCoreOSImage() {
-	c.images = append(c.images, &placemat.ImageConfig{
-		Kind: "Image",
-		Name: "coreos-image",
-		Spec: placemat.ImageSpec{
-			URL:               qemuImageCoreOS,
-			CompressionMethod: "bzip2",
-		},
-	})
-}
-
-func (c *cluster) appendUbuntuImage() {
-	c.images = append(c.images, &placemat.ImageConfig{
-		Kind: "Image",
-		Name: "ubuntu-image",
-		Spec: placemat.ImageSpec{
-			URL: qemuImageubuntu,
 		},
 	})
 }

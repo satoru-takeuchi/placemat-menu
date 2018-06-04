@@ -4,6 +4,7 @@ The source YAML of the `placemat-menu` consists of the set of the following reso
 
 * Network
 * Inventory
+* Image
 * Node
 * Account
 
@@ -142,6 +143,10 @@ The available properties are as following:
     - `cs`: the number of the computer servers (cs)
     - `ss`: the number of the storage servers (ss)
 
+## Image resource
+
+Image resource is the same as [Image resource of placemat](https://github.com/cybozu-go/placemat/blob/master/SPEC.md#image-resource).
+
 ## Node resource
 
 Node resource specify the resources of the machines.
@@ -152,6 +157,7 @@ type: cs
 spec:
   cpu: 2
   memory: 2G
+  image: ubuntu-cloud-image
 ```
 
 The available properties are as following:
@@ -162,6 +168,7 @@ The available properties are as following:
     - `ss`: storage servers
 - `cpu`: The number of the virtual CPU cores
 - `memory`: The size of the memory.
+- `image`: The name of an image resource for boot (optional)
 
 ## Account resource
 

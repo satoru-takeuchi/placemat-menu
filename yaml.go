@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 
+	placemat "github.com/cybozu-go/placemat/yaml"
 	k8sYaml "github.com/kubernetes/apimachinery/pkg/util/yaml"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -42,11 +43,14 @@ type inventoryConfig struct {
 	} `yaml:"spec"`
 }
 
+type imageConfig = placemat.ImageConfig
+
 type nodeConfig struct {
 	Type string `yaml:"type"`
 	Spec struct {
 		CPU    int    `yaml:"cpu"`
 		Memory string `yaml:"memory"`
+		Image  string `yaml:"image"`
 	} `yaml:"spec"`
 }
 
@@ -158,6 +162,16 @@ func unmarshalInventory(data []byte) (*InventoryMenu, error) {
 	return &inventory, nil
 }
 
+func unmarshalImage(data []byte) (*imageConfig, error) {
+	var i imageConfig
+	err := yaml.Unmarshal(data, &i)
+	if err != nil {
+		return nil, err
+	}
+
+	return &i, nil
+}
+
 func unmarshalNode(data []byte) (*NodeMenu, error) {
 	var n nodeConfig
 	err := yaml.Unmarshal(data, &n)
@@ -179,6 +193,7 @@ func unmarshalNode(data []byte) (*NodeMenu, error) {
 	node.CPU = n.Spec.CPU
 
 	node.Memory = n.Spec.Memory
+	node.Image = n.Spec.Image
 
 	return &node, nil
 }
@@ -232,6 +247,12 @@ func ReadYAML(r *bufio.Reader) (*Menu, error) {
 				return nil, err
 			}
 			m.Inventory = r
+		case "Image":
+			r, err := unmarshalImage(data)
+			if err != nil {
+				return nil, err
+			}
+			m.Images = append(m.Images, r)
 		case "Node":
 			r, err := unmarshalNode(data)
 			if err != nil {

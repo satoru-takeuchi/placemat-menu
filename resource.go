@@ -46,6 +46,7 @@ type NodeMenu struct {
 	Type   NodeType
 	CPU    int
 	Memory string
+	Image  string
 }
 
 // AccountMenu contains user account settings
@@ -58,6 +59,7 @@ type AccountMenu struct {
 type Menu struct {
 	Network   *NetworkMenu
 	Inventory *InventoryMenu
+	Images    []*imageConfig
 	Nodes     []*NodeMenu
 	Account   *AccountMenu
 }

@@ -124,6 +124,7 @@ type TemplateArgs struct {
 	CS        VMResource
 	SS        VMResource
 	Boot      VMResource
+	Images    []*imageConfig
 	Account   Account
 }
 
@@ -149,6 +150,7 @@ type BIRDSpineTemplateArgs struct {
 type VMResource struct {
 	CPU    int
 	Memory string
+	Image  string
 }
 
 // ToTemplateArgs is converter Menu to TemplateArgs
@@ -159,19 +161,34 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 
 	setNetworkArgs(&templateArgs, menu)
 
+	templateArgs.Images = menu.Images
+
+OUTER:
 	for _, node := range menu.Nodes {
 		switch node.Type {
 		case CSNode:
 			templateArgs.CS.Memory = node.Memory
 			templateArgs.CS.CPU = node.CPU
+			templateArgs.CS.Image = node.Image
 		case SSNode:
 			templateArgs.SS.Memory = node.Memory
 			templateArgs.SS.CPU = node.CPU
+			templateArgs.SS.Image = node.Image
 		case BootNode:
 			templateArgs.Boot.Memory = node.Memory
 			templateArgs.Boot.CPU = node.CPU
+			templateArgs.Boot.Image = node.Image
 		default:
 			return nil, errors.New("invalid node type")
+		}
+
+		if len(node.Image) > 0 {
+			for _, image := range menu.Images {
+				if image.Name == node.Image {
+					continue OUTER
+				}
+			}
+			return nil, errors.New("no such Image resource: " + node.Image)
 		}
 	}
 

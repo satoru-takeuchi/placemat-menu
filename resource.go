@@ -50,17 +50,10 @@ type NodeMenu struct {
 	CloudInitTemplate string
 }
 
-// AccountMenu contains user account settings
-type AccountMenu struct {
-	UserName     string
-	PasswordHash string
-}
-
 // Menu is a top-level structure that summarizes the settings of each menus
 type Menu struct {
 	Network   *NetworkMenu
 	Inventory *InventoryMenu
 	Images    []*imageConfig
 	Nodes     []*NodeMenu
-	Account   *AccountMenu
 }

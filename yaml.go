@@ -61,13 +61,6 @@ var nodeType = map[string]NodeType{
 	"ss":   SSNode,
 }
 
-type accountConfig struct {
-	Spec struct {
-		UserName     string `yaml:"username"`
-		PasswordHash string `yaml:"password-hash"`
-	} `yaml:"spec"`
-}
-
 func parseNetworkCIDR(s string) (net.IP, *net.IPNet, error) {
 	ip, network, err := net.ParseCIDR(s)
 	if err != nil {
@@ -200,25 +193,6 @@ func unmarshalNode(data []byte) (*NodeMenu, error) {
 	return &node, nil
 }
 
-func unmarshalAccount(data []byte) (*AccountMenu, error) {
-	var a accountConfig
-	err := yaml.Unmarshal(data, &a)
-	if err != nil {
-		return nil, err
-	}
-
-	var account AccountMenu
-
-	if a.Spec.UserName == "" {
-		return nil, errors.New("username is empty")
-	}
-	account.UserName = a.Spec.UserName
-
-	account.PasswordHash = a.Spec.PasswordHash
-
-	return &account, nil
-}
-
 // ReadYAML read placemat-menu resource files
 func ReadYAML(r *bufio.Reader) (*Menu, error) {
 	var m Menu
@@ -261,12 +235,6 @@ func ReadYAML(r *bufio.Reader) (*Menu, error) {
 				return nil, err
 			}
 			m.Nodes = append(m.Nodes, r)
-		case "Account":
-			r, err := unmarshalAccount(data)
-			if err != nil {
-				return nil, err
-			}
-			m.Account = r
 		default:
 			return nil, errors.New("unknown resource: " + c.Kind)
 		}

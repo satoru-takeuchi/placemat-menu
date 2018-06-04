@@ -125,13 +125,6 @@ type TemplateArgs struct {
 	SS        VMResource
 	Boot      VMResource
 	Images    []*imageConfig
-	Account   Account
-}
-
-// Account is setting data to create linux user account
-type Account struct {
-	Name         string
-	PasswordHash string
 }
 
 // BIRDRackTemplateArgs is args to generate bird config for each rack
@@ -157,8 +150,6 @@ type VMResource struct {
 // ToTemplateArgs is converter Menu to TemplateArgs
 func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 	var templateArgs TemplateArgs
-	templateArgs.Account.Name = menu.Account.UserName
-	templateArgs.Account.PasswordHash = menu.Account.PasswordHash
 
 	setNetworkArgs(&templateArgs, menu)
 

@@ -260,57 +260,8 @@ spec:
 	}
 }
 
-func testUnmarshalAccount(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		source   string
-		expected AccountMenu
-	}{
-		{
-			source: `
-kind: Account
-spec:
-  username: scott
-  password-hash: qawsedrftgyhujikolp
-`,
-			expected: AccountMenu{
-				UserName:     "scott",
-				PasswordHash: "qawsedrftgyhujikolp",
-			},
-		},
-	}
-
-	for _, c := range cases {
-		actual, err := unmarshalAccount([]byte(c.source))
-		if err != nil {
-			t.Error(err)
-		} else if !reflect.DeepEqual(*actual, c.expected) {
-			t.Errorf("%v != %v", *actual, c.expected)
-		}
-	}
-
-	errorSources := []string{
-		`
-# Empty username
-kind: Account
-spec:
-  username:
-  password-hash: qawsedrftgyhujikolp
-`,
-	}
-
-	for _, s := range errorSources {
-		_, err := unmarshalAccount([]byte(s))
-		if err == nil {
-			t.Error("err == nil", s)
-		}
-	}
-}
-
 func TestYAML(t *testing.T) {
 	t.Run("network", testUnmarshalNetwork)
 	t.Run("inventory", testUnmarshalInventory)
 	t.Run("node", testUnmarshalNode)
-	t.Run("account", testUnmarshalAccount)
 }

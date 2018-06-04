@@ -6,7 +6,6 @@ The source YAML of the `placemat-menu` consists of the set of the following reso
 * Inventory
 * Image
 * Node
-* Account
 
 ## Network resource
 
@@ -184,20 +183,3 @@ hostname: {{.Name}}
 runcmd:
 - ["/extras/setup/setup-neco-network", "{{.Rack.Index}}"]
 ```
-
-## Account resource
-
-Account resource represents an authorization information used in the each nodes.
-
-```yaml
-kind: Account
-spec:
-  username: cybozu
-  password-hash: $6$rounds=4096$m3AVOWeB$EPystoHozf.eJNCm4tWyRHpJzgTDymYuGOONWxRN8uk4amLvxwB4Pc7.tEkZdeXewoVEBEX5ujUon9wSpEf1N.
-```
-
-The available properties are as following:
-
-- `username`: user name
-- `password-hash` hashed password
-

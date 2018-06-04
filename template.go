@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"crypto/sha1"
 	"errors"
 	"fmt"
 	"net"
@@ -49,6 +50,8 @@ type Rack struct {
 // Node is a template args for a node
 type Node struct {
 	Name         string
+	Fullname     string // some func compose full name by itself...
+	Serial       string
 	Node0Address *net.IPNet
 	Node1Address *net.IPNet
 	Node2Address *net.IPNet
@@ -213,7 +216,7 @@ OUTER:
 		rack.node2Network = makeNodeNetwork(menu.Network.NodeBase, menu.Network.NodeRangeMask, rackIdx*3+2)
 
 		constructToRAddresses(rack, rackIdx, menu, spineToRackBases)
-		constructBootAddresses(rack, rackIdx, menu)
+		buildBootNode(rack, menu)
 		rack.NodeNetworkPrefixSize = menu.Network.NodeRangeMask
 
 		for csIdx := 0; csIdx < rackMenu.CS; csIdx++ {
@@ -260,6 +263,8 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	node := Node{}
 	node.Name = fmt.Sprintf("%v%d", basename, idx+1)
+	node.Fullname = fmt.Sprintf("%s-%s", rack.Name, node.Name)
+	node.Serial = fmt.Sprintf("%x", sha1.Sum([]byte(node.Fullname)))
 	offset := offsetStart + idx
 
 	node.Node0Address = addToIP(rack.node0Network.IP, offset, 32)
@@ -270,11 +275,15 @@ func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 	return node
 }
 
-func constructBootAddresses(rack *Rack, rackIdx int, menu *Menu) {
+func buildBootNode(rack *Rack, menu *Menu) {
+	rack.BootNode.Name = "boot"
+	rack.BootNode.Fullname = fmt.Sprintf("%s-%s", rack.Name, rack.BootNode.Name)
+	rack.BootNode.Serial = fmt.Sprintf("%x", sha1.Sum([]byte(rack.BootNode.Fullname)))
+
 	rack.BootNode.Node0Address = addToIP(rack.node0Network.IP, offsetNodenetBoot, 32)
 	rack.BootNode.Node1Address = addToIPNet(rack.node1Network, offsetNodenetBoot)
 	rack.BootNode.Node2Address = addToIPNet(rack.node2Network, offsetNodenetBoot)
-	rack.BootNode.BastionAddress = addToIP(menu.Network.Bastion.IP, rackIdx, 32)
+	rack.BootNode.BastionAddress = addToIP(menu.Network.Bastion.IP, rack.Index, 32)
 
 	rack.BootNode.ToR1Address = addToIPNet(rack.node1Network, offsetNodenetToR)
 	rack.BootNode.ToR2Address = addToIPNet(rack.node2Network, offsetNodenetToR)

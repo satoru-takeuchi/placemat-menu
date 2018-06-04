@@ -55,7 +55,6 @@ Load this and generate the configuration of placemat as following:
 Then, start placemat:
 
     $ cd out
-    $ make
     $ sudo $GOPATH/bin/placemat cluster.yml
 
 ## Specification

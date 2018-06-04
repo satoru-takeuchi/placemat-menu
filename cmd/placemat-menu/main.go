@@ -21,9 +21,6 @@ import (
 )
 
 var staticFiles = []string{
-	"/static/Makefile",
-	"/static/bashrc",
-	"/static/rkt-fetch",
 	"/static/setup-iptables",
 }
 
@@ -54,7 +51,8 @@ func run() error {
 			return errors.New(*flagOutDir + "is not a directory")
 		}
 	case os.IsNotExist(err):
-		err = os.MkdirAll(*flagOutDir, 0755)
+		p := filepath.Join(*flagOutDir, "operation")
+		err = os.MkdirAll(p, 0755)
 		if err != nil {
 			return err
 		}

@@ -107,6 +107,8 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendOperationDataFolder()
 
+	cluster.appendSabakanDataFolder()
+
 	cluster.appendCorePod(ta)
 
 	cluster.appendSpinePod(ta)
@@ -210,6 +212,14 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 					},
 				})
 		}
+		volumes = append(volumes,
+			placemat.NodeVolumeConfig{
+				Kind: "vvfat",
+				Name: "sabakan",
+				Spec: placemat.NodeVolumeSpec{
+					Folder: "sabakan-data",
+				},
+			})
 	} else {
 		volumes = []placemat.NodeVolumeConfig{
 			{
@@ -468,6 +478,17 @@ func (c *cluster) appendOperationDataFolder() {
 			Name: "operation-data",
 			Spec: placemat.DataFolderSpec{
 				Dir: "operation",
+			},
+		})
+}
+
+func (c *cluster) appendSabakanDataFolder() {
+	c.dataFolders = append(c.dataFolders,
+		&placemat.DataFolderConfig{
+			Kind: "DataFolder",
+			Name: "sabakan-data",
+			Spec: placemat.DataFolderSpec{
+				Dir: "sabakan",
 			},
 		})
 }

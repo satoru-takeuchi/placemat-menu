@@ -44,12 +44,12 @@ this IP addresses from operation network.
 
 Install placemat-menu to your local disk:
 
-    $ go get github.com/cybozu-go/placemat-menu/cmd/placemat-menu/...
+    $ make setup
+    $ make
 
-placemat-menu loads source in YAML, which is the configuration of the cluster.
-Load this and generate the configuration of placemat as following:
+placemat-menu loads configuration data from YAML file.
+Load this and generate the configuration of placemat as follows:
 
-    $ $GOPATH/src/github.com/cybozu-go/placemat-menu
     $ $GOPATH/bin/placemat-menu -f example.yml -o out
 
 Then, start placemat:

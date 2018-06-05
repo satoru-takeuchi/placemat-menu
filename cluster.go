@@ -530,6 +530,18 @@ func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 					},
 				},
 			},
+			&placemat.DataFolderConfig{
+				Kind: "DataFolder",
+				Name: fmt.Sprintf("%s-bird-data", rack.Name),
+				Spec: placemat.DataFolderSpec{
+					Files: []placemat.DataFolderFileConfig{
+						{
+							Name: "bird.conf",
+							File: fmt.Sprintf("bird_%s-node.conf", rack.Name),
+						},
+					},
+				},
+			},
 		)
 	}
 }

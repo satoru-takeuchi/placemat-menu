@@ -154,6 +154,13 @@ spec:
     file: bird_rack0-tor2.conf
 ---
 kind: DataFolder
+name: rack0-bird-data
+spec:
+  files:
+  - name: bird.conf
+    file: bird_rack0-node.conf
+---
+kind: DataFolder
 name: rack1-tor1-data
 spec:
   files:
@@ -166,6 +173,13 @@ spec:
   files:
   - name: bird.conf
     file: bird_rack1-tor2.conf
+---
+kind: DataFolder
+name: rack1-bird-data
+spec:
+  files:
+  - name: bird.conf
+    file: bird_rack1-node.conf
 ---
 kind: DataFolder
 name: operation-data

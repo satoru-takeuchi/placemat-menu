@@ -160,6 +160,13 @@ func run() error {
 		if err != nil {
 			return err
 		}
+
+		err = export(statikFS, "/templates/bird_rack-node.conf",
+			fmt.Sprintf("bird_rack%d-node.conf", rackIdx),
+			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
+		if err != nil {
+			return err
+		}
 	}
 
 	err = menu.ExportSabakanData(sabakanDir, m, ta)

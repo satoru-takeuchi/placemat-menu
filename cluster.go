@@ -280,6 +280,13 @@ func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMRes
 						Folder: "common-data",
 					},
 				},
+				{
+					Kind: "vvfat",
+					Name: "local",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: fmt.Sprintf("%s-bird-data", rackName),
+					},
+				},
 			},
 			Resources: placemat.NodeResourceConfig{
 				CPU:    fmt.Sprint(resource.CPU),

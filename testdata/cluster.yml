@@ -108,6 +108,17 @@ spec:
   url: https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
 ---
 kind: DataFolder
+name: common-data
+spec:
+  files:
+  - name: bird.aci
+    file: cybozu-bird-2.0.aci
+  - name: ubuntu-debug.aci
+    file: cybozu-ubuntu-debug-18.04.aci
+  - name: rkt-fetch
+    file: rkt-fetch
+---
+kind: DataFolder
 name: core-data
 spec:
   files:
@@ -182,10 +193,12 @@ spec:
     name: seed
     spec:
       user-data: seed_rack0-boot.yml
+      copy-on-write: false
   - kind: vvfat
     name: sabakan
     spec:
       folder: sabakan-data
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -203,6 +216,12 @@ spec:
     name: root
     spec:
       size: 30G
+      copy-on-write: false
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -221,6 +240,12 @@ spec:
     name: root
     spec:
       size: 30G
+      copy-on-write: false
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -244,10 +269,12 @@ spec:
     name: seed
     spec:
       user-data: seed_rack1-boot.yml
+      copy-on-write: false
   - kind: vvfat
     name: sabakan
     spec:
       folder: sabakan-data
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -265,6 +292,12 @@ spec:
     name: root
     spec:
       size: 30G
+      copy-on-write: false
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -283,6 +316,12 @@ spec:
     name: root
     spec:
       size: 30G
+      copy-on-write: false
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+      copy-on-write: false
   resources:
     cpu: "2"
     memory: 2G
@@ -301,6 +340,12 @@ spec:
     name: root
     spec:
       size: 30G
+      copy-on-write: false
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+      copy-on-write: false
   resources:
     cpu: "1"
     memory: 1G
@@ -319,6 +364,12 @@ spec:
     name: root
     spec:
       size: 30G
+      copy-on-write: false
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+      copy-on-write: false
   resources:
     cpu: "1"
     memory: 1G

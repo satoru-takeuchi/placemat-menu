@@ -19,6 +19,7 @@ import (
 )
 
 var staticFiles = []string{
+	"/static/rkt-fetch",
 	"/static/setup-iptables",
 }
 

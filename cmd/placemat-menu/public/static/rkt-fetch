@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-DIR=/mnt/containers
+DIR=/mnt/common
 
 if [ -f /etc/rkt_image_fetched ]; then
     exit 0

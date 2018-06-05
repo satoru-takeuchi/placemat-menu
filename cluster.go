@@ -203,23 +203,14 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 			},
 		}
 		if resource.CloudInitTemplate != "" {
-			volumes = append(volumes,
-				placemat.NodeVolumeConfig{
-					Kind: "localds",
-					Name: "seed",
-					Spec: placemat.NodeVolumeSpec{
-						UserData: fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
-					},
-				})
-		}
-		volumes = append(volumes,
-			placemat.NodeVolumeConfig{
-				Kind: "vvfat",
-				Name: "sabakan",
+			volumes = append(volumes, placemat.NodeVolumeConfig{
+				Kind: "localds",
+				Name: "seed",
 				Spec: placemat.NodeVolumeSpec{
-					Folder: "sabakan-data",
+					UserData: fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
 				},
 			})
+		}
 	} else {
 		volumes = []placemat.NodeVolumeConfig{
 			{
@@ -231,6 +222,14 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 			},
 		}
 	}
+
+	volumes = append(volumes, placemat.NodeVolumeConfig{
+		Kind: "vvfat",
+		Name: "sabakan",
+		Spec: placemat.NodeVolumeSpec{
+			Folder: "sabakan-data",
+		},
+	})
 
 	return &placemat.NodeConfig{
 		Kind: "Node",

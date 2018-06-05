@@ -12,7 +12,6 @@ import (
 const (
 	dockerImageBird    = "docker://quay.io/cybozu/bird:2.0"
 	dockerImageDebug   = "docker://quay.io/cybozu/ubuntu-debug:18.04"
-	dockerImageDev     = "docker://quay.io/cybozu/ubuntu-dev:18.04"
 	dockerImageDnsmasq = "docker://quay.io/cybozu/dnsmasq:2.79"
 )
 
@@ -146,7 +145,7 @@ func (c *cluster) appendOperationPod(ta *TemplateArgs) {
 			Apps: []placemat.PodAppConfig{
 				{
 					Name:  "ubuntu",
-					Image: dockerImageDev,
+					Image: dockerImageDebug,
 					Exec:  "/bin/sleep",
 					Args:  []string{"infinity"},
 					Mount: []placemat.PodAppMountConfig{
@@ -203,23 +202,14 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 			},
 		}
 		if resource.CloudInitTemplate != "" {
-			volumes = append(volumes,
-				placemat.NodeVolumeConfig{
-					Kind: "localds",
-					Name: "seed",
-					Spec: placemat.NodeVolumeSpec{
-						UserData: fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
-					},
-				})
-		}
-		volumes = append(volumes,
-			placemat.NodeVolumeConfig{
-				Kind: "vvfat",
-				Name: "sabakan",
+			volumes = append(volumes, placemat.NodeVolumeConfig{
+				Kind: "localds",
+				Name: "seed",
 				Spec: placemat.NodeVolumeSpec{
-					Folder: "sabakan-data",
+					UserData: fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
 				},
 			})
+		}
 	} else {
 		volumes = []placemat.NodeVolumeConfig{
 			{
@@ -231,6 +221,14 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 			},
 		}
 	}
+
+	volumes = append(volumes, placemat.NodeVolumeConfig{
+		Kind: "vvfat",
+		Name: "sabakan",
+		Spec: placemat.NodeVolumeSpec{
+			Folder: "sabakan-data",
+		},
+	})
 
 	return &placemat.NodeConfig{
 		Kind: "Node",
@@ -516,18 +514,6 @@ func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 						{
 							Name: "bird.conf",
 							File: fmt.Sprintf("bird_%s-tor2.conf", rack.Name),
-						},
-					},
-				},
-			},
-			&placemat.DataFolderConfig{
-				Kind: "DataFolder",
-				Name: fmt.Sprintf("%s-bird-data", rack.Name),
-				Spec: placemat.DataFolderSpec{
-					Files: []placemat.DataFolderFileConfig{
-						{
-							Name: "bird.conf",
-							File: fmt.Sprintf("bird_%s-node.conf", rack.Name),
 						},
 					},
 				},

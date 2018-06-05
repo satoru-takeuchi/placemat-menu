@@ -12,7 +12,6 @@ import (
 const (
 	dockerImageBird    = "docker://quay.io/cybozu/bird:2.0"
 	dockerImageDebug   = "docker://quay.io/cybozu/ubuntu-debug:18.04"
-	dockerImageDev     = "docker://quay.io/cybozu/ubuntu-dev:18.04"
 	dockerImageDnsmasq = "docker://quay.io/cybozu/dnsmasq:2.79"
 )
 
@@ -146,7 +145,7 @@ func (c *cluster) appendOperationPod(ta *TemplateArgs) {
 			Apps: []placemat.PodAppConfig{
 				{
 					Name:  "ubuntu",
-					Image: dockerImageDev,
+					Image: dockerImageDebug,
 					Exec:  "/bin/sleep",
 					Args:  []string{"infinity"},
 					Mount: []placemat.PodAppMountConfig{

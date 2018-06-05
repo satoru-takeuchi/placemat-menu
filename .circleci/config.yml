@@ -6,7 +6,8 @@ jobs:
     working_directory: /go/src/github.com/cybozu-go/placemat-menu
     steps:
       - checkout
-      - run: go get -v -t -d ./...
+      - run: go get -d -v -t .
+      - run: make
       - run: (! goimports -d . 2>&1 | read _)
       - run: golint -set_exit_status ./...
       - run: go test -race -v ./...

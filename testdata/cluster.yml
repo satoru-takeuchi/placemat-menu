@@ -207,6 +207,7 @@ spec:
     name: seed
     spec:
       user-data: seed_rack0-boot.yml
+      network-config: network.yml
   - kind: vvfat
     name: sabakan
     spec:
@@ -285,6 +286,7 @@ spec:
     name: seed
     spec:
       user-data: seed_rack1-boot.yml
+      network-config: network.yml
   - kind: vvfat
     name: sabakan
     spec:

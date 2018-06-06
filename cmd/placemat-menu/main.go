@@ -100,6 +100,16 @@ func run() error {
 		}
 	}
 
+	networkFile, err := os.Create(filepath.Join(*flagOutDir, "network.yml"))
+	if err != nil {
+		return err
+	}
+	defer networkFile.Close()
+	err = menu.ExportEmptyNetworkConfig(networkFile)
+	if err != nil {
+		return err
+	}
+
 	for rackIdx, rack := range ta.Racks {
 		if ta.Boot.CloudInitTemplate != "" {
 			arg := struct {

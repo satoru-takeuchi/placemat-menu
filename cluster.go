@@ -211,7 +211,8 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 				Kind: "localds",
 				Name: "seed",
 				Spec: placemat.NodeVolumeSpec{
-					UserData: fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+					UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+					NetworkConfig: "network.yml",
 				},
 			})
 		}
@@ -698,4 +699,10 @@ func (c *cluster) appendCoreNetwork(ta *TemplateArgs) {
 			},
 		},
 	)
+}
+
+// ExportEmptyNetworkConfig export empty network-config file used in cloud-init
+func ExportEmptyNetworkConfig(w io.Writer) error {
+	_, err := fmt.Fprintln(w, "version: 2\nethernets: {}")
+	return err
 }

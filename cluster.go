@@ -13,6 +13,9 @@ const (
 	dockerImageBird    = "docker://quay.io/cybozu/bird:2.0"
 	dockerImageDebug   = "docker://quay.io/cybozu/ubuntu-debug:18.04"
 	dockerImageDnsmasq = "docker://quay.io/cybozu/dnsmasq:2.79"
+
+	aciBird  = "cybozu-bird-2.0.aci"
+	aciDebug = "cybozu-ubuntu-debug-18.04.aci"
 )
 
 var birdContainer = placemat.PodAppConfig{
@@ -97,6 +100,8 @@ func generateCluster(ta *TemplateArgs) *cluster {
 	cluster.appendSpineToRackNetwork(ta)
 
 	cluster.appendRackNetwork(ta)
+
+	cluster.appendCommonDataFolder()
 
 	cluster.appendCoreDataFolder()
 
@@ -266,6 +271,20 @@ func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMRes
 					Name: "root",
 					Spec: placemat.NodeVolumeSpec{
 						Size: "30G",
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "common",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: "common-data",
+					},
+				},
+				{
+					Kind: "vvfat",
+					Name: "local",
+					Spec: placemat.NodeVolumeSpec{
+						Folder: fmt.Sprintf("%s-bird-data", rackName),
 					},
 				},
 			},
@@ -518,6 +537,18 @@ func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 					},
 				},
 			},
+			&placemat.DataFolderConfig{
+				Kind: "DataFolder",
+				Name: fmt.Sprintf("%s-bird-data", rack.Name),
+				Spec: placemat.DataFolderSpec{
+					Files: []placemat.DataFolderFileConfig{
+						{
+							Name: "bird.conf",
+							File: fmt.Sprintf("bird_%s-node.conf", rack.Name),
+						},
+					},
+				},
+			},
 		)
 	}
 }
@@ -554,6 +585,29 @@ func (c *cluster) appendSpineDataFolder(ta *TemplateArgs) {
 				},
 			})
 	}
+}
+
+func (c *cluster) appendCommonDataFolder() {
+	c.dataFolders = append(c.dataFolders, &placemat.DataFolderConfig{
+		Kind: "DataFolder",
+		Name: "common-data",
+		Spec: placemat.DataFolderSpec{
+			Files: []placemat.DataFolderFileConfig{
+				{
+					Name: "bird.aci",
+					File: aciBird,
+				},
+				{
+					Name: "ubuntu-debug.aci",
+					File: aciDebug,
+				},
+				{
+					Name: "rkt-fetch",
+					File: "rkt-fetch",
+				},
+			},
+		},
+	})
 }
 
 func (c *cluster) appendRackNetwork(ta *TemplateArgs) {

@@ -108,6 +108,17 @@ spec:
   url: https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
 ---
 kind: DataFolder
+name: common-data
+spec:
+  files:
+  - name: bird.aci
+    file: cybozu-bird-2.0.aci
+  - name: ubuntu-debug.aci
+    file: cybozu-ubuntu-debug-18.04.aci
+  - name: rkt-fetch
+    file: rkt-fetch
+---
+kind: DataFolder
 name: core-data
 spec:
   files:
@@ -143,6 +154,13 @@ spec:
     file: bird_rack0-tor2.conf
 ---
 kind: DataFolder
+name: rack0-bird-data
+spec:
+  files:
+  - name: bird.conf
+    file: bird_rack0-node.conf
+---
+kind: DataFolder
 name: rack1-tor1-data
 spec:
   files:
@@ -155,6 +173,13 @@ spec:
   files:
   - name: bird.conf
     file: bird_rack1-tor2.conf
+---
+kind: DataFolder
+name: rack1-bird-data
+spec:
+  files:
+  - name: bird.conf
+    file: bird_rack1-node.conf
 ---
 kind: DataFolder
 name: operation-data
@@ -203,6 +228,14 @@ spec:
     name: root
     spec:
       size: 30G
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+  - kind: vvfat
+    name: local
+    spec:
+      folder: rack0-bird-data
   resources:
     cpu: "2"
     memory: 2G
@@ -221,6 +254,14 @@ spec:
     name: root
     spec:
       size: 30G
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+  - kind: vvfat
+    name: local
+    spec:
+      folder: rack0-bird-data
   resources:
     cpu: "2"
     memory: 2G
@@ -265,6 +306,14 @@ spec:
     name: root
     spec:
       size: 30G
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+  - kind: vvfat
+    name: local
+    spec:
+      folder: rack1-bird-data
   resources:
     cpu: "2"
     memory: 2G
@@ -283,6 +332,14 @@ spec:
     name: root
     spec:
       size: 30G
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+  - kind: vvfat
+    name: local
+    spec:
+      folder: rack1-bird-data
   resources:
     cpu: "2"
     memory: 2G
@@ -301,6 +358,14 @@ spec:
     name: root
     spec:
       size: 30G
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+  - kind: vvfat
+    name: local
+    spec:
+      folder: rack1-bird-data
   resources:
     cpu: "1"
     memory: 1G
@@ -319,6 +384,14 @@ spec:
     name: root
     spec:
       size: 30G
+  - kind: vvfat
+    name: common
+    spec:
+      folder: common-data
+  - kind: vvfat
+    name: local
+    spec:
+      folder: rack1-bird-data
   resources:
     cpu: "1"
     memory: 1G

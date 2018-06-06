@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+DIR=/mnt/common
+
+if [ -f /etc/rkt_image_fetched ]; then
+    exit 0
+fi
+
+for aci in $DIR/*.aci; do
+    rkt --insecure-options=image fetch $aci
+done
+
+touch /etc/rkt_image_fetched

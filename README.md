@@ -44,7 +44,6 @@ this IP addresses from operation network.
 
 Install placemat-menu to your local disk:
 
-    $ make setup
     $ make
 
 placemat-menu loads configuration data from YAML file.

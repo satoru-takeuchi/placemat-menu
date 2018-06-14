@@ -55,6 +55,7 @@ type nodeConfig struct {
 		CPU               int    `yaml:"cpu"`
 		Memory            string `yaml:"memory"`
 		Image             string `yaml:"image"`
+		BIOS              string `yaml:"bios"`
 		CloudInitTemplate string `yaml:"cloud-init-template"`
 	} `yaml:"spec"`
 }
@@ -211,6 +212,7 @@ func unmarshalNode(data []byte) (*NodeMenu, error) {
 
 	node.Memory = n.Spec.Memory
 	node.Image = n.Spec.Image
+	node.BIOS = n.Spec.BIOS
 	node.CloudInitTemplate = n.Spec.CloudInitTemplate
 
 	return &node, nil

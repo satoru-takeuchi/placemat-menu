@@ -306,7 +306,6 @@ spec:
   resources:
     cpu: "1"
     memory: 1G
-  bios: uefi
   smbios:
     serial: 1145129a085ecf521ab524028302a6b4a4e49a00
 ---
@@ -324,7 +323,6 @@ spec:
   resources:
     cpu: "1"
     memory: 1G
-  bios: uefi
   smbios:
     serial: 628c8c360d0113de66db14a225affcb85fb2a27f
 ---

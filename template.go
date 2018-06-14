@@ -147,6 +147,7 @@ type VMResource struct {
 	CPU               int
 	Memory            string
 	Image             string
+	BIOS              string
 	CloudInitTemplate string
 }
 
@@ -165,16 +166,19 @@ OUTER:
 			templateArgs.CS.Memory = node.Memory
 			templateArgs.CS.CPU = node.CPU
 			templateArgs.CS.Image = node.Image
+			templateArgs.CS.BIOS = node.BIOS
 			templateArgs.CS.CloudInitTemplate = node.CloudInitTemplate
 		case SSNode:
 			templateArgs.SS.Memory = node.Memory
 			templateArgs.SS.CPU = node.CPU
 			templateArgs.SS.Image = node.Image
+			templateArgs.SS.BIOS = node.BIOS
 			templateArgs.SS.CloudInitTemplate = node.CloudInitTemplate
 		case BootNode:
 			templateArgs.Boot.Memory = node.Memory
 			templateArgs.Boot.CPU = node.CPU
 			templateArgs.Boot.Image = node.Image
+			templateArgs.Boot.BIOS = node.BIOS
 			templateArgs.Boot.CloudInitTemplate = node.CloudInitTemplate
 		default:
 			return nil, errors.New("invalid node type")

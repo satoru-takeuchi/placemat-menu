@@ -160,6 +160,7 @@ spec:
   cpu: 2
   memory: 2G
   image: ubuntu-cloud-image
+  bios: uefi
   cloud-init-template: boot-seed.yml.template
 ```
 
@@ -172,6 +173,7 @@ The available properties are as following:
 - `cpu`: The number of the virtual CPU cores
 - `memory`: The size of the memory.
 - `image`: The name of an image resource for boot (optional)
+- `bios`: The name of BIOS mode (optional. See [Node resource of placemat](https://github.com/cybozu-go/placemat/blob/master/SPEC.md#node-resource))
 - `cloud-init-template`: The path of cloud-init template file.
 
 In a cloud-init template file, following attributes can be referenced.

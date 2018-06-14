@@ -40,6 +40,7 @@ type: cs
 spec:
   cpu: 2
   memory: 2G
+  bios: "uefi"
 ---
 kind: Node
 type: ss

@@ -52,6 +52,7 @@ type NodeMenu struct {
 	CPU               int
 	Memory            string
 	Image             string
+	BIOS              string
 	CloudInitTemplate string
 }
 

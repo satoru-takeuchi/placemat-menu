@@ -244,6 +244,7 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 				CPU:    fmt.Sprint(resource.CPU),
 				Memory: resource.Memory,
 			},
+			BIOS: resource.BIOS,
 			SMBIOS: placemat.SMBIOSConfig{
 				SerialNumber: serial,
 			},
@@ -274,7 +275,7 @@ func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMRes
 				CPU:    fmt.Sprint(resource.CPU),
 				Memory: resource.Memory,
 			},
-			BIOS: "uefi",
+			BIOS: resource.BIOS,
 			SMBIOS: placemat.SMBIOSConfig{
 				SerialNumber: serial,
 			},

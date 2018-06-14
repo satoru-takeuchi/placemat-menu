@@ -40,9 +40,11 @@ type: cs
 spec:
   cpu: 2
   memory: 2G
+  bios: "seabios"
 ---
 kind: Node
 type: ss
 spec:
   cpu: 1
   memory: 1G
+  bios: "seabios"

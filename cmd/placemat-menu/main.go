@@ -19,7 +19,6 @@ import (
 )
 
 var staticFiles = []string{
-	"/static/rkt-fetch",
 	"/static/setup-iptables",
 }
 
@@ -166,13 +165,6 @@ func run() error {
 
 		err = export(statikFS, "/templates/bird_rack-tor2.conf",
 			fmt.Sprintf("bird_rack%d-tor2.conf", rackIdx),
-			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
-		if err != nil {
-			return err
-		}
-
-		err = export(statikFS, "/templates/bird_rack-node.conf",
-			fmt.Sprintf("bird_rack%d-node.conf", rackIdx),
 			menu.BIRDRackTemplateArgs{Args: *ta, RackIdx: rackIdx})
 		if err != nil {
 			return err

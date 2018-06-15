@@ -265,7 +265,14 @@ func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMRes
 			Volumes: []placemat.NodeVolumeConfig{
 				{
 					Kind: "raw",
-					Name: "root",
+					Name: "data1",
+					Spec: placemat.NodeVolumeSpec{
+						Size: "30G",
+					},
+				},
+				{
+					Kind: "raw",
+					Name: "data2",
 					Spec: placemat.NodeVolumeSpec{
 						Size: "30G",
 					},

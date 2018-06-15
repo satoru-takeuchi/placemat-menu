@@ -201,7 +201,11 @@ spec:
   - r0-node2
   volumes:
   - kind: raw
-    name: root
+    name: data1
+    spec:
+      size: 30G
+  - kind: raw
+    name: data2
     spec:
       size: 30G
   resources:
@@ -219,7 +223,11 @@ spec:
   - r0-node2
   volumes:
   - kind: raw
-    name: root
+    name: data1
+    spec:
+      size: 30G
+  - kind: raw
+    name: data2
     spec:
       size: 30G
   resources:
@@ -264,7 +272,11 @@ spec:
   - r1-node2
   volumes:
   - kind: raw
-    name: root
+    name: data1
+    spec:
+      size: 30G
+  - kind: raw
+    name: data2
     spec:
       size: 30G
   resources:
@@ -282,7 +294,11 @@ spec:
   - r1-node2
   volumes:
   - kind: raw
-    name: root
+    name: data1
+    spec:
+      size: 30G
+  - kind: raw
+    name: data2
     spec:
       size: 30G
   resources:
@@ -300,7 +316,11 @@ spec:
   - r1-node2
   volumes:
   - kind: raw
-    name: root
+    name: data1
+    spec:
+      size: 30G
+  - kind: raw
+    name: data2
     spec:
       size: 30G
   resources:
@@ -317,7 +337,11 @@ spec:
   - r1-node2
   volumes:
   - kind: raw
-    name: root
+    name: data1
+    spec:
+      size: 30G
+  - kind: raw
+    name: data2
     spec:
       size: 30G
   resources:

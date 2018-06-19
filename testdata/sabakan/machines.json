@@ -6,7 +6,8 @@
     "rack": 0,
     "index-in-rack": 0,
     "role": "boot",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",
@@ -20,7 +21,8 @@
     "rack": 0,
     "index-in-rack": 0,
     "role": "worker",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",
@@ -34,7 +36,8 @@
     "rack": 0,
     "index-in-rack": 0,
     "role": "worker",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",
@@ -48,7 +51,8 @@
     "rack": 1,
     "index-in-rack": 0,
     "role": "boot",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",
@@ -62,7 +66,8 @@
     "rack": 1,
     "index-in-rack": 0,
     "role": "worker",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",
@@ -76,7 +81,8 @@
     "rack": 1,
     "index-in-rack": 0,
     "role": "worker",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",
@@ -90,7 +96,8 @@
     "rack": 1,
     "index-in-rack": 0,
     "role": "worker",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",
@@ -104,7 +111,8 @@
     "rack": 1,
     "index-in-rack": 0,
     "role": "worker",
-    "network": null,
+    "ipv4": null,
+    "ipv6": null,
     "bmc": {
       "ipv4": "",
       "ipv6": "",

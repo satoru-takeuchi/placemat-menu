@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 func assertFileEqual(t *testing.T, f1, f2 string) {
@@ -18,7 +20,9 @@ func assertFileEqual(t *testing.T, f1, f2 string) {
 		t.Fatal(err)
 	}
 	if string(content1) != string(content2) {
-		t.Error("unexpected file content: " + filepath.Base(f1))
+		dmp := diffmatchpatch.New()
+		diffs := dmp.DiffMain(string(content1), string(content2), false)
+		t.Error("unexpected file content: " + dmp.DiffPrettyText(diffs))
 	}
 }
 

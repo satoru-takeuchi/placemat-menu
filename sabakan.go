@@ -47,8 +47,8 @@ func exportDHCPConfig(dst string) error {
 	return exportJSON(dst, config)
 }
 
-func sabakanMachine(serial string, rack int, role string) sabakan.Machine {
-	return sabakan.Machine{
+func sabakanMachine(serial string, rack int, role string) sabakan.MachineSpec {
+	return sabakan.MachineSpec{
 		Serial:     serial,
 		Product:    "vm",
 		Datacenter: "dc1",
@@ -61,7 +61,7 @@ func sabakanMachine(serial string, rack int, role string) sabakan.Machine {
 }
 
 func exportMachinesJSON(dst string, ta *TemplateArgs) error {
-	ms := []sabakan.Machine{}
+	var ms []sabakan.MachineSpec
 
 	for _, rack := range ta.Racks {
 		ms = append(ms, sabakanMachine(rack.BootNode.Serial, rack.Index, "boot"))

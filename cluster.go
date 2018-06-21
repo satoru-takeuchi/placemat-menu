@@ -573,14 +573,14 @@ func (c *cluster) appendRackNetwork(ta *TemplateArgs) {
 				Kind: "Network",
 				Name: fmt.Sprintf("%s-node1", rack.ShortName),
 				Spec: placemat.NetworkSpec{
-					Internal: true,
+					Type: "internal",
 				},
 			},
 			&placemat.NetworkConfig{
 				Kind: "Network",
 				Name: fmt.Sprintf("%s-node2", rack.ShortName),
 				Spec: placemat.NetworkSpec{
-					Internal: true,
+					Type: "internal",
 				},
 			},
 		)
@@ -596,14 +596,14 @@ func (c *cluster) appendSpineToRackNetwork(ta *TemplateArgs) {
 					Kind: "Network",
 					Name: fmt.Sprintf("%s-to-%s-1", spine.ShortName, rack.ShortName),
 					Spec: placemat.NetworkSpec{
-						Internal: true,
+						Type: "internal",
 					},
 				},
 				&placemat.NetworkConfig{
 					Kind: "Network",
 					Name: fmt.Sprintf("%s-to-%s-2", spine.ShortName, rack.ShortName),
 					Spec: placemat.NetworkSpec{
-						Internal: true,
+						Type: "internal",
 					},
 				},
 			)
@@ -618,7 +618,7 @@ func (c *cluster) appendExternalNetwork(ta *TemplateArgs) {
 			Kind: "Network",
 			Name: "internet",
 			Spec: placemat.NetworkSpec{
-				Internal:  false,
+				Type:      "external",
 				UseNAT:    true,
 				Addresses: []string{ta.Network.Endpoints.Host.String()},
 			},
@@ -632,7 +632,7 @@ func (c *cluster) appendCoreNetwork(ta *TemplateArgs) {
 			Kind: "Network",
 			Name: fmt.Sprintf("core-to-%s", spine.ShortName),
 			Spec: placemat.NetworkSpec{
-				Internal: true,
+				Type: "internal",
 			},
 		})
 	}
@@ -642,14 +642,14 @@ func (c *cluster) appendCoreNetwork(ta *TemplateArgs) {
 			Kind: "Network",
 			Name: "core-to-ext",
 			Spec: placemat.NetworkSpec{
-				Internal: true,
+				Type: "internal",
 			},
 		},
 		&placemat.NetworkConfig{
 			Kind: "Network",
 			Name: "core-to-op",
 			Spec: placemat.NetworkSpec{
-				Internal: true,
+				Type: "internal",
 			},
 		},
 	)

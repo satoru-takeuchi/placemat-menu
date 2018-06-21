@@ -1,7 +1,7 @@
 kind: Network
 name: internet
 spec:
-  internal: false
+  type: external
   use-nat: true
   addresses:
   - 10.0.0.1/24
@@ -9,97 +9,97 @@ spec:
 kind: Network
 name: core-to-s1
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: core-to-s2
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: core-to-ext
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: core-to-op
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s1-to-r0-1
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s1-to-r0-2
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s1-to-r1-1
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s1-to-r1-2
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s2-to-r0-1
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s2-to-r0-2
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s2-to-r1-1
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: s2-to-r1-2
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: r0-node1
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: r0-node2
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: r1-node1
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Network
 name: r1-node2
 spec:
-  internal: true
+  type: internal
   use-nat: false
 ---
 kind: Image

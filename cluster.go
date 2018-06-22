@@ -94,6 +94,8 @@ func generateCluster(ta *TemplateArgs) *cluster {
 
 	cluster.appendCoreNetwork(ta)
 
+	cluster.appendBMCNetwork(ta)
+
 	cluster.appendSpineToRackNetwork(ta)
 
 	cluster.appendRackNetwork(ta)
@@ -383,6 +385,10 @@ func (c *cluster) appendCorePod(ta *TemplateArgs) {
 		Network:   "internet",
 		Addresses: []string{ta.Core.InternetAddress.String()},
 	})
+	interfaces = append(interfaces, placemat.PodInterfaceConfig{
+		Network:   "bmc",
+		Addresses: []string{ta.Core.BMCAddress.String()},
+	})
 	for i, spine := range ta.Spines {
 		interfaces = append(interfaces, placemat.PodInterfaceConfig{
 			Network: fmt.Sprintf("core-to-%s", spine.ShortName),
@@ -431,16 +437,16 @@ func (c *cluster) appendCorePod(ta *TemplateArgs) {
 
 func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
-		var rackIfs []placemat.PodInterfaceConfig
+		var ifces []placemat.PodInterfaceConfig
 
-		rackIfs = append(rackIfs,
+		ifces = append(ifces,
 			placemat.PodInterfaceConfig{
 				Network:   fmt.Sprintf("core-to-%s", spine.ShortName),
 				Addresses: []string{spine.CoreAddress.String()},
 			},
 		)
 		for i, rack := range ta.Racks {
-			rackIfs = append(rackIfs,
+			ifces = append(ifces,
 				placemat.PodInterfaceConfig{
 					Network:   fmt.Sprintf("%s-to-%s-1", spine.ShortName, rack.ShortName),
 					Addresses: []string{spine.ToR1Address(i).String()},
@@ -456,7 +462,7 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 			Kind: "Pod",
 			Name: spine.Name,
 			Spec: placemat.PodSpec{
-				Interfaces: rackIfs,
+				Interfaces: ifces,
 				Volumes: []placemat.PodVolumeConfig{
 					{
 						Name:     "config",
@@ -650,6 +656,20 @@ func (c *cluster) appendCoreNetwork(ta *TemplateArgs) {
 			Name: "core-to-op",
 			Spec: placemat.NetworkSpec{
 				Type: "internal",
+			},
+		},
+	)
+}
+
+func (c *cluster) appendBMCNetwork(ta *TemplateArgs) {
+	c.networks = append(
+		c.networks,
+		&placemat.NetworkConfig{
+			Kind: "Network",
+			Name: "bmc",
+			Spec: placemat.NetworkSpec{
+				Type:      "bmc",
+				Addresses: []string{addToIPNet(ta.Network.BMC, offsetBMCHost).String()},
 			},
 		},
 	)

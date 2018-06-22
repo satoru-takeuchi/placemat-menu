@@ -28,6 +28,9 @@ const (
 	offsetASNCore     = -3
 	offsetASNExternal = -2
 	offsetASNSpine    = -1
+
+	offsetBMCHost = 1
+	offsetBMCCore = 2
 )
 
 // Rack is template args for rack
@@ -102,6 +105,7 @@ type Endpoints struct {
 // Core contains parameters to construct core router
 type Core struct {
 	InternetAddress  *net.IPNet
+	BMCAddress       *net.IPNet
 	SpineAddresses   []*net.IPNet
 	OperationAddress *net.IPNet
 	ExternalAddress  *net.IPNet
@@ -115,6 +119,7 @@ type TemplateArgs struct {
 			LoadBalancer *net.IPNet
 			Ingress      *net.IPNet
 		}
+		BMC         *net.IPNet
 		Endpoints   Endpoints
 		ASNExternal int
 		ASNSpine    int
@@ -253,6 +258,7 @@ OUTER:
 }
 
 func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
+	templateArgs.Network.BMC = menu.Network.BMC
 	templateArgs.Network.ASNCore = menu.Network.ASNBase + offsetASNCore
 	templateArgs.Network.ASNExternal = menu.Network.ASNBase + offsetASNExternal
 	templateArgs.Network.ASNSpine = menu.Network.ASNBase + offsetASNSpine
@@ -297,6 +303,7 @@ func setCore(ta *TemplateArgs, menu *Menu) {
 	for i := range ta.Spines {
 		ta.Core.SpineAddresses = append(ta.Core.SpineAddresses, addToIPNet(menu.Network.CoreSpine, 2*i))
 	}
+	ta.Core.BMCAddress = addToIPNet(menu.Network.BMC, offsetBMCCore)
 	ta.Core.OperationAddress = addToIPNet(menu.Network.CoreOperation, offsetOperationCore)
 	ta.Core.InternetAddress = addToIPNet(menu.Network.Internet, offsetInternetCore)
 	ta.Core.ExternalAddress = addToIPNet(menu.Network.CoreExternal, offsetExternalCore)

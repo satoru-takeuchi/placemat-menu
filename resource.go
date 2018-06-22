@@ -27,6 +27,7 @@ type NetworkMenu struct {
 	CoreSpine      *net.IPNet
 	CoreExternal   *net.IPNet
 	CoreOperation  *net.IPNet
+	BMC            *net.IPNet
 	SpineTor       net.IP
 	Bastion        *net.IPNet
 	LoadBalancer   *net.IPNet

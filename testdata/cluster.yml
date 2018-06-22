@@ -31,6 +31,14 @@ spec:
   use-nat: false
 ---
 kind: Network
+name: bmc
+spec:
+  type: bmc
+  use-nat: false
+  addresses:
+  - 10.72.16.1/20
+---
+kind: Network
 name: s1-to-r0-1
 spec:
   type: internal
@@ -359,6 +367,9 @@ spec:
   - network: internet
     addresses:
     - 10.0.0.2/24
+  - network: bmc
+    addresses:
+    - 10.72.16.2/20
   - network: core-to-s1
     addresses:
     - 10.0.2.0/31

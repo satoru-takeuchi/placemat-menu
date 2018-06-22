@@ -385,6 +385,10 @@ func (c *cluster) appendCorePod(ta *TemplateArgs) {
 		Network:   "internet",
 		Addresses: []string{ta.Core.InternetAddress.String()},
 	})
+	interfaces = append(interfaces, placemat.PodInterfaceConfig{
+		Network:   "bmc",
+		Addresses: []string{ta.Core.BMCAddress.String()},
+	})
 	for i, spine := range ta.Spines {
 		interfaces = append(interfaces, placemat.PodInterfaceConfig{
 			Network: fmt.Sprintf("core-to-%s", spine.ShortName),
@@ -439,12 +443,6 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 			placemat.PodInterfaceConfig{
 				Network:   fmt.Sprintf("core-to-%s", spine.ShortName),
 				Addresses: []string{spine.CoreAddress.String()},
-			},
-		)
-		ifces = append(ifces,
-			placemat.PodInterfaceConfig{
-				Network:   "bmc",
-				Addresses: []string{spine.BMCAddress.String()},
 			},
 		)
 		for i, rack := range ta.Racks {

@@ -28,6 +28,7 @@ type networkConfig struct {
 		CoreSpine     string `yaml:"core-spine"`
 		CoreExternal  string `yaml:"core-external"`
 		CoreOperation string `yaml:"core-operation"`
+		BMC           string `yaml:"bmc"`
 		Exposed       struct {
 			Bastion      string `yaml:"bastion"`
 			LoadBalancer string `yaml:"loadbalancer"`
@@ -118,6 +119,10 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 	}
 
 	_, network.CoreOperation, err = parseNetworkCIDR(n.Spec.CoreOperation)
+	if err != nil {
+		return nil, err
+	}
+	_, network.BMC, err = parseNetworkCIDR(n.Spec.BMC)
 	if err != nil {
 		return nil, err
 	}

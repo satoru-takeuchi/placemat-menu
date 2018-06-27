@@ -298,9 +298,9 @@ func torPod(rackName, rackShortName string, tor ToR, torNumber int, ta *Template
 	})
 
 	dhcpRelayArgs := []string{
-		"--log-queries",
-		"--log-dhcp",
-		"--no-daemon",
+		"--keep-in-foreground",
+		"--pid-file",
+		"--log-facility=-",
 	}
 	for _, r := range ta.Racks {
 		if r.Name == rackName {

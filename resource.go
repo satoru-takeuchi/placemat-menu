@@ -53,7 +53,7 @@ type NodeMenu struct {
 	CPU               int
 	Memory            string
 	Image             string
-	BIOS              string
+	UEFI              bool
 	CloudInitTemplate string
 }
 
@@ -61,6 +61,6 @@ type NodeMenu struct {
 type Menu struct {
 	Network   *NetworkMenu
 	Inventory *InventoryMenu
-	Images    []*imageConfig
+	Images    []*imageSpec
 	Nodes     []*NodeMenu
 }

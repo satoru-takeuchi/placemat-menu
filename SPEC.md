@@ -163,7 +163,7 @@ spec:
   cpu: 2
   memory: 2G
   image: ubuntu-cloud-image
-  bios: uefi
+  uefi: true
   cloud-init-template: boot-seed.yml.template
 ```
 

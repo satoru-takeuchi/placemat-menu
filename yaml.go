@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 
-	placemat "github.com/cybozu-go/placemat/yaml"
+	"github.com/cybozu-go/placemat"
 	"github.com/cybozu-go/sabakan"
 	k8sYaml "github.com/kubernetes/apimachinery/pkg/util/yaml"
 	yaml "gopkg.in/yaml.v2"
@@ -48,7 +48,7 @@ type inventoryConfig struct {
 	} `yaml:"spec"`
 }
 
-type imageConfig = placemat.ImageConfig
+type imageSpec = placemat.ImageSpec
 
 type nodeConfig struct {
 	Type string `yaml:"type"`
@@ -56,7 +56,7 @@ type nodeConfig struct {
 		CPU               int    `yaml:"cpu"`
 		Memory            string `yaml:"memory"`
 		Image             string `yaml:"image"`
-		BIOS              string `yaml:"bios"`
+		UEFI              bool   `yaml:"uefi"`
 		CloudInitTemplate string `yaml:"cloud-init-template"`
 	} `yaml:"spec"`
 }
@@ -185,8 +185,8 @@ func unmarshalInventory(data []byte) (*InventoryMenu, error) {
 	return &inventory, nil
 }
 
-func unmarshalImage(data []byte) (*imageConfig, error) {
-	var i imageConfig
+func unmarshalImage(data []byte) (*imageSpec, error) {
+	var i imageSpec
 	err := yaml.Unmarshal(data, &i)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func unmarshalNode(data []byte) (*NodeMenu, error) {
 
 	node.Memory = n.Spec.Memory
 	node.Image = n.Spec.Image
-	node.BIOS = n.Spec.BIOS
+	node.UEFI = n.Spec.UEFI
 	node.CloudInitTemplate = n.Spec.CloudInitTemplate
 
 	return &node, nil

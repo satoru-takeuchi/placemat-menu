@@ -25,8 +25,7 @@ spec:
 ---
 kind: Image
 name: ubuntu-cloud-image
-spec:
-  url: https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
+url: https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
 ---
 kind: Node
 type: boot
@@ -41,7 +40,7 @@ type: cs
 spec:
   cpu: 2
   memory: 2G
-  bios: "uefi"
+  uefi: true
 ---
 kind: Node
 type: ss

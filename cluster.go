@@ -5,7 +5,7 @@ import (
 
 	"io"
 
-	placemat "github.com/cybozu-go/placemat/yaml"
+	"github.com/cybozu-go/placemat"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -15,11 +15,11 @@ const (
 	dockerImageDnsmasq = "docker://quay.io/cybozu/dnsmasq:2.79"
 )
 
-var birdContainer = placemat.PodAppConfig{
+var birdContainer = placemat.PodAppSpec{
 	Name:           "bird",
 	Image:          dockerImageBird,
 	ReadOnlyRootfs: true,
-	Mount: []placemat.PodAppMountConfig{
+	Mount: []placemat.PodAppMountSpec{
 		{
 			Volume: "config",
 			Target: "/etc/bird",
@@ -36,17 +36,17 @@ var birdContainer = placemat.PodAppConfig{
 	},
 }
 
-var debugContainer = placemat.PodAppConfig{
+var debugContainer = placemat.PodAppSpec{
 	Name:           "debug",
 	Image:          dockerImageDebug,
 	ReadOnlyRootfs: true,
 }
 
 type cluster struct {
-	networks    []*placemat.NetworkConfig
-	dataFolders []*placemat.DataFolderConfig
-	pods        []*placemat.PodConfig
-	nodes       []*placemat.NodeConfig
+	networks    []*placemat.NetworkSpec
+	dataFolders []*placemat.DataFolderSpec
+	pods        []*placemat.PodSpec
+	nodes       []*placemat.NodeSpec
 }
 
 // ExportCluster exports a placemat configuration to writer from TemplateArgs
@@ -126,35 +126,33 @@ func generateCluster(ta *TemplateArgs) *cluster {
 }
 
 func (c *cluster) appendOperationPod(ta *TemplateArgs) {
-	pod := &placemat.PodConfig{
-		Kind: "Pod",
-		Name: "operation",
-		Spec: placemat.PodSpec{
-			InitScripts: []string{"setup-default-gateway-operation"},
-			Interfaces: []placemat.PodInterfaceConfig{
-				{
-					Network:   "core-to-op",
-					Addresses: []string{ta.Network.Endpoints.Operation.String()},
-				},
+	pod := &placemat.PodSpec{
+		Kind:        "Pod",
+		Name:        "operation",
+		InitScripts: []string{"setup-default-gateway-operation"},
+		Interfaces: []placemat.PodInterfaceSpec{
+			{
+				Network:   "core-to-op",
+				Addresses: []string{ta.Network.Endpoints.Operation.String()},
 			},
-			Volumes: []placemat.PodVolumeConfig{
-				{
-					Name:   "operation",
-					Kind:   "host",
-					Folder: "operation-data",
-				},
+		},
+		Volumes: []*placemat.PodVolumeSpec{
+			{
+				Name:   "operation",
+				Kind:   "host",
+				Folder: "operation-data",
 			},
-			Apps: []placemat.PodAppConfig{
-				{
-					Name:  "ubuntu",
-					Image: dockerImageDebug,
-					Exec:  "/bin/sleep",
-					Args:  []string{"infinity"},
-					Mount: []placemat.PodAppMountConfig{
-						{
-							Volume: "operation",
-							Target: "/mnt",
-						},
+		},
+		Apps: []*placemat.PodAppSpec{
+			{
+				Name:  "ubuntu",
+				Image: dockerImageDebug,
+				Exec:  "/bin/sleep",
+				Args:  []string{"infinity"},
+				Mount: []placemat.PodAppMountSpec{
+					{
+						Volume: "operation",
+						Target: "/mnt",
 					},
 				},
 			},
@@ -165,24 +163,22 @@ func (c *cluster) appendOperationPod(ta *TemplateArgs) {
 }
 
 func (c *cluster) appendExtPod(ta *TemplateArgs) {
-	pod := &placemat.PodConfig{
-		Kind: "Pod",
-		Name: "external",
-		Spec: placemat.PodSpec{
-			InitScripts: []string{"setup-default-gateway-external"},
-			Interfaces: []placemat.PodInterfaceConfig{
-				{
-					Network:   "core-to-ext",
-					Addresses: []string{ta.Network.Endpoints.External.String()},
-				},
+	pod := &placemat.PodSpec{
+		Kind:        "Pod",
+		Name:        "external",
+		InitScripts: []string{"setup-default-gateway-external"},
+		Interfaces: []placemat.PodInterfaceSpec{
+			{
+				Network:   "core-to-ext",
+				Addresses: []string{ta.Network.Endpoints.External.String()},
 			},
-			Apps: []placemat.PodAppConfig{
-				{
-					Name:  "ubuntu",
-					Image: dockerImageDebug,
-					Exec:  "/bin/sleep",
-					Args:  []string{"infinity"},
-				},
+		},
+		Apps: []*placemat.PodAppSpec{
+			{
+				Name:  "ubuntu",
+				Image: dockerImageDebug,
+				Exec:  "/bin/sleep",
+				Args:  []string{"infinity"},
 			},
 		},
 	}
@@ -190,104 +186,84 @@ func (c *cluster) appendExtPod(ta *TemplateArgs) {
 	c.pods = append(c.pods, pod)
 }
 
-func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeConfig {
-	var volumes []placemat.NodeVolumeConfig
+func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeSpec {
+	var volumes []placemat.NodeVolumeSpec
 	if resource.Image != "" {
-		volumes = []placemat.NodeVolumeConfig{
+		volumes = []placemat.NodeVolumeSpec{
 			{
-				Kind: "image",
-				Name: "root",
-				Spec: placemat.NodeVolumeSpec{
-					Image:       resource.Image,
-					CopyOnWrite: true,
-				},
+				Kind:        "image",
+				Name:        "root",
+				Image:       resource.Image,
+				CopyOnWrite: true,
 			},
 		}
 		if resource.CloudInitTemplate != "" {
-			volumes = append(volumes, placemat.NodeVolumeConfig{
-				Kind: "localds",
-				Name: "seed",
-				Spec: placemat.NodeVolumeSpec{
-					UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
-					NetworkConfig: "network.yml",
-				},
+			volumes = append(volumes, placemat.NodeVolumeSpec{
+				Kind:          "localds",
+				Name:          "seed",
+				UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+				NetworkConfig: "network.yml",
 			})
 		}
 	} else {
-		volumes = []placemat.NodeVolumeConfig{
+		volumes = []placemat.NodeVolumeSpec{
 			{
 				Kind: "raw",
 				Name: "root",
-				Spec: placemat.NodeVolumeSpec{
-					Size: "30G",
-				},
+				Size: "30G",
 			},
 		}
 	}
 
-	volumes = append(volumes, placemat.NodeVolumeConfig{
-		Kind: "vvfat",
-		Name: "sabakan",
-		Spec: placemat.NodeVolumeSpec{
-			Folder: "sabakan-data",
-		},
+	volumes = append(volumes, placemat.NodeVolumeSpec{
+		Kind:   "vvfat",
+		Name:   "sabakan",
+		Folder: "sabakan-data",
 	})
 
-	return &placemat.NodeConfig{
+	return &placemat.NodeSpec{
 		Kind: "Node",
 		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
-		Spec: placemat.NodeSpec{
-			Interfaces: []string{
-				fmt.Sprintf("%s-node1", rackShortName),
-				fmt.Sprintf("%s-node2", rackShortName),
-			},
-			Volumes: volumes,
-			Resources: placemat.NodeResourceConfig{
-				CPU:    fmt.Sprint(resource.CPU),
-				Memory: resource.Memory,
-			},
-			BIOS: resource.BIOS,
-			SMBIOS: placemat.SMBIOSConfig{
-				SerialNumber: serial,
-			},
+		Interfaces: []string{
+			fmt.Sprintf("%s-node1", rackShortName),
+			fmt.Sprintf("%s-node2", rackShortName),
+		},
+		Volumes: volumes,
+		CPU:     resource.CPU,
+		Memory:  resource.Memory,
+		UEFI:    resource.UEFI,
+		SMBIOS: placemat.SMBIOSConfig{
+			Serial: serial,
 		},
 	}
 }
 
-func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeConfig {
+func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeSpec {
 
-	return &placemat.NodeConfig{
+	return &placemat.NodeSpec{
 		Kind: "Node",
 		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
-		Spec: placemat.NodeSpec{
-			Interfaces: []string{
-				fmt.Sprintf("%s-node1", rackShortName),
-				fmt.Sprintf("%s-node2", rackShortName),
+		Interfaces: []string{
+			fmt.Sprintf("%s-node1", rackShortName),
+			fmt.Sprintf("%s-node2", rackShortName),
+		},
+		Volumes: []placemat.NodeVolumeSpec{
+			{
+				Kind: "raw",
+				Name: "data1",
+				Size: "30G",
 			},
-			Volumes: []placemat.NodeVolumeConfig{
-				{
-					Kind: "raw",
-					Name: "data1",
-					Spec: placemat.NodeVolumeSpec{
-						Size: "30G",
-					},
-				},
-				{
-					Kind: "raw",
-					Name: "data2",
-					Spec: placemat.NodeVolumeSpec{
-						Size: "30G",
-					},
-				},
+			{
+				Kind: "raw",
+				Name: "data2",
+				Size: "30G",
 			},
-			Resources: placemat.NodeResourceConfig{
-				CPU:    fmt.Sprint(resource.CPU),
-				Memory: resource.Memory,
-			},
-			BIOS: resource.BIOS,
-			SMBIOS: placemat.SMBIOSConfig{
-				SerialNumber: serial,
-			},
+		},
+		CPU:    resource.CPU,
+		Memory: resource.Memory,
+		UEFI:   resource.UEFI,
+		SMBIOS: placemat.SMBIOSConfig{
+			Serial: serial,
 		},
 	}
 }
@@ -305,18 +281,18 @@ func (c *cluster) appendNodes(ta *TemplateArgs) {
 	}
 }
 
-func torPod(rackName, rackShortName string, tor ToR, torNumber int, ta *TemplateArgs) *placemat.PodConfig {
+func torPod(rackName, rackShortName string, tor ToR, torNumber int, ta *TemplateArgs) *placemat.PodSpec {
 
-	var spineIfs []placemat.PodInterfaceConfig
+	var spineIfs []placemat.PodInterfaceSpec
 	for i, spine := range ta.Spines {
 		spineIfs = append(spineIfs,
-			placemat.PodInterfaceConfig{
+			placemat.PodInterfaceSpec{
 				Network:   fmt.Sprintf("%s-to-%s-%d", spine.ShortName, rackShortName, torNumber),
 				Addresses: []string{tor.SpineAddresses[i].String()},
 			},
 		)
 	}
-	spineIfs = append(spineIfs, placemat.PodInterfaceConfig{
+	spineIfs = append(spineIfs, placemat.PodInterfaceSpec{
 		Network:   fmt.Sprintf("%s-node%d", rackShortName, torNumber),
 		Addresses: []string{tor.NodeAddress.String()},
 	})
@@ -334,37 +310,35 @@ func torPod(rackName, rackShortName string, tor ToR, torNumber int, ta *Template
 		dhcpRelayArgs = append(dhcpRelayArgs, tor.NodeAddress.IP.String()+","+r.BootNode.Node0Address.IP.String())
 	}
 
-	return &placemat.PodConfig{
-		Kind: "Pod",
-		Name: fmt.Sprintf("%s-tor%d", rackName, torNumber),
-		Spec: placemat.PodSpec{
-			Interfaces: spineIfs,
-			Volumes: []placemat.PodVolumeConfig{
-				{
-					Name:     "config",
-					Kind:     "host",
-					Folder:   fmt.Sprintf("%s-tor%d-data", rackName, torNumber),
-					ReadOnly: true,
-				},
-				{
-					Name: "run",
-					Kind: "empty",
-				},
+	return &placemat.PodSpec{
+		Kind:       "Pod",
+		Name:       fmt.Sprintf("%s-tor%d", rackName, torNumber),
+		Interfaces: spineIfs,
+		Volumes: []*placemat.PodVolumeSpec{
+			{
+				Name:     "config",
+				Kind:     "host",
+				Folder:   fmt.Sprintf("%s-tor%d-data", rackName, torNumber),
+				ReadOnly: true,
 			},
-			Apps: []placemat.PodAppConfig{
-				birdContainer,
-				debugContainer,
-				{
-					Name:           "dhcp-relay",
-					Image:          dockerImageDnsmasq,
-					ReadOnlyRootfs: true,
-					CapsRetain: []string{
-						"CAP_NET_BIND_SERVICE",
-						"CAP_NET_RAW",
-						"CAP_NET_BROADCAST",
-					},
-					Args: dhcpRelayArgs,
+			{
+				Name: "run",
+				Kind: "empty",
+			},
+		},
+		Apps: []*placemat.PodAppSpec{
+			&birdContainer,
+			&debugContainer,
+			{
+				Name:           "dhcp-relay",
+				Image:          dockerImageDnsmasq,
+				ReadOnlyRootfs: true,
+				CapsRetain: []string{
+					"CAP_NET_BIND_SERVICE",
+					"CAP_NET_RAW",
+					"CAP_NET_BROADCAST",
 				},
+				Args: dhcpRelayArgs,
 			},
 		},
 	}
@@ -380,46 +354,91 @@ func (c *cluster) appendToRPods(ta *TemplateArgs) {
 }
 
 func (c *cluster) appendCorePod(ta *TemplateArgs) {
-	var interfaces []placemat.PodInterfaceConfig
-	interfaces = append(interfaces, placemat.PodInterfaceConfig{
+	var interfaces []placemat.PodInterfaceSpec
+	interfaces = append(interfaces, placemat.PodInterfaceSpec{
 		Network:   "internet",
 		Addresses: []string{ta.Core.InternetAddress.String()},
 	})
-	interfaces = append(interfaces, placemat.PodInterfaceConfig{
+	interfaces = append(interfaces, placemat.PodInterfaceSpec{
 		Network:   "bmc",
 		Addresses: []string{ta.Core.BMCAddress.String()},
 	})
 	for i, spine := range ta.Spines {
-		interfaces = append(interfaces, placemat.PodInterfaceConfig{
+		interfaces = append(interfaces, placemat.PodInterfaceSpec{
 			Network: fmt.Sprintf("core-to-%s", spine.ShortName),
 			Addresses: []string{
 				ta.Core.SpineAddresses[i].String(),
 			},
 		})
 	}
-	interfaces = append(interfaces, placemat.PodInterfaceConfig{
+	interfaces = append(interfaces, placemat.PodInterfaceSpec{
 		Network: "core-to-ext",
 		Addresses: []string{
 			ta.Core.ExternalAddress.String(),
 		},
 	})
-	interfaces = append(interfaces, placemat.PodInterfaceConfig{
+	interfaces = append(interfaces, placemat.PodInterfaceSpec{
 		Network: "core-to-op",
 		Addresses: []string{
 			ta.Core.OperationAddress.String(),
 		},
 	})
-	c.pods = append(c.pods, &placemat.PodConfig{
-		Kind: "Pod",
-		Name: "core",
-		Spec: placemat.PodSpec{
-			InitScripts: []string{"setup-iptables"},
-			Interfaces:  interfaces,
-			Volumes: []placemat.PodVolumeConfig{
+	c.pods = append(c.pods, &placemat.PodSpec{
+		Kind:        "Pod",
+		Name:        "core",
+		InitScripts: []string{"setup-iptables"},
+		Interfaces:  interfaces,
+		Volumes: []*placemat.PodVolumeSpec{
+			{
+				Name:     "config",
+				Kind:     "host",
+				Folder:   "core-data",
+				ReadOnly: true,
+			},
+			{
+				Name: "run",
+				Kind: "empty",
+			},
+		},
+		Apps: []*placemat.PodAppSpec{
+			&birdContainer,
+			&debugContainer,
+		},
+	})
+}
+
+func (c *cluster) appendSpinePod(ta *TemplateArgs) {
+	for _, spine := range ta.Spines {
+		var ifces []placemat.PodInterfaceSpec
+
+		ifces = append(ifces,
+			placemat.PodInterfaceSpec{
+				Network:   fmt.Sprintf("core-to-%s", spine.ShortName),
+				Addresses: []string{spine.CoreAddress.String()},
+			},
+		)
+		for i, rack := range ta.Racks {
+			ifces = append(ifces,
+				placemat.PodInterfaceSpec{
+					Network:   fmt.Sprintf("%s-to-%s-1", spine.ShortName, rack.ShortName),
+					Addresses: []string{spine.ToR1Address(i).String()},
+				},
+				placemat.PodInterfaceSpec{
+					Network:   fmt.Sprintf("%s-to-%s-2", spine.ShortName, rack.ShortName),
+					Addresses: []string{spine.ToR2Address(i).String()},
+				},
+			)
+		}
+
+		c.pods = append(c.pods, &placemat.PodSpec{
+			Kind:       "Pod",
+			Name:       spine.Name,
+			Interfaces: ifces,
+			Volumes: []*placemat.PodVolumeSpec{
 				{
 					Name:     "config",
 					Kind:     "host",
-					Folder:   "core-data",
+					Folder:   fmt.Sprintf("%s-data", spine.Name),
 					ReadOnly: true,
 				},
 				{
@@ -427,58 +446,9 @@ func (c *cluster) appendCorePod(ta *TemplateArgs) {
 					Kind: "empty",
 				},
 			},
-			Apps: []placemat.PodAppConfig{
-				birdContainer,
-				debugContainer,
-			},
-		},
-	})
-}
-
-func (c *cluster) appendSpinePod(ta *TemplateArgs) {
-	for _, spine := range ta.Spines {
-		var ifces []placemat.PodInterfaceConfig
-
-		ifces = append(ifces,
-			placemat.PodInterfaceConfig{
-				Network:   fmt.Sprintf("core-to-%s", spine.ShortName),
-				Addresses: []string{spine.CoreAddress.String()},
-			},
-		)
-		for i, rack := range ta.Racks {
-			ifces = append(ifces,
-				placemat.PodInterfaceConfig{
-					Network:   fmt.Sprintf("%s-to-%s-1", spine.ShortName, rack.ShortName),
-					Addresses: []string{spine.ToR1Address(i).String()},
-				},
-				placemat.PodInterfaceConfig{
-					Network:   fmt.Sprintf("%s-to-%s-2", spine.ShortName, rack.ShortName),
-					Addresses: []string{spine.ToR2Address(i).String()},
-				},
-			)
-		}
-
-		c.pods = append(c.pods, &placemat.PodConfig{
-			Kind: "Pod",
-			Name: spine.Name,
-			Spec: placemat.PodSpec{
-				Interfaces: ifces,
-				Volumes: []placemat.PodVolumeConfig{
-					{
-						Name:     "config",
-						Kind:     "host",
-						Folder:   fmt.Sprintf("%s-data", spine.Name),
-						ReadOnly: true,
-					},
-					{
-						Name: "run",
-						Kind: "empty",
-					},
-				},
-				Apps: []placemat.PodAppConfig{
-					birdContainer,
-					debugContainer,
-				},
+			Apps: []*placemat.PodAppSpec{
+				&birdContainer,
+				&debugContainer,
 			},
 		})
 	}
@@ -486,50 +456,42 @@ func (c *cluster) appendSpinePod(ta *TemplateArgs) {
 
 func (c *cluster) appendOperationDataFolder() {
 	c.dataFolders = append(c.dataFolders,
-		&placemat.DataFolderConfig{
+		&placemat.DataFolderSpec{
 			Kind: "DataFolder",
 			Name: "operation-data",
-			Spec: placemat.DataFolderSpec{
-				Dir: "operation",
-			},
+			Dir:  "operation",
 		})
 }
 
 func (c *cluster) appendSabakanDataFolder() {
 	c.dataFolders = append(c.dataFolders,
-		&placemat.DataFolderConfig{
+		&placemat.DataFolderSpec{
 			Kind: "DataFolder",
 			Name: "sabakan-data",
-			Spec: placemat.DataFolderSpec{
-				Dir: "sabakan",
-			},
+			Dir:  "sabakan",
 		})
 }
 
 func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
 		c.dataFolders = append(c.dataFolders,
-			&placemat.DataFolderConfig{
+			&placemat.DataFolderSpec{
 				Kind: "DataFolder",
 				Name: fmt.Sprintf("%s-tor1-data", rack.Name),
-				Spec: placemat.DataFolderSpec{
-					Files: []placemat.DataFolderFileConfig{
-						{
-							Name: "bird.conf",
-							File: fmt.Sprintf("bird_%s-tor1.conf", rack.Name),
-						},
+				Files: []placemat.DataFolderFileSpec{
+					{
+						Name: "bird.conf",
+						File: fmt.Sprintf("bird_%s-tor1.conf", rack.Name),
 					},
 				},
 			},
-			&placemat.DataFolderConfig{
+			&placemat.DataFolderSpec{
 				Kind: "DataFolder",
 				Name: fmt.Sprintf("%s-tor2-data", rack.Name),
-				Spec: placemat.DataFolderSpec{
-					Files: []placemat.DataFolderFileConfig{
-						{
-							Name: "bird.conf",
-							File: fmt.Sprintf("bird_%s-tor2.conf", rack.Name),
-						},
+				Files: []placemat.DataFolderFileSpec{
+					{
+						Name: "bird.conf",
+						File: fmt.Sprintf("bird_%s-tor2.conf", rack.Name),
 					},
 				},
 			},
@@ -539,15 +501,13 @@ func (c *cluster) appendRackDataFolder(ta *TemplateArgs) {
 
 func (c *cluster) appendCoreDataFolder() {
 	c.dataFolders = append(c.dataFolders,
-		&placemat.DataFolderConfig{
+		&placemat.DataFolderSpec{
 			Kind: "DataFolder",
 			Name: "core-data",
-			Spec: placemat.DataFolderSpec{
-				Files: []placemat.DataFolderFileConfig{
-					{
-						Name: "bird.conf",
-						File: "bird_core.conf",
-					},
+			Files: []placemat.DataFolderFileSpec{
+				{
+					Name: "bird.conf",
+					File: "bird_core.conf",
 				},
 			},
 		})
@@ -556,15 +516,13 @@ func (c *cluster) appendCoreDataFolder() {
 func (c *cluster) appendSpineDataFolder(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
 		c.dataFolders = append(c.dataFolders,
-			&placemat.DataFolderConfig{
+			&placemat.DataFolderSpec{
 				Kind: "DataFolder",
 				Name: fmt.Sprintf("%s-data", spine.Name),
-				Spec: placemat.DataFolderSpec{
-					Files: []placemat.DataFolderFileConfig{
-						{
-							Name: "bird.conf",
-							File: fmt.Sprintf("bird_%s.conf", spine.Name),
-						},
+				Files: []placemat.DataFolderFileSpec{
+					{
+						Name: "bird.conf",
+						File: fmt.Sprintf("bird_%s.conf", spine.Name),
 					},
 				},
 			})
@@ -575,19 +533,15 @@ func (c *cluster) appendRackNetwork(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
 		c.networks = append(
 			c.networks,
-			&placemat.NetworkConfig{
+			&placemat.NetworkSpec{
 				Kind: "Network",
 				Name: fmt.Sprintf("%s-node1", rack.ShortName),
-				Spec: placemat.NetworkSpec{
-					Type: "internal",
-				},
+				Type: "internal",
 			},
-			&placemat.NetworkConfig{
+			&placemat.NetworkSpec{
 				Kind: "Network",
 				Name: fmt.Sprintf("%s-node2", rack.ShortName),
-				Spec: placemat.NetworkSpec{
-					Type: "internal",
-				},
+				Type: "internal",
 			},
 		)
 	}
@@ -598,19 +552,15 @@ func (c *cluster) appendSpineToRackNetwork(ta *TemplateArgs) {
 		for _, rack := range ta.Racks {
 			c.networks = append(
 				c.networks,
-				&placemat.NetworkConfig{
+				&placemat.NetworkSpec{
 					Kind: "Network",
 					Name: fmt.Sprintf("%s-to-%s-1", spine.ShortName, rack.ShortName),
-					Spec: placemat.NetworkSpec{
-						Type: "internal",
-					},
+					Type: "internal",
 				},
-				&placemat.NetworkConfig{
+				&placemat.NetworkSpec{
 					Kind: "Network",
 					Name: fmt.Sprintf("%s-to-%s-2", spine.ShortName, rack.ShortName),
-					Spec: placemat.NetworkSpec{
-						Type: "internal",
-					},
+					Type: "internal",
 				},
 			)
 		}
@@ -620,43 +570,35 @@ func (c *cluster) appendSpineToRackNetwork(ta *TemplateArgs) {
 func (c *cluster) appendExternalNetwork(ta *TemplateArgs) {
 	c.networks = append(
 		c.networks,
-		&placemat.NetworkConfig{
-			Kind: "Network",
-			Name: "internet",
-			Spec: placemat.NetworkSpec{
-				Type:      "external",
-				UseNAT:    true,
-				Addresses: []string{ta.Network.Endpoints.Host.String()},
-			},
+		&placemat.NetworkSpec{
+			Kind:    "Network",
+			Name:    "internet",
+			Type:    "external",
+			UseNAT:  true,
+			Address: ta.Network.Endpoints.Host.String(),
 		},
 	)
 }
 
 func (c *cluster) appendCoreNetwork(ta *TemplateArgs) {
 	for _, spine := range ta.Spines {
-		c.networks = append(c.networks, &placemat.NetworkConfig{
+		c.networks = append(c.networks, &placemat.NetworkSpec{
 			Kind: "Network",
 			Name: fmt.Sprintf("core-to-%s", spine.ShortName),
-			Spec: placemat.NetworkSpec{
-				Type: "internal",
-			},
+			Type: "internal",
 		})
 	}
 	c.networks = append(
 		c.networks,
-		&placemat.NetworkConfig{
+		&placemat.NetworkSpec{
 			Kind: "Network",
 			Name: "core-to-ext",
-			Spec: placemat.NetworkSpec{
-				Type: "internal",
-			},
+			Type: "internal",
 		},
-		&placemat.NetworkConfig{
+		&placemat.NetworkSpec{
 			Kind: "Network",
 			Name: "core-to-op",
-			Spec: placemat.NetworkSpec{
-				Type: "internal",
-			},
+			Type: "internal",
 		},
 	)
 }
@@ -664,18 +606,16 @@ func (c *cluster) appendCoreNetwork(ta *TemplateArgs) {
 func (c *cluster) appendBMCNetwork(ta *TemplateArgs) {
 	c.networks = append(
 		c.networks,
-		&placemat.NetworkConfig{
-			Kind: "Network",
-			Name: "bmc",
-			Spec: placemat.NetworkSpec{
-				Type:      "bmc",
-				Addresses: []string{addToIPNet(ta.Network.BMC, offsetBMCHost).String()},
-			},
+		&placemat.NetworkSpec{
+			Kind:    "Network",
+			Name:    "bmc",
+			Type:    "bmc",
+			Address: addToIPNet(ta.Network.BMC, offsetBMCHost).String(),
 		},
 	)
 }
 
-// ExportEmptyNetworkConfig export empty network-config file used in cloud-init
+// ExportEmptyNetworkSpec export empty network-config file used in cloud-init
 func ExportEmptyNetworkConfig(w io.Writer) error {
 	_, err := fmt.Fprintln(w, "version: 2\nethernets: {}")
 	return err

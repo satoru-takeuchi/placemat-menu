@@ -615,7 +615,7 @@ func (c *cluster) appendBMCNetwork(ta *TemplateArgs) {
 	)
 }
 
-// ExportEmptyNetworkSpec export empty network-config file used in cloud-init
+// ExportEmptyNetworkConfig export empty network-config file used in cloud-init
 func ExportEmptyNetworkConfig(w io.Writer) error {
 	_, err := fmt.Fprintln(w, "version: 2\nethernets: {}")
 	return err

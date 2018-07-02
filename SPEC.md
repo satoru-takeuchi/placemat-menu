@@ -21,7 +21,6 @@ spec:
   core-spine: 10.0.2.0/31
   core-external: 10.0.3.0/24
   core-operation: 10.0.4.0/24
-  bmc: 10.0.5.0/24
   exposed:
     bastion: 10.72.48.0/26
     loadbalancer: 10.72.32.0/20
@@ -104,8 +103,6 @@ example is assigned addresses when `10.0.1.0` is specified:
 - `core-external`: The network address between the core and the external network.
 
 - `core-operation`: The network address between the core switch and the operation network.
-
-- `bmc`: The network address for BMC control network.
 
 - `exposed`: The network addresses advertise to outside of the cluster
     - `bastion`: The bastion network addresses, whey are also advertised to the

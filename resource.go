@@ -22,12 +22,12 @@ type NetworkMenu struct {
 	NodeBase       net.IP
 	NodeRangeSize  int
 	NodeRangeMask  int
+	BMC            *net.IPNet
 	ASNBase        int
 	Internet       *net.IPNet
 	CoreSpine      *net.IPNet
 	CoreExternal   *net.IPNet
 	CoreOperation  *net.IPNet
-	BMC            *net.IPNet
 	SpineTor       net.IP
 	Bastion        *net.IPNet
 	LoadBalancer   *net.IPNet

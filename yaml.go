@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/cybozu-go/netutil"
 	"github.com/cybozu-go/placemat"
 	"github.com/cybozu-go/sabakan"
 	k8sYaml "github.com/kubernetes/apimachinery/pkg/util/yaml"
@@ -103,10 +104,15 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 	if ic.NodeIndexOffset != offsetNodenetBoot {
 		return nil, fmt.Errorf("node-index-offset in IPAM config must be %d", offsetNodenetBoot)
 	}
-	network.NodeBase, _, err = parseNetworkCIDR(ic.NodeIPv4Pool)
+	nodePool, _, err := parseNetworkCIDR(ic.NodeIPv4Pool)
 	if err != nil {
 		return nil, err
 	}
+	nodeOffset := uint32(0)
+	if len(ic.NodeIPv4Offset) > 0 {
+		nodeOffset = netutil.IP4ToInt(net.ParseIP(ic.NodeIPv4Offset))
+	}
+	network.NodeBase = netutil.IntToIP4(netutil.IP4ToInt(nodePool) + nodeOffset)
 	network.NodeRangeSize = int(ic.NodeRangeSize)
 	network.NodeRangeMask = int(ic.NodeRangeMask)
 	_, network.BMC, err = parseNetworkCIDR(ic.BMCIPv4Pool)

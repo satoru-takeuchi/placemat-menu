@@ -145,7 +145,7 @@ name: sabakan-data
 dir: sabakan
 ---
 kind: Node
-name: rack0-boot
+name: boot-0
 interfaces:
 - r0-node1
 - r0-node2
@@ -156,7 +156,7 @@ volumes:
   copy-on-write: true
 - kind: localds
   name: seed
-  user-data: seed_rack0-boot.yml
+  user-data: seed_boot-0.yml
   network-config: network.yml
 - kind: vvfat
   name: sabakan
@@ -164,7 +164,7 @@ volumes:
 cpu: 2
 memory: 2G
 smbios:
-  serial: d77bd2bf046bf5c6acde124136dba4e2b393d36a
+  serial: fb8f2417d0b4db30050719c31ce02a2e8141bbd8
 ---
 kind: Node
 name: rack0-cs1
@@ -203,7 +203,7 @@ smbios:
   serial: e6abb04b4645a765faf91f97536ec64f9cecfb61
 ---
 kind: Node
-name: rack1-boot
+name: boot-1
 interfaces:
 - r1-node1
 - r1-node2
@@ -214,7 +214,7 @@ volumes:
   copy-on-write: true
 - kind: localds
   name: seed
-  user-data: seed_rack1-boot.yml
+  user-data: seed_boot-1.yml
   network-config: network.yml
 - kind: vvfat
   name: sabakan
@@ -222,7 +222,7 @@ volumes:
 cpu: 2
 memory: 2G
 smbios:
-  serial: e6c5c72f081d987a5e75041aebbbe82d4c89e999
+  serial: fa362303b7af8c4291773ab496aaca16726beaa3
 ---
 kind: Node
 name: rack1-cs1

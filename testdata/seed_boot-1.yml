@@ -1,5 +1,5 @@
 #cloud-config
-hostname: rack1-boot
+hostname: boot-1
 runcmd:
 - ["/extras/setup/setup-neco-network", "1"]
 network:

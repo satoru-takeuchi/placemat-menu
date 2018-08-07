@@ -38,9 +38,9 @@ The following example is assigned addresses when `"node-ipv4-pool": "10.69.0.0/2
     - rack0 node2 network: 10.69.0.128/26    # node + 64 * 2<br><br>
     - rack0-tor1 eth1: 10.69.0.65/26         # rack0 node1 network + 1
     - rack0-tor2 eth1: 10.69.0.129/26        # rack0 node2 network + 1<br><br>
-    - rack0-boot node0: 10.69.0.3/32         # rack0 node0 network + 3
-    - rack0-boot node1(eth0): 10.69.0.67/26  # rack0 node1 network + 3
-    - rack0-boot node2(eth1): 10.69.0.131/26 # rack0 node2 network + 3<br><br>
+    - boot-0 node0: 10.69.0.3/32             # rack0 node0 network + 3
+    - boot-0 node1(eth0): 10.69.0.67/26      # rack0 node1 network + 3
+    - boot-0 node2(eth1): 10.69.0.131/26     # rack0 node2 network + 3<br><br>
     - rack0-cs1 node0: 10.69.0.4/32          # rack0 node0 network + 4
     - rack0-cs1 node1(eth0): 10.69.0.68/26   # rack0 node1 network + 4
     - rack0-cs1 node2(eth1): 10.69.0.132/26  # rack0 node2 network + 4<br><br>
@@ -52,9 +52,9 @@ The following example is assigned addresses when `"node-ipv4-pool": "10.69.0.0/2
     - rack1 node2 network: 10.69.1.64/26     # node + 64 * 5<br><br>
     - rack1-tor1 eth1: 10.69.1.1/26          # rack1 node1 network + 1
     - rack1-tor2 eth1: 10.69.1.65/26         # rack1 node2 network + 1<br><br>
-    - rack1-boot node0: 10.69.0.195/32       # rack1 node0 network + 3
-    - rack1-boot node1(eth0): 10.69.1.3/26   # rack1 node1 network + 3
-    - rack1-boot node2(eth1): 10.69.1.67/26  # rack1 node2 network + 3<br><br>
+    - boot-1 node0: 10.69.0.195/32           # rack1 node0 network + 3
+    - boot-1 node1(eth0): 10.69.1.3/26       # rack1 node1 network + 3
+    - boot-1 node2(eth1): 10.69.1.67/26      # rack1 node2 network + 3<br><br>
     - rack1-cs1 node0: 10.69.0.196/32        # rack1 node0 network + 4
     - rack1-cs1 node1(eth0): 10.69.1.4/26    # rack1 node1 network + 4
     - rack1-cs1 node2(eth1): 10.69.1.68/26   # rack1 node2 network + 4<br><br>
@@ -109,9 +109,9 @@ example is assigned addresses when `10.0.1.0` is specified:
         external of the cluster.  They are assigned for the boot servers, and they able
         to be accessed from the internet network.  The following example is the
         assigned addresses when `10.72.48.0/26` is set:
-        - rack0-boot: 10.72.48.0/32
-        - rack1-boot: 10.72.48.1/32
-        - rack2-boot: 10.72.48.2/32
+        - boot-0: 10.72.48.0/32
+        - boot-1: 10.72.48.1/32
+        - boot-2: 10.72.48.2/32
     - `loadbalancer`: The network addresses used for the load balancer exposed to the external address.
     - `ingress`: The ingress network addresses from the external address.
 

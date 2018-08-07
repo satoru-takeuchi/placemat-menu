@@ -186,7 +186,7 @@ func (c *cluster) appendExtPod(ta *TemplateArgs) {
 	c.pods = append(c.pods, pod)
 }
 
-func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeSpec {
+func bootNode(rack *Rack, resource *VMResource) *placemat.NodeSpec {
 	var volumes []placemat.NodeVolumeSpec
 	if resource.Image != "" {
 		volumes = []placemat.NodeVolumeSpec{
@@ -201,7 +201,7 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 			volumes = append(volumes, placemat.NodeVolumeSpec{
 				Kind:          "localds",
 				Name:          "seed",
-				UserData:      fmt.Sprintf("seed_%s-%s.yml", rackName, nodeName),
+				UserData:      fmt.Sprintf("seed_%s.yml", rack.BootNode.Fullname),
 				NetworkConfig: "network.yml",
 			})
 		}
@@ -223,17 +223,17 @@ func bootNode(rackName, rackShortName, nodeName, serial string, resource *VMReso
 
 	return &placemat.NodeSpec{
 		Kind: "Node",
-		Name: fmt.Sprintf("%s-%s", rackName, nodeName),
+		Name: rack.BootNode.Fullname,
 		Interfaces: []string{
-			fmt.Sprintf("%s-node1", rackShortName),
-			fmt.Sprintf("%s-node2", rackShortName),
+			fmt.Sprintf("%s-node1", rack.ShortName),
+			fmt.Sprintf("%s-node2", rack.ShortName),
 		},
 		Volumes: volumes,
 		CPU:     resource.CPU,
 		Memory:  resource.Memory,
 		UEFI:    resource.UEFI,
 		SMBIOS: placemat.SMBIOSConfig{
-			Serial: serial,
+			Serial: rack.BootNode.Serial,
 		},
 	}
 }
@@ -270,7 +270,7 @@ func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMRes
 
 func (c *cluster) appendNodes(ta *TemplateArgs) {
 	for _, rack := range ta.Racks {
-		c.nodes = append(c.nodes, bootNode(rack.Name, rack.ShortName, rack.BootNode.Name, rack.BootNode.Serial, &ta.Boot))
+		c.nodes = append(c.nodes, bootNode(&rack, &ta.Boot))
 
 		for _, cs := range rack.CSList {
 			c.nodes = append(c.nodes, emptyNode(rack.Name, rack.ShortName, cs.Name, cs.Serial, &ta.CS))

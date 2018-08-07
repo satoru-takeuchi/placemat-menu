@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
 	"github.com/andreyvit/diff"
 )
 

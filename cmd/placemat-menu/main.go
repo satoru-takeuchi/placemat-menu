@@ -115,10 +115,10 @@ func run() error {
 				Name string
 				Rack menu.Rack
 			}{
-				fmt.Sprintf("%s-boot", rack.Name),
+				fmt.Sprintf("boot-%d", rack.Index),
 				rack,
 			}
-			err := exportFile(ta.Boot.CloudInitTemplate, fmt.Sprintf("seed_%s-boot.yml", rack.Name), arg)
+			err := exportFile(ta.Boot.CloudInitTemplate, fmt.Sprintf("seed_boot-%d.yml", rack.Index), arg)
 			if err != nil {
 				return err
 			}

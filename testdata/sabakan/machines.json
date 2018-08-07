@@ -1,6 +1,6 @@
 [
   {
-    "serial": "d77bd2bf046bf5c6acde124136dba4e2b393d36a",
+    "serial": "fb8f2417d0b4db30050719c31ce02a2e8141bbd8",
     "product": "vm",
     "datacenter": "dc1",
     "rack": 0,
@@ -45,7 +45,7 @@
     }
   },
   {
-    "serial": "e6c5c72f081d987a5e75041aebbbe82d4c89e999",
+    "serial": "fa362303b7af8c4291773ab496aaca16726beaa3",
     "product": "vm",
     "datacenter": "dc1",
     "rack": 1,

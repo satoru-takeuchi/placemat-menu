@@ -6,8 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/andreyvit/diff"
 )
 
 func assertFileEqual(t *testing.T, f1, f2 string) {
@@ -20,9 +19,7 @@ func assertFileEqual(t *testing.T, f1, f2 string) {
 		t.Fatal(err)
 	}
 	if string(content1) != string(content2) {
-		dmp := diffmatchpatch.New()
-		diffs := dmp.DiffMain(string(content1), string(content2), false)
-		t.Error("unexpected file content: " + dmp.DiffPrettyText(diffs))
+		t.Errorf("unexpected file content: %s\n%v", f1, diff.LineDiff(string(content1), string(content2)))
 	}
 }
 
@@ -42,8 +39,8 @@ func TestE2E(t *testing.T) {
 		"bird_rack0-tor2.conf",
 		"bird_rack1-tor1.conf",
 		"bird_rack1-tor2.conf",
-		"seed_rack0-boot.yml",
-		"seed_rack1-boot.yml",
+		"seed_boot-0.yml",
+		"seed_boot-1.yml",
 		"sabakan/ipam.json",
 		"sabakan/dhcp.json",
 		"sabakan/machines.json",
@@ -58,8 +55,8 @@ func TestE2E(t *testing.T) {
 	}
 
 	for _, f := range targets {
-		f1 := filepath.Join(dir, f)
-		f2 := filepath.Join("testdata", f)
+		f1 := filepath.Join("testdata", f)
+		f2 := filepath.Join(dir, f)
 		assertFileEqual(t, f1, f2)
 	}
 }

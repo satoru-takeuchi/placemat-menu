@@ -287,7 +287,7 @@ func buildNode(basename string, idx int, offsetStart int, rack *Rack) Node {
 
 func buildBootNode(rack *Rack, menu *Menu) {
 	rack.BootNode.Name = "boot"
-	rack.BootNode.Fullname = fmt.Sprintf("%s-%s", rack.Name, rack.BootNode.Name)
+	rack.BootNode.Fullname = fmt.Sprintf("%s-%d", rack.BootNode.Name, rack.Index)
 	rack.BootNode.Serial = fmt.Sprintf("%x", sha1.Sum([]byte(rack.BootNode.Fullname)))
 
 	rack.BootNode.Node0Address = addToIP(rack.node0Network.IP, offsetNodenetBoot, 32)

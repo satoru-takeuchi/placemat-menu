@@ -1,3 +1,8 @@
+[![GitHub release](https://img.shields.io/github/release/cybozu-go/placemat-menu.svg?maxAge=60)][releases]
+[![CircleCI](https://circleci.com/gh/cybozu-go/placemat-menu.svg?style=svg)](https://circleci.com/gh/cybozu-go/placemat-menu)
+[![GoDoc](https://godoc.org/github.com/cybozu-go/placemat-menu?status.svg)][godoc]
+[![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/placemat-menu)](https://goreportcard.com/report/github.com/cybozu-go/placemat-menu)
+
 # placemat-menu
 
 Placemat-menu is an automatic configuration generation tool for [placemat][placemat].
@@ -81,5 +86,7 @@ Then build a placemat-menu:
 
 MIT
 
+[releases]: https://github.com/cybozu-go/placemat-menu/releases
+[godoc]: https://godoc.org/github.com/cybozu-go/placemat-menu
 [placemat]: https://github.com/cybozu-go/placemat
 [statik]: https://github.com/rakyll/statik

@@ -49,13 +49,15 @@ func exportDHCPConfig(dst string) error {
 
 func sabakanMachine(serial string, rack int, role string) sabakan.MachineSpec {
 	return sabakan.MachineSpec{
-		Serial:     serial,
-		Product:    "vm",
-		Datacenter: "dc1",
-		Rack:       uint(rack),
-		Role:       role,
+		Serial: serial,
+		Labels: map[string]string{
+			"product":    "vm",
+			"datacenter": "dc1",
+		},
+		Rack: uint(rack),
+		Role: role,
 		BMC: sabakan.MachineBMC{
-			Type: sabakan.BmcIpmi2,
+			Type: "IPMI-2.0",
 		},
 	}
 }

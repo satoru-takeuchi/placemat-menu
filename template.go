@@ -152,6 +152,7 @@ type VMResource struct {
 	CPU               int
 	Memory            string
 	Image             string
+	Data              []string
 	UEFI              bool
 	CloudInitTemplate string
 }
@@ -164,38 +165,46 @@ func ToTemplateArgs(menu *Menu) (*TemplateArgs, error) {
 
 	templateArgs.Images = menu.Images
 
-OUTER:
+	definedImages := map[string]bool{}
+	for _, image := range menu.Images {
+		definedImages[image.Name] = true
+	}
+
 	for _, node := range menu.Nodes {
 		switch node.Type {
 		case CSNode:
 			templateArgs.CS.Memory = node.Memory
 			templateArgs.CS.CPU = node.CPU
 			templateArgs.CS.Image = node.Image
+			templateArgs.CS.Data = node.Data
 			templateArgs.CS.UEFI = node.UEFI
 			templateArgs.CS.CloudInitTemplate = node.CloudInitTemplate
 		case SSNode:
 			templateArgs.SS.Memory = node.Memory
 			templateArgs.SS.CPU = node.CPU
 			templateArgs.SS.Image = node.Image
+			templateArgs.SS.Data = node.Data
 			templateArgs.SS.UEFI = node.UEFI
 			templateArgs.SS.CloudInitTemplate = node.CloudInitTemplate
 		case BootNode:
 			templateArgs.Boot.Memory = node.Memory
 			templateArgs.Boot.CPU = node.CPU
 			templateArgs.Boot.Image = node.Image
+			templateArgs.Boot.Data = node.Data
 			templateArgs.Boot.UEFI = node.UEFI
 			templateArgs.Boot.CloudInitTemplate = node.CloudInitTemplate
 		default:
 			return nil, errors.New("invalid node type")
 		}
 
+		requiredImages := node.Data
 		if len(node.Image) > 0 {
-			for _, image := range menu.Images {
-				if image.Name == node.Image {
-					continue OUTER
-				}
+			requiredImages = append(requiredImages, node.Image)
+		}
+		for _, img := range requiredImages {
+			if !definedImages[img] {
+				return nil, errors.New("no such Image resource: " + node.Image)
 			}
-			return nil, errors.New("no such Image resource: " + node.Image)
 		}
 	}
 

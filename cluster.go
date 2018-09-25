@@ -221,6 +221,15 @@ func bootNode(rack *Rack, resource *VMResource) *placemat.NodeSpec {
 		Folder: "sabakan-data",
 	})
 
+	for i, dataImg := range resource.Data {
+		volumes = append(volumes, placemat.NodeVolumeSpec{
+			Kind:        "image",
+			Name:        fmt.Sprintf("extra%d", i),
+			Image:       dataImg,
+			CopyOnWrite: true,
+		})
+	}
+
 	return &placemat.NodeSpec{
 		Kind: "Node",
 		Name: rack.BootNode.Fullname,
@@ -239,6 +248,27 @@ func bootNode(rack *Rack, resource *VMResource) *placemat.NodeSpec {
 }
 
 func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMResource) *placemat.NodeSpec {
+	volumes := []placemat.NodeVolumeSpec{
+		{
+			Kind: "raw",
+			Name: "data1",
+			Size: "30G",
+		},
+		{
+			Kind: "raw",
+			Name: "data2",
+			Size: "30G",
+		},
+	}
+
+	for i, dataImg := range resource.Data {
+		volumes = append(volumes, placemat.NodeVolumeSpec{
+			Kind:        "image",
+			Name:        fmt.Sprintf("extra%d", i),
+			Image:       dataImg,
+			CopyOnWrite: true,
+		})
+	}
 
 	return &placemat.NodeSpec{
 		Kind: "Node",
@@ -247,21 +277,10 @@ func emptyNode(rackName, rackShortName, nodeName, serial string, resource *VMRes
 			fmt.Sprintf("%s-node1", rackShortName),
 			fmt.Sprintf("%s-node2", rackShortName),
 		},
-		Volumes: []placemat.NodeVolumeSpec{
-			{
-				Kind: "raw",
-				Name: "data1",
-				Size: "30G",
-			},
-			{
-				Kind: "raw",
-				Name: "data2",
-				Size: "30G",
-			},
-		},
-		CPU:    resource.CPU,
-		Memory: resource.Memory,
-		UEFI:   resource.UEFI,
+		Volumes: volumes,
+		CPU:     resource.CPU,
+		Memory:  resource.Memory,
+		UEFI:    resource.UEFI,
 		SMBIOS: placemat.SMBIOSConfig{
 			Serial: serial,
 		},

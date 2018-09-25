@@ -53,6 +53,7 @@ type NodeMenu struct {
 	CPU               int
 	Memory            string
 	Image             string
+	Data              []string
 	UEFI              bool
 	CloudInitTemplate string
 }

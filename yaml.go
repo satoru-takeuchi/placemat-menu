@@ -53,11 +53,12 @@ type imageSpec = placemat.ImageSpec
 type nodeConfig struct {
 	Type string `yaml:"type"`
 	Spec struct {
-		CPU               int    `yaml:"cpu"`
-		Memory            string `yaml:"memory"`
-		Image             string `yaml:"image"`
-		UEFI              bool   `yaml:"uefi"`
-		CloudInitTemplate string `yaml:"cloud-init-template"`
+		CPU               int      `yaml:"cpu"`
+		Memory            string   `yaml:"memory"`
+		Image             string   `yaml:"image"`
+		Data              []string `yaml:"data"`
+		UEFI              bool     `yaml:"uefi"`
+		CloudInitTemplate string   `yaml:"cloud-init-template"`
 	} `yaml:"spec"`
 }
 
@@ -222,6 +223,7 @@ func unmarshalNode(data []byte) (*NodeMenu, error) {
 
 	node.Memory = n.Spec.Memory
 	node.Image = n.Spec.Image
+	node.Data = n.Spec.Data
 	node.UEFI = n.Spec.UEFI
 	node.CloudInitTemplate = n.Spec.CloudInitTemplate
 

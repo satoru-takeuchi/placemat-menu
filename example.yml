@@ -26,6 +26,10 @@ kind: Image
 name: ubuntu-cloud-image
 url: https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
 ---
+kind: Image
+name: docker-image
+file: ./docker.img
+---
 kind: Node
 type: boot
 spec:
@@ -39,6 +43,8 @@ type: cs
 spec:
   cpu: 2
   memory: 2G
+  data:
+    - docker-image
   uefi: true
 ---
 kind: Node
@@ -46,3 +52,5 @@ type: ss
 spec:
   cpu: 1
   memory: 1G
+  data:
+    - docker-image

@@ -2,12 +2,12 @@ version: 2
 jobs:
   build:
     docker:
-      - image: quay.io/cybozu/golang:1.10-bionic
-    working_directory: /go/src/github.com/cybozu-go/placemat-menu
+      - image: quay.io/cybozu/golang:1.11-bionic
     steps:
       - checkout
-      - run: go get -d -v -t .
+      - run: go get -d -v .
       - run: make
-      - run: (! goimports -d . 2>&1 | read _)
+      - run: test -z "$(gofmt -s -d . | tee /dev/stderr)"
+      - run: go vet ./...
       - run: golint -set_exit_status ./...
       - run: go test -race -v ./...

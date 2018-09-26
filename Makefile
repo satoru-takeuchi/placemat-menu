@@ -8,7 +8,7 @@ all: $(TARGET)
 
 $(TARGET): $(SOURCES)
 	mkdir -p $(dir $(TARGET))
-	go get github.com/rakyll/statik/...
+	go install github.com/rakyll/statik
 	go generate ./...
 
 .PHONY:	all

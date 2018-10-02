@@ -145,6 +145,10 @@ name: operation-data
 dir: operation
 ---
 kind: DataFolder
+name: ssh-config
+dir: operation-ssh
+---
+kind: DataFolder
 name: sabakan-data
 dir: sabakan
 ---
@@ -685,6 +689,10 @@ volumes:
   kind: host
   folder: operation-data
   readonly: false
+- name: ssh-config
+  kind: host
+  folder: ssh-config
+  readonly: false
 apps:
 - name: ubuntu
   image: docker://quay.io/cybozu/ubuntu-debug:18.04
@@ -695,3 +703,5 @@ apps:
   mount:
   - volume: operation
     target: /mnt
+  - volume: ssh-config
+    target: /etc/ssh

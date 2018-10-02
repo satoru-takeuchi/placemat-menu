@@ -142,6 +142,11 @@ func (c *cluster) appendOperationPod(ta *TemplateArgs) {
 				Kind:   "host",
 				Folder: "operation-data",
 			},
+			{
+				Name:   "ssh-config",
+				Kind:   "host",
+				Folder: "ssh-config",
+			},
 		},
 		Apps: []*placemat.PodAppSpec{
 			{
@@ -153,6 +158,10 @@ func (c *cluster) appendOperationPod(ta *TemplateArgs) {
 					{
 						Volume: "operation",
 						Target: "/mnt",
+					},
+					{
+						Volume: "ssh-config",
+						Target: "/etc/ssh",
 					},
 				},
 			},
@@ -479,7 +488,13 @@ func (c *cluster) appendOperationDataFolder() {
 			Kind: "DataFolder",
 			Name: "operation-data",
 			Dir:  "operation",
-		})
+		},
+		&placemat.DataFolderSpec{
+			Kind: "DataFolder",
+			Name: "ssh-config",
+			Dir:  "operation-ssh",
+		},
+	)
 }
 
 func (c *cluster) appendSabakanDataFolder() {

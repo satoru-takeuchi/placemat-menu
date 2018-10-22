@@ -118,6 +118,7 @@ type TemplateArgs struct {
 			Bastion      *net.IPNet
 			LoadBalancer *net.IPNet
 			Ingress      *net.IPNet
+			Global       *net.IPNet
 		}
 		BMC         *net.IPNet
 		Endpoints   Endpoints
@@ -274,6 +275,7 @@ func setNetworkArgs(templateArgs *TemplateArgs, menu *Menu) {
 	templateArgs.Network.Exposed.Bastion = menu.Network.Bastion
 	templateArgs.Network.Exposed.LoadBalancer = menu.Network.LoadBalancer
 	templateArgs.Network.Exposed.Ingress = menu.Network.Ingress
+	templateArgs.Network.Exposed.Global = menu.Network.Global
 	templateArgs.Network.Endpoints.Host = addToIPNet(menu.Network.Internet, offsetInternetHost)
 	templateArgs.Network.Endpoints.External = addToIPNet(menu.Network.CoreExternal, offsetExternalExternal)
 	templateArgs.Network.Endpoints.Operation = addToIPNet(menu.Network.CoreOperation, offsetOperationOperation)

@@ -33,6 +33,7 @@ type networkConfig struct {
 			Bastion      string `yaml:"bastion"`
 			LoadBalancer string `yaml:"loadbalancer"`
 			Ingress      string `yaml:"ingress"`
+			Global       string `yaml:"global"`
 		} `yaml:"exposed"`
 	} `yaml:"spec"`
 }
@@ -154,6 +155,10 @@ func unmarshalNetwork(data []byte) (*NetworkMenu, error) {
 		return nil, err
 	}
 	_, network.Ingress, err = parseNetworkCIDR(n.Spec.Exposed.Ingress)
+	if err != nil {
+		return nil, err
+	}
+	_, network.Global, err = parseNetworkCIDR(n.Spec.Exposed.Global)
 	if err != nil {
 		return nil, err
 	}

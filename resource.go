@@ -32,6 +32,7 @@ type NetworkMenu struct {
 	Bastion        *net.IPNet
 	LoadBalancer   *net.IPNet
 	Ingress        *net.IPNet
+	Global         *net.IPNet
 }
 
 // InventoryMenu represents inventory settings to be written to the configuration file

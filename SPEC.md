@@ -25,6 +25,7 @@ spec:
     bastion: 10.72.48.0/26
     loadbalancer: 10.72.32.0/20
     ingress: 10.72.48.64/26
+    global: 172.17.0.0/26
 ```
 
 - `ipam-config`: The path of configuration file of IP address assignment.
@@ -114,6 +115,7 @@ example is assigned addresses when `10.0.1.0` is specified:
         - boot-2: 10.72.48.2/32
     - `loadbalancer`: The network addresses used for the load balancer exposed to the external address.
     - `ingress`: The ingress network addresses from the external address.
+    - `global`: The global network addresses to reach Internet.
 
 ## Inventory resource
 

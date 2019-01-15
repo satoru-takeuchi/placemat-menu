@@ -71,7 +71,7 @@ placemat-menu utilize [statik][statik] to embed files to the built binary (they
 are places in `cmd/placemat-menu/public`).  `statik` is a command to generate
 embedded data from static files.  Run the following command to install it:
 
-    $ go get https://github.com/rakyll/statik
+    $ go get github.com/rakyll/statik
 
 It is necessary to run the following to update embedded files when the static
 files are modified:
